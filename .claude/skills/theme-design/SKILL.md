@@ -264,6 +264,40 @@ interact, and choose the best combination — every step from measurement.
   nothing. Scope specificity still beats order, which is usually what you want: a
   hand-written `variable.parameter` survives a generated `variable`, so refinements the
   instrument does not model (the body-versus-definition split) are not flattened by it.
+- **A posterior mean without its interval hides grid truncation.** Of the observer model's
+  five fitted parameters, two sit on the edge of their own grid — 94% of the lapse
+  posterior is on the grid's smallest value, and the guess rate's marginal is *exactly* its
+  prior, meaning the data said nothing about it. Point estimates reported none of that.
+  Quote an interval with every fitted number, and flag any parameter whose mass touches a
+  grid edge: it is not an estimate, it is a boundary.
+- **On a coarse grid, take a quantile by inverse CDF, never by interpolating the CDF.**
+  Interpolation names values the model cannot hold, and it stops commuting with a change of
+  variable — the same dark/light threshold ratio came out 0.685 computed one way and 0.782
+  the other. Inverse CDF makes both routes agree exactly.
+- **Restate a null result with the power it actually had — and this one needed it.** The
+  standing verdict on colour deficiency was a flat "no signal", which overclaimed. Properly:
+  P(ratio ≥ 3) = 0.0005, which does exclude the several-fold elevation the literature
+  reports for a deficiency; but P(ratio ≥ 2) = 0.145 and the 90% credible interval is
+  [0.93, 2.49], which includes 1.0. So: a strong deficiency is excluded, a mild elevation is
+  not, and the honest verdict is "no strong signal, and not enough data to exclude a mild
+  one". A null stated without its power reads as a stronger claim than the data supports.
+- **Separate anchor trials from probe trials before quoting any accuracy.** Anchors run at
+  99.6% and probes at 85.5%; pooling them inflated the headline by five points, and the
+  historical anchor share (35%) was itself far above the 5% the protocol now declares.
+  Under an adaptive generator, accuracy is equalised BY CONSTRUCTION, so a per-condition
+  accuracy column reports the sampler rather than the eyes — report fitted thresholds
+  instead.
+- **An information-maximising generator does not target 75% correct.** The protocol text
+  promised trials that "feel like guessing"; with a fitted slope and lapse the EIG-optimal
+  4AFC stimulus sits in the high eighties, and the log says 85.5%. Have the diagnostic print
+  the number so the claim cannot drift again.
+- **Position bias exists even without a clock.** The four-slot discrimination task showed
+  slot 2 attracting guesses on error trials — 18/35/10/9 against 17/21/18/16 expected,
+  chi-square p = 0.0011 — and end slots easier than middle ones (88.2% against 92.6%,
+  p = 0.052; in a 1x4 row an end square abuts one same-coloured neighbour and a middle
+  square two). Randomising the slot with a shuffled permutation per group fixes the
+  exposure; the guess bias enters the likelihood as overdispersion and costs a shallower
+  slope and a larger lapse than the eyes deserve.
 - **A discrimination floor is not a conspicuity floor.** These are different perceptual
   questions and conflating them cost real trials. A dE threshold answers "can two patches
   be told apart, side by side, at 104 px". Finding one highlighted token in a page of code
