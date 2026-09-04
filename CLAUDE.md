@@ -26,45 +26,65 @@ engineering contract, including the procedure for several agents working at once
 The instrument is served at `127.0.0.1:2919` (`pixi run serve`) and answered daily. The
 analysis notebook reads the log and reports what the model believes.
 
-Open questions, most valuable first:
+Open questions, most valuable first. Figures are from 192 responses, 127 duels.
 
-1. **Both polarities are plateaus** (leader ~16-18% of the probability of being best). The
-   model has no strong opinion among the shelf's members and a person's eye does — that is
-   the intended division of labour, not a failure to converge. Applying a champion is one
-   command.
-2. **Night is the thinner half** and its surface reading (p = 0.09 over 32 duels) is the
-   one live hint that a single theme might be the wrong shape of answer. It needs roughly
-   twice the duels to settle either way.
-3. **The find-highlight axes.** Axis 8 ranks high for preference, and the legibility
-   surface could not resolve its effect on speed at 29 uniform hunts. Active hunting plus
-   the new conspicuity floor should fix that; re-read around 60 hunts.
-4. **Preference versus speed.** The point estimate says the leader is about 1.5x slower
+**Needs clicks, not code.** These are measurement limits; no engineering removes them.
+
+1. **The size exponent is unidentified**, and it is the most valuable measurement available
+   anywhere in the project. Every vision trial to date was shown at one patch size, so the
+   parameter that scales a discrimination threshold down to glyph size has a flat posterior.
+   The separation floor therefore stands on a constant (twice the reference threshold, which
+   at 14 px encodes an exponent of 0.35) rather than on data. The vision generator already
+   cycles patch size and serves 16-px and 10-px trials from about trial 784, so this
+   resolves by running `pixi run analyse`'s sibling notebook and answering. `separation_floor`
+   switches regime on its own once it does.
+2. **Night is the thinner half.** Day sits at a leader of 40% with a credible set of 5;
+   night is 16% with a set of 14 over 64 duels. Night also carries the one live hint that a
+   single theme might be the wrong shape of answer (surface interaction, p = 0.09).
+3. **Day is close enough to choose by eye.** A five-theme plateau is the model saying it
+   cannot separate them, which is where a person's judgement is the better instrument.
+4. **The find-highlight axes.** Axis 8 ranks high for preference and the legibility surface
+   could not resolve its effect on speed at 29 uniform hunts. Active hunting plus the
+   conspicuity floor should fix it; re-read around 60 hunts.
+5. **Preference versus speed.** The leader's point estimate is about 1.5x slower to read
    than the quickest page the model knows, with an interval far too wide to act on. The
    verdict flips to a warning on its own if it ever clears zero.
-5. **The 12-13px legacy.** Duels before 2026-09-04 were judged at a size nobody reads code
-   at. The factor test says the old and new regimes pool, but that reading is weak and
-   worth repeating as the new size accumulates.
-6. **Regenerate `data/measured-theme.json`.** It has been stale since the contrast floors
-   tightened: `p_best` moved 0.1772 to 0.2021 by day and 0.146 to 0.1694 by night. The
-   palette itself is byte-identical, so the winner did not move. Note that opening the
-   analysis notebook rewrites this tracked file as a documented side effect, so `git status`
-   goes dirty on every read — worth deciding whether it should be tracked at all, since by
-   the project's own rule it is derived rather than measured.
-7. **`theme/space.py`'s `theta_key` rounding** costs about 18 ms of a warm trial across
-   18,981 `round` calls.
-8. **Promote the model review's characterization harness into `tests/`** — 2191 comparisons
-   over 39 entry points, currently only in a session scratchpad.
-9. **The role plan is calibrated for 14-line pages** while every caller asks for 28, so
-   `role_error` never lands inside its tolerance and the tolerance is enforced nowhere. Not
-   invalidating — per-role counts stay tight across seeds — but changing the plan changes
-   the stimulus, so it is a measurement decision rather than a refactor.
-7. **Deferred performance work, measured but not done.** The permutation test in
-   `factor_effect` is 60,000 solves of an 11x11 system inside two Python loops; folding the
-   permutations into one batched array operation is worth about 8 s per analysis pass and
-   most of the test suite's runtime. And the suite has no parallelism — `pytest -n auto`
-   would take roughly 4x off it. Neither is a GPU candidate: the operands are tiny, and a
-   kernel launch costs more than the work.
-8. **Repo hygiene.** No CI, no pre-commit config, no LICENSE. Nothing blocking, but this is
-   a public repo without the furniture a public repo usually has.
-9. **Screen calibration.** No ICC profile, which bounds absolute colour claims but not the
-   relative structure the instrument learns.
+
+**Code, and mine to do.**
+
+6. **Vision has no timing channel.** Reaction time carries information about distance from
+   threshold, which the duels demonstrated, so adding it would sharpen thresholds from
+   clicks already being made. It requires the timing guarantees a notebook cannot give, so
+   it means moving the vision trials into the web app as a fourth arm. Deliberately queued
+   behind item 1: the binding constraint today is the exponent, and the notebook already
+   collects it.
+7. **No observer-fit provenance on a response.** Tightening a threshold silently re-bases
+   every past duel. Pixel size already has this discipline; the thresholds need the same
+   stamp.
+8. **The memorisation-confounded rows are not excluded automatically.** 116 of 192 responses
+   used one of four repeated pages. They are flagged and excludable, but nothing excludes
+   them.
+9. **Regenerate `data/measured-theme.json`**, stale since the floors tightened (day
+   `p_best` moved from 0.1772 to 0.2021; the palette is byte-identical, so the winner did not move). And
+   decide whether it should be tracked at all: by this project's own rule it is derived
+   rather than measured, and reading the analysis rewrites it, so `git status` goes dirty.
+10. **Smaller, measured, undone.** The permutation test is 60,000 solves of an 11x11 system
+    inside two Python loops and folds into one batched operation. The suite has no
+    parallelism. `theta_key` rounding costs ~18 ms of a warm trial. `REALIZE_CACHE` grows
+    without bound in a long-lived server. None is a GPU candidate: the operands are tiny and
+    a kernel launch costs more than the work.
+11. **Latent, documented, not fixed.** The lightness bisection assumes monotonicity that
+    contrast does not have, and finds the intended root only because every ground sits at an
+    end of the range. It also cannot report failure, and the assembly step checks the
+    absolute floors but not each row's own requested ratio.
+12. **Repo hygiene.** No CI, no pre-commit config, no LICENSE.
+
+**Needs a decision from Titus.**
+
+13. **The 28 MB likelihood grid** is untracked going forward but still sits in the first
+    commit's tree. Removing it means a history rewrite and a force push to a public repo.
+14. **Screen calibration.** No ICC profile, which bounds absolute colour claims but not the
+    relative structure the instrument learns.
+15. **The role plan is calibrated for 14-line pages** while every caller asks for 28, so its
+    tolerance is never met and is enforced nowhere. Per-role counts stay tight, so nothing is
+    invalidated, but changing the plan changes the stimulus.
