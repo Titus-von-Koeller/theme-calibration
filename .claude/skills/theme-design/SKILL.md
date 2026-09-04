@@ -259,6 +259,58 @@ interact, and choose the best combination — every step from measurement.
   nothing. Scope specificity still beats order, which is usually what you want: a
   hand-written `variable.parameter` survives a generated `variable`, so refinements the
   instrument does not model (the body-versus-definition split) are not flattened by it.
+- **A discrimination floor is not a conspicuity floor.** These are different perceptual
+  questions and conflating them cost real trials. A dE threshold answers "can two patches
+  be told apart, side by side, at 104 px". Finding one highlighted token in a page of code
+  is visual SEARCH: the target has to win against every distractor at a glance, which takes
+  many multiples of a discrimination step. The instrument required only 1.5x the threshold
+  between the current highlight and the ground, so themes at ~2x came through — and an
+  active sampler seeks exactly those out, because an unexplored corner is where a GP's
+  variance is highest. Measured over 33 hunts: salience correlates with log find time at
+  −0.43 (day) and −0.37 (night), and splitting at the median gives 3489 ms against 2066
+  (day), 2897 against 2225 (night). A faint highlight costs over a second, which measures
+  patience rather than the theme. The floor is now 4x the measured threshold.
+- **Put a stimulus floor on the ARM whose measurement it protects, not on the whole
+  space.** A quiet highlight is a legitimate thing to PREFER, and the axis exists to find
+  that trade-off, so duels must keep exploring it. What a faint highlight destroys is the
+  timed hunt. Filtering the candidate grid BEFORE the acquisition, rather than rejecting
+  after, also keeps the chosen trial the best available one rather than the first
+  acceptable one.
+- **Check a floor on the pixels that render, not on the values that were solved for.** The
+  bisection converged correctly to Lc 60.27 and 60.06; rounding to 8-bit hex moved those by
+  up to 0.38, and the check ran before the rounding — so themes shipped at 59.89 and 59.83
+  against their own 60 floor, and the comment claiming the floors were "checked on what
+  will actually render" was false. Quantize, then check. A floor is a promise about pixels.
+- **Equivalence testing cannot find a bug both implementations share.** 842 byte-identical
+  realizations proved a batched rewrite faithful and proved the floor bug above was NOT a
+  regression — both valuable — but could never have found the bug itself, because the old
+  and new code were wrong in the same way. Only a property test asking whether the
+  invariant holds for EVERY theta found it. Use characterization tests to prove a refactor
+  faithful; use property tests to ask whether the thing was ever right.
+- **State what each pair of roles is owed, and why it differs.** Writing the separation rule
+  as "every pair clears 2x the threshold" fails immediately and correctly: comment and ink
+  are MEANT to sit closer, because both are neutral text and a comment is a deliberate step
+  quieter than body ink. Accents pairwise and against ink get 2x (they carry meaning by
+  hue); comment against ink gets 1x, with the italic carrying the rest; the highlight gets
+  1.5x against the ground and 1x against its siblings.
+- **The instrument's own chrome must never wear the theme under test.** The prompt, the
+  chip, the progress and the gate are furniture; a theme being judged must not colour the
+  frame it is judged in. And the chrome's ink has to follow the surround, which flips with
+  polarity: a stylesheet that asserted one colour rendered the instruction and the begin
+  button at about 1.1:1 on light pages, which is an invisible instrument.
+- **The clock starts when the participant asks, never on render.** A page that reveals on
+  load times however long it took to look at the screen, and a tab opened and left times an
+  empty room. Gate the first trial of every sitting; inside a run, reveal at once, since
+  that is the point of batching a run.
+- **A timed task must own the DOM it measures against.** The trial surface was a notebook
+  widget, and the notebook rebuilt it on every answer. That needed three separate
+  workarounds — reparenting the stage to escape the host's stacking context, a page-owned
+  persistent overlay so loading placeholders did not flash between trials, and a
+  render-generation guard so a stale render could not clobber a live one — and still lost a
+  race that left an empty full-screen stage over the page. Three workarounds for one
+  missing guarantee is the signal to change the architecture, not to add a fourth.
+- **Verify the click path as a path.** Every unit passed while the trial vanished from the
+  screen. A suite that only checks the model's arithmetic cannot see that.
 - A surface's beauty is allowed to vote and never to overrule the instruments; Titus's eyes
   outrank both — his comparison across a gallery row is the final measurement.
 - Verify a theme change by **pixel-sampling a screenshot against the expected hexes**, never by
