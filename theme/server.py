@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 """The trial instrument, as a web app that owns its own page.
 
-Why this exists. The trials used to live in a marimo anywidget, and marimo tears the
+Why this exists. The trials used to live in a notebook widget, and that notebook tears the
 widget down and rebuilds it on every answer. A timed psychophysics task cannot work that
-way: the DOM it measures against has to outlive the measurement. The notebook version
-needed three separate workarounds for not owning its mount -- reparenting to <body> to
-escape marimo's stacking context, a page-owned persistent stage so loading placeholders
-did not flash between trials, and a render-generation guard so a stale render could not
-clobber a live one -- and still lost a race that left an empty full-screen stage over the
-page (reproduced on the versions both before and after the styling change, so it was never
-about styling).
+way: the DOM it measures against has to outlive the measurement. That version needed three
+separate workarounds for not owning its mount -- reparenting to <body> to escape the host's
+stacking context, a page-owned persistent stage so loading placeholders did not flash
+between trials, and a render-generation guard so a stale render could not clobber a live
+one -- and still lost a race that left an empty full-screen stage over the page (reproduced
+on the versions both before and after the styling change, so it was never about styling).
 
 Here the page is built once and never rebuilt. Trials arrive as JSON and only the contents
 change. There is no teardown, no reparenting, no z-index war, and no skew token on the path
@@ -43,14 +42,14 @@ async def warm_the_model(_app: FastAPI):
     A fresh process pays about 3.3 s for the first trial: the reaction-time exponent is
     chosen by five-fold cross-validation over four candidate values, which is twenty
     Laplace fits, and it is memoised only once it has run. Paying that at boot costs
-    nobody anything -- the server starts while Titus is still opening the tab -- whereas
-    paying it on his first answer puts three seconds inside a measurement.
+    nobody anything -- the server starts while the tab is still being opened -- whereas
+    paying it on the first answer puts three seconds inside a measurement.
     """
     try:
         answered = responses.DEFAULT_LOG.read()
         payload(len(answered), answered)
     except Exception as exc:  # a warm-up must never stop the app from serving
-        print(f"warm-up skipped: {exc}")
+        print(f"warm-up skipped, so the first trial will pay for the fit: {exc!r}")
     yield
 
 
@@ -76,31 +75,32 @@ def page_for(trial: dict) -> dict:
     )
 
 
-def payload(n: int, answered: list[dict]) -> dict:
-    """Everything the page needs to show trial n, and nothing it does not.
+def _stage(n: int, trial: dict, page: dict) -> dict:
+    """The stimulus itself: the instruction, and the card HTML to put on screen.
 
-    The HTML for each candidate page is rendered here rather than in the browser because
-    the tokenizer, the role colours and the floors all live in Python; the page's job is
-    to display it, time it, and report a click.
+    Rendered here rather than in the browser because the tokenizer, the role colours and
+    the floors all live in Python; the page's job is to display it, time it, and report a
+    click.
     """
-    trial = trial_for(n, answered)
-    polarity, _arm, position, run_length = run_info(n, len(answered))
-    page = page_for(trial)
-    is_duel = trial["mode"] == "duel"
     prompt, cards, current_match = trialspec.stimulus_for(n, trial, page)
     return {
-        "n": n,
         "mode": trial["mode"],
-        "polarity": polarity,
-        "is_duel": is_duel,
-        "chip": f"{ARM_LABEL[trial['mode']]} · {polarity} page",
+        "is_duel": trial["mode"] == "duel",
         "prompt_html": prompt,
         "cards": cards,
         "find_current": current_match,
-        # A duel keeps the polarity's neutral surround, since painting the page with either
-        # candidate's ground would advantage it; a single-card trial paints the page with
-        # the theme under test, which is what a theme owning the screen actually looks like.
-        "page_bg": (responses.DUEL_SURROUND[polarity] if is_duel else trial["theme_a"]["ground"]),
+    }
+
+
+def _chrome(trial: dict, polarity: str, position: int, run_length: int) -> dict:
+    """The instrument's own furniture around the stimulus."""
+    is_duel = trial["mode"] == "duel"
+    return {
+        "polarity": polarity,
+        "chip": f"{ARM_LABEL[trial['mode']]} · {polarity} page",
+        # The same rule the recorded row uses, from the same place, so the row cannot
+        # describe a surround other than the one painted.
+        "page_bg": responses.surround_for(trial, polarity),
         # The instrument's OWN chrome -- prompt, chip, progress, the gate -- has to contrast
         # with whatever surround this trial paints, and the surround flips with polarity. A
         # stylesheet cannot know that, so it is sent per trial. Getting it wrong is not
@@ -113,6 +113,21 @@ def payload(n: int, answered: list[dict]) -> dict:
         # click is spent re-reading it mid-stride.
         "gate": position == 0,
         "gate_text": trialspec.gate_text_for(trial["mode"], polarity, run_length),
+    }
+
+
+def payload(n: int, answered: list[dict]) -> dict:
+    """Everything the page needs to show trial n, and nothing it does not.
+
+    The keys here are a contract with static/app.js and are read nowhere else.
+    """
+    trial = trial_for(n, answered)
+    polarity, _arm, position, run_length = run_info(n, len(answered))
+    page = page_for(trial)
+    return {
+        "n": n,
+        **_stage(n, trial, page),
+        **_chrome(trial, polarity, position, run_length),
     }
 
 
@@ -149,10 +164,15 @@ class Answer(BaseModel):
 def api_response(a: Answer, log: LogDep) -> dict:
     """Append one answer, then hand back the next trial in the same round trip.
 
-    The guard is the same one the notebook had and matters for the same reason: the trial
-    is recomputed from the LOG at record time, never read from whatever the page happened
-    to be holding, so a stale page cannot mis-record. A click for a trial that is no longer
-    next is dropped rather than written to the wrong row.
+    The guard matters for the reason it always did: the trial is recomputed from the LOG at
+    record time, never read from whatever the page happened to be holding, so a stale page
+    cannot mis-record. A click for a trial that is no longer next is dropped rather than
+    written to the wrong row, and the page is handed the trial it should be showing.
+
+    What makes that safe is that `trial_for` is a pure function of the trial number and the
+    rows before it, so the trial rebuilt here is the same one the page was shown -- with no
+    dependence on anything cached in this process, and therefore none on whether the server
+    has restarted since the page loaded.
     """
     answered = log.read()
     if a.n != len(answered):
@@ -167,7 +187,7 @@ def api_response(a: Answer, log: LogDep) -> dict:
 @app.get("/api/status")
 def api_status(log: LogDep) -> dict:
     rows = log.read()
-    duels = sum(1 for r in rows if r.get("mode") == "duel")
+    duels = sum(1 for row in rows if row.get("mode") == "duel")
     return {"responses": len(rows), "duels": duels}
 
 
