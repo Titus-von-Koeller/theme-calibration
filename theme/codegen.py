@@ -1,10 +1,10 @@
 """Fresh, unfamiliar code stimuli for the aesthetics instrument — one snippet per trial.
 
-calibrate-aesthetics.py times how long Titus takes to find a named function in a page of
-code and reads that time as legibility. It cannot, while the corpus is four snippets from
-his own repo: of 116 recorded trials `tensor-ops` was drawn 46 times, and by a page's
-fortieth showing the answer's position is recalled rather than found. The log already
-shows the damage — across the twenty comprehension probes no theme axis separates from
+The instrument times how long the reader takes to find a named function in a page of code
+and reads that time as legibility. It cannot, while the corpus is four snippets from the
+reader's own repository: of 116 recorded trials `tensor-ops` was drawn 46 times, and by a
+page's fortieth showing the answer's position is recalled rather than found. The log
+already shows the damage — across the twenty comprehension probes no theme axis separates from
 reaction time (median |r| 0.12 over the nine axes, largest 0.48, none of it surviving
 nine comparisons at n = 20), while find-hunt time falls steadily with trial index
 (r = -0.47, n = 17). A practice curve on a memorized corpus is what was being measured.
@@ -17,13 +17,13 @@ does both jobs:
   a difference between themes rather than between pages. Identifiers are invented from
   morpheme lists, which makes novelty structural instead of hoped for: a permutation of
   the seed chooses the names, so seeds under ~17 million apart cannot yield the same page.
-- **obscure stdlib**, sliced out of modules he is unlikely to have opened. Real code
+- **obscure stdlib**, sliced out of modules the reader is unlikely to have opened. Real code
   carries the irregular line lengths, comment placement and naming a grammar smooths away,
   and a legibility number measured only on synthetic text has no claim on the editor.
 
-Torch-free and stdlib-only on purpose: the instrument serves under `marimo run`, which
-instantiates in a worker thread, and importing torch from a non-main thread can die
-mid-import — the same constraint that split _palette.py out of _viz.py.
+Torch-free and stdlib-only on purpose: the analysis surface runs the instrument's modules
+under `marimo run`, which instantiates in a worker thread, and importing torch from a
+non-main thread can die mid-import.
 
 The returned dict is a drop-in for one of the instrument's own snippet records (`spans`
 carry the same role tokenization; `fn_ids` and `ident_ids` index into them), plus the
@@ -53,8 +53,8 @@ MAX_WIDTH = 100
 DUEL_WIDTH = 64  # a duel's column: short enough that both pages sit near the centre
 # of the screen. Two 80-column pages aligned inward still spanned 58% of a 2560px
 # panel and read as two edge-ward blocks; 64 brings the pair into the middle where an
-# 8K screen is viewed straight on (Titus). It is a ceiling, not a target -- real code
-# lines are shorter than it more often than not.
+# 8K screen is viewed straight on. It is a ceiling, not a target -- real code lines are
+# shorter than it more often than not.
 # Nesting past this reads as a different task, and a page indented off the left margin is
 # mostly whitespace; both are stimulus changes wearing a theme's clothes.
 MAX_NESTING = 4
@@ -66,7 +66,7 @@ EXTRACT_MAX_WIDTH = 119
 
 KINDS = ("procedural", "stdlib")
 
-# Roles as `_role_spans` labels them. `punct` is deliberately unplanned: bracket and
+# Roles as `role_spans` labels them. `punct` is deliberately unplanned: bracket and
 # operator counts follow from the statements rather than being chosen.
 PLANNED_ROLES = ("comment", "string", "number", "keyword", "function", "variable")
 
@@ -139,7 +139,7 @@ _REPO_VOCAB = (
 )
 
 # Invented morphemes, drawn from joinery, landscape and bookbinding — plausible as code,
-# and nowhere near the vocabulary of this repo or of anything he reads.
+# and nowhere near the vocabulary of this repo or of the corpus under study.
 _QUALIFIERS = (
     "prime",
     "outer",
@@ -318,30 +318,63 @@ _ALT_NUMS = ("0.5", "1.5", "2.25", "0.125", "6", "9", "11", "24", "48")
 _THIRD_NUMS = ("5", "10", "13", "20", "36", "72")
 
 
-def _role_spans(code):
-    """Role spans via the stdlib tokenizer: text, role, and the token's line and column.
+# Token types that carry no role: they are layout, not text the reader sees coloured.
+_UNROLED = (tokenize.NEWLINE, tokenize.NL, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER)
 
-    Duplicated from the instrument's own cell rather than shared, because a marimo cell's
-    underscore-prefixed helper is cell-local and cannot be imported. The semantics have to
-    stay identical — the instrument colors and click-targets these spans — so `_render`
-    below reconstructs the source out of them and `_finish` refuses any page whose
-    reconstruction is not the source. That is the same walk the instrument's renderer
-    performs, so it fails here rather than as mangled code on a card.
+# f-strings tokenize as START/MIDDLE/END around their embedded expressions. Looked up by
+# getattr with distinct negative defaults, so an interpreter that drops one of them cannot
+# make the tuple collide with a real token type.
+_FSTRING_TYPES = (
+    getattr(tokenize, "FSTRING_START", -1),
+    getattr(tokenize, "FSTRING_MIDDLE", -2),
+    getattr(tokenize, "FSTRING_END", -3),
+)
+
+# Operators after which a NAME reads as a definition or member name rather than a fresh
+# binding. Single characters only, and membership is tested against this string, so a
+# multi-character operator (`**`, `:=`) correctly does not qualify.
+_ROLE_SIGNIFICANT_OPS = "()[]{}.,:"
+
+
+def _following_significant(toks):
+    """For each token index, the next token that is neither NL nor NEWLINE.
+
+    One backward pass instead of re-scanning the tail per NAME — the scan-per-name version
+    sliced the token list to do it, which made classification quadratic in page length for
+    no gain (measured: 445 us per 29-line page, 399 us once the slice was gone).
     """
-    spans = []
+    following = [None] * len(toks)
+    ahead = None
+    for i in range(len(toks) - 1, -1, -1):
+        following[i] = ahead
+        if toks[i].type not in (tokenize.NL, tokenize.NEWLINE):
+            ahead = toks[i]
+    return following
+
+
+def _tagged_tokens(code):
+    """[(token, role)] for every token in `code` that carries a role.
+
+    The one place a token's role is decided. Two callers need that decision and need it to
+    agree exactly: `role_spans` builds the records the instrument colours and
+    click-targets, and `_role_tally` counts them for the plan search. A second classifier
+    would let the page the search was costed on differ from the page the reader sees.
+
+    Definition and call names are `function`; control words `keyword`; strings and numbers
+    are the one literal family; dotted-name reads and everything else recede as
+    variable/punct.
+    """
     toks = list(tokenize.generate_tokens(io.StringIO(code).readline))
+    following = _following_significant(toks)
+    tagged = []
     prev_sig = None
     for i, tok in enumerate(toks):
-        typ, txt, (sr, sc), (er, ec), _ = tok
-        if typ in (tokenize.NEWLINE, tokenize.NL, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER):
+        typ, txt = tok.type, tok.string
+        if typ in _UNROLED:
             continue
         if typ == tokenize.COMMENT:
             role = "comment"
-        elif typ == tokenize.STRING or typ in (
-            getattr(tokenize, "FSTRING_START", -1),
-            getattr(tokenize, "FSTRING_MIDDLE", -2),
-            getattr(tokenize, "FSTRING_END", -3),
-        ):
+        elif typ == tokenize.STRING or typ in _FSTRING_TYPES:
             role = "string"
         elif typ == tokenize.NUMBER:
             role = "number"
@@ -353,14 +386,31 @@ def _role_spans(code):
             elif prev_sig in ("def", "class"):
                 role = "function"
             else:
-                nxt = next((t2 for t2 in toks[i + 1 :] if t2.type not in (tokenize.NL, tokenize.NEWLINE)), None)
+                nxt = following[i]
                 role = "function" if (nxt is not None and nxt.string == "(") else "variable"
         else:
             role = "variable"
-        spans.append({"text": txt, "role": role, "sr": sr, "sc": sc, "er": er, "ec": ec})
-        if typ == tokenize.NAME or (typ == tokenize.OP and txt in "()[]{}.,:"):
+        tagged.append((tok, role))
+        if typ == tokenize.NAME or (typ == tokenize.OP and txt in _ROLE_SIGNIFICANT_OPS):
             prev_sig = txt
-    return spans
+    return tagged
+
+
+def role_spans(code):
+    """Role spans via the stdlib tokenizer: text, role, and the token's line and column.
+
+    The instrument's renderer addresses a page through exactly these records, which is why
+    `theme.stimulus` re-exports this function as `tokenize_roles` instead of keeping a
+    second copy: two copies of a role table drift, and the drift surfaces as a miscoloured
+    or unclickable token rather than as a failure. `_render` below reconstructs the source
+    out of the spans and `_finish` refuses any page whose reconstruction is not the source,
+    so a span-addressing mistake — f-string and multi-line-string positions are where they
+    happen — fails here rather than as mangled code on a card.
+    """
+    return [
+        {"text": tok.string, "role": role, "sr": tok.start[0], "sc": tok.start[1], "er": tok.end[0], "ec": tok.end[1]}
+        for tok, role in _tagged_tokens(code)
+    ]
 
 
 def _render(code, spans):
@@ -387,6 +437,20 @@ def _role_counts(spans):
     counts = dict.fromkeys((*PLANNED_ROLES, "punct"), 0)
     for s in spans:
         counts[s["role"]] = counts.get(s["role"], 0) + 1
+    return counts
+
+
+def _role_tally(code):
+    """Role counts straight from the classifier, allocating no span records.
+
+    The plan search costs thousands of candidate pages per trial and needs only the counts,
+    so building a six-key dict per token was most of its work: dropping them took the role
+    step from 563 to 377 microseconds per 29-line page. Identical to
+    `_role_counts(role_spans(code))` by construction — both read the same tagged tokens.
+    """
+    counts = dict.fromkeys((*PLANNED_ROLES, "punct"), 0)
+    for _tok, role in _tagged_tokens(code):
+        counts[role] = counts.get(role, 0) + 1
     return counts
 
 
@@ -736,15 +800,33 @@ def _generate(seed, n_lines, plan, attempt, max_width):
     allowed = [("comment",) if i in pinned else _BODY_IDS for i in range(len(slots))]
     picks = [rng.choice(a) for a in allowed]
 
+    # A page too wide to show is rejected before it is tokenized: the width test is a max
+    # over line lengths and the role tally is a tokenizer pass, so the cheap test goes
+    # first. UNREACHABLE is the sentinel error such a page scores -- above any reachable
+    # role error, since the plan totals a few dozen tokens.
+    UNREACHABLE = 10**6
+    costed = {}
+
     def cost(candidate):
+        """(role error, code) for one assignment of templates to slots.
+
+        Memoized on the assignment. A descent round that improves nothing at slot i still
+        re-explores slots i+1.. from the same vector the previous round did, so 6-26% of
+        the calls (measured over three seeds) ask a question already answered.
+        """
+        key = tuple(candidate)
+        if key in costed:
+            return costed[key]
         code = _assemble(rows, candidate, slot_names, nb.carrier)
         if _widest(code) > max_width:
-            return 10**6, code
-        try:
-            spans = _role_spans(code)
-        except tokenize.TokenError, IndentationError, SyntaxError:
-            return 10**6, code
-        return _role_error(_role_counts(spans), plan), code
+            answer = (UNREACHABLE, code)
+        else:
+            try:
+                answer = (_role_error(_role_tally(code), plan), code)
+            except tokenize.TokenError, IndentationError, SyntaxError:
+                answer = (UNREACHABLE, code)
+        costed[key] = answer
+        return answer
 
     # Coordinate descent, one slot fully explored at a time: a random-swap walk gets the
     # mean error low and leaves a tail of pages several tokens off the plan, and a tail is
@@ -758,11 +840,11 @@ def _generate(seed, n_lines, plan, attempt, max_width):
             for option in allowed[i]:
                 if option == picks[i]:
                     continue
-                trial = list(picks)
-                trial[i] = option
-                err, code = cost(trial)
+                candidate = list(picks)
+                candidate[i] = option
+                err, code = cost(candidate)
                 if err < best:
-                    picks, best, best_code = trial, err, code
+                    picks, best, best_code = candidate, err, code
             if best == 0:
                 break
         if best == opening:
@@ -774,7 +856,7 @@ def _generate(seed, n_lines, plan, attempt, max_width):
 # The stdlib corpus
 # ---------------------------------------------------------------------------
 
-# Modules Titus is unlikely to have opened. The obvious candidates for that are the ones
+# Modules the reader is unlikely to have opened. The obvious candidates for that are the ones
 # PEP 594 retired, so six of them (sunau, sndhdr, chunk, uu, cgitb, pipes) are simply gone
 # before 3.14 and their same-spirit survivors stand in — the list is long because how many
 # distinct blocks the corpus holds is exactly how long the freshness guarantee lasts.
@@ -914,7 +996,7 @@ def _viable_blocks(n_lines, max_width):
         if code in seen or _finish(code, "stdlib", 0, "", DEFAULT_ROLES, False, max_width) is None:
             continue
         seen.add(code)
-        out.append((name, start, code, _role_counts(_role_spans(code))))
+        out.append((name, start, code, _role_tally(code)))
     return tuple(out)
 
 
@@ -991,7 +1073,7 @@ def _finish(code, kind, seed, provenance, plan, generated, max_width=MAX_WIDTH, 
         return None
     try:
         compile(code, f"<{kind}-{seed}>", "exec")
-        spans = _role_spans(code)
+        spans = role_spans(code)
     except SyntaxError, ValueError, tokenize.TokenError, IndentationError:
         return None
     if _render(code, spans) != code.rstrip("\n"):
@@ -1019,22 +1101,24 @@ def _finish(code, kind, seed, provenance, plan, generated, max_width=MAX_WIDTH, 
     # measures which kind was drawn rather than how the theme reads (measured: 12 of 60
     # probe pages handed out a def-site target). Call sites are preferred, and the kind is
     # reported either way so a caller can require one and an analysis can check.
-    def _is_def_site(_i):
-        _line = code.split("\n")[spans[_i]["sr"] - 1]
-        return _line.lstrip().startswith("def ") and f"def {spans[_i]['text']}" in _line
+    source_lines = code.split("\n")
 
-    _calls = [i for i in candidates if not _is_def_site(i)]
-    _pool = _calls or candidates
-    if target_kind == "call" and not _calls:
+    def is_def_site(span_id):
+        line = source_lines[spans[span_id]["sr"] - 1]
+        return line.lstrip().startswith("def ") and f"def {spans[span_id]['text']}" in line
+
+    call_sites = [i for i in candidates if not is_def_site(i)]
+    eligible = call_sites or candidates
+    if target_kind == "call" and not call_sites:
         return None
     if target_kind == "def":
-        _defs = [i for i in candidates if _is_def_site(i)]
-        if not _defs:
+        def_sites = [i for i in candidates if is_def_site(i)]
+        if not def_sites:
             return None
-        _pool = _defs
-    target_id = _pool[(seed // 3) % len(_pool)]
+        eligible = def_sites
+    target_id = eligible[(seed // 3) % len(eligible)]
     target = spans[target_id]["text"]
-    target_is_def = _is_def_site(target_id)
+    target_is_def = is_def_site(target_id)
 
     # Longer wins a tie in occurrence count: the find hunt highlights every match and asks
     # which is current, so the useful stimulus is a name read rather than recognized.
@@ -1093,13 +1177,13 @@ def snippet(
     every third trial. `lines` is exact for procedural pages and within two of the request
     for stdlib ones, whose blocks are real code. `roles` overrides DEFAULT_ROLES:
     procedural pages are built to it, stdlib pages filtered toward it. `max_width` is the
+    column ceiling no line may cross; DUEL_WIDTH is the number to pass when two cards
+    share the band, since the ceiling above is what one card can hold, not two.
+
     `target_kind` may require "call" or "def" for the comprehension target: a def-site
     target is found far faster than a call-site one, so a probe that wants to measure the
     theme rather than the draw asks for "call". Leaving it None still prefers call sites
     whenever the page offers a choice.
-
-    column ceiling no line may cross; DUEL_WIDTH is the number to pass when two cards
-    share the band, since the ceiling above is what one card can hold, not two.
 
     Returns a drop-in for the instrument's snippet record — `id`, `provenance`, `code`,
     `spans`, `fn_ids`, `ident`, `ident_ids` — plus `target` (the identifier `fn_ids` names,
