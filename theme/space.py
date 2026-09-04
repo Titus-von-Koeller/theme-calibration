@@ -1,33 +1,27 @@
+"""The theme space, and how a point in it becomes a theme.
+
+Nine axes in, a full palette of hexes out -- or a refusal, when no palette at that point
+clears the floors. Two neighbours were split out of this module because they change for
+different reasons than the space does, and both are re-exported below because callers
+outside the colour layer (theme/model.py, theme/schedule.py, the analysis notebook) had
+been importing them from here:
+
+  thresholds.py   the observer-derived perceptual floors: DE_MIN and friends
+  harmony.py      Ou & Luo (2006) two-colour harmony, transcribed from the paper
+
+What stayed is what genuinely belongs to the space: the axes, the anchor colours, the
+realization, the feasible pool, and the prior standardized over that pool. raw_prior in
+particular reads theta by axis index and so cannot leave without taking the axis layout
+with it, which is why the harmony model moved and the prior did not.
+"""
+
 import math
 
-import colour
 import numpy as np
 
-from . import paths
 from .color import apca_lc, composite, hex_to_rgb, rgb_to_hex, rgb_to_ucs, solve_j, ucs_to_rgb, wcag
-from .observer import fit as observer_fit
-
-VISION_LOG = paths.VISION_LOG
-
-# The observer is fit in ONE place — observer.py, the home of the measurement <->
-# preference interlock. It refits lazily from the shared vision log (cached beside it),
-# so every new vision trial sharpens these constraints automatically and no instrument
-# carries its own copy of the model. v2 fits the psychometric slope, the lapse, a
-# chromatic confusion-axis rotation, and threshold as a smooth function of ground
-# lightness — all in CAM16-UCS, the same geometry this instrument searches.
-if VISION_LOG.exists():
-    VISION_FIT = observer_fit(VISION_LOG)
-    DE_MIN = {"day": VISION_FIT.de_min_day, "night": VISION_FIT.de_min_night}
-    THRESH_DETAIL = {"day": VISION_FIT.de_dir_day, "night": VISION_FIT.de_dir_night}
-    VISION_N = VISION_FIT.n
-else:
-    # No vision data on this machine: the v2.0 fit at 748 trials, flagged in the analysis
-    # so the substitution is never silent.
-    VISION_FIT = None
-    DE_MIN = {"day": 3.2, "night": 2.5}
-    THRESH_DETAIL = {"day": {}, "night": {}}
-    VISION_N = 0
-
+from .harmony import lab, ou_luo_pair
+from .thresholds import DE_MIN, THRESH_DETAIL, VISION_FIT, VISION_LOG, VISION_N  # noqa: F401
 
 # Theme space and its realization. Nine axes, each in [0, 1]; polarity (light page /
 # dark page) is a block factor, not an axis — trials alternate in blocks and the model
@@ -353,55 +347,6 @@ def realize(theta, polarity):
     theme = realize_uncached(theta, polarity)
     REALIZE_CACHE[key] = theme
     return theme
-
-
-# ------------------------------------------------------------------ the prior mean
-def lab(hexes):
-    """CIELAB under D65 for one or more hexes. The harmony model below is published in
-    CIELAB, so it is transcribed and evaluated there rather than in CAM16-UCS."""
-    rgb = np.atleast_2d(hex_to_rgb(hexes))
-    return colour.XYZ_to_Lab(
-        colour.sRGB_to_XYZ(rgb),
-        colour.CCS_ILLUMINANTS["CIE 1931 2 Degree Standard Observer"]["D65"],
-    )
-
-
-def ou_luo_pair(lab1, lab2):
-    """Two-colour harmony CH = HC + HL + HH, Ou & Luo (2006), transcribed from the
-    published model. Prior-mean duty only: it tilts where the search starts, the
-    responses decide where it ends.
-
-    Names below are the paper's quantities spelled out: chromatic_effect is its H_C,
-    lightness_effect its H_L, and hue_effect its H_SY summed over the two colours.
-    """
-    lightness_1, a_1, b_1 = lab1
-    lightness_2, a_2, b_2 = lab2
-    chroma_1, chroma_2 = math.hypot(a_1, b_1), math.hypot(a_2, b_2)
-    hue_1 = math.degrees(math.atan2(b_1, a_1)) % 360
-    hue_2 = math.degrees(math.atan2(b_2, a_2)) % 360
-    hue_difference = math.radians((hue_1 - hue_2 + 180) % 360 - 180)
-    hue_distance = 2 * math.sqrt(max(chroma_1 * chroma_2, 0.0)) * abs(math.sin(hue_difference / 2))
-    colour_distance = math.hypot(hue_distance, (chroma_1 - chroma_2) / 1.46)
-    chromatic_effect = 0.04 + 0.53 * math.tanh(0.8 - 0.045 * colour_distance)
-    lightness_effect = (0.28 + 0.54 * math.tanh(-3.88 + 0.029 * (lightness_1 + lightness_2))) + (
-        0.14 + 0.15 * math.tanh(-2 + 0.2 * abs(lightness_1 - lightness_2))
-    )
-
-    def hue_effect(lightness, chroma, hue):
-        chroma_weight = 0.5 + 0.5 * math.tanh(-2 + 0.5 * chroma)
-        hue_preference = -0.08 - 0.14 * math.sin(math.radians(hue + 50)) - 0.07 * math.sin(math.radians(2 * hue + 90))
-        yellowness = (90 - hue) / 10
-        # y - exp(y) peaks at -1, so the exponent can never overflow; the cap is belt and
-        # braces against a hue arriving outside [0, 360).
-        yellow_effect = ((0.22 * lightness - 12.8) / 10) * math.exp(min(yellowness - math.exp(yellowness), 50))
-        return chroma_weight * (hue_preference + yellow_effect)
-
-    return (
-        chromatic_effect
-        + lightness_effect
-        + hue_effect(lightness_1, chroma_1, hue_1)
-        + hue_effect(lightness_2, chroma_2, hue_2)
-    )
 
 
 def raw_prior(theta, polarity, theme):
