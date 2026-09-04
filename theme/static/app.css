@@ -56,3 +56,10 @@ body.duel #cards { gap: 0; align-items: stretch; height: 100%; }
 #cover-text { margin: 0; opacity: .75; font-size: 17px; max-width: 38em; text-align: center; line-height: 1.5; }
 #go { font-size: 16px; padding: 8px 26px; letter-spacing: .02em; }
 #cards[data-hidden="1"] { visibility: hidden; }
+
+/* One block child per card, holding the stimulus's own sibling blocks in normal flow.
+   Capped so a page cannot sprawl toward the edges of a very wide screen: about 64
+   columns of 14px monospace is 580px, and a page wider than the text it holds only
+   moves the text further off-axis. */
+.page { max-width: 640px; width: 100%; }
+body.duel .page { max-width: 640px; }

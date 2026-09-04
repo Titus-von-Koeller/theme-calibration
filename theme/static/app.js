@@ -52,16 +52,28 @@ function show(t) {
   el.keys.textContent = t.keys;
   el.progress.textContent = t.progress;
   el.prompt.innerHTML = t.prompt_html;
+  // Each card's HTML is a SEQUENCE of sibling blocks -- prose, the code card, an output
+  // line -- so it goes inside one block child. Handing the siblings straight to a flex
+  // row lays them out left-to-right instead of stacking them, which squeezes the code to
+  // a third of the half and clips it mid-token. That has now happened twice; the wrapper
+  // is what prevents it.
+  //
+  // A duel hugs the centre line: the left page is pushed right and the right page pushed
+  // left, so both sit inside the middle half of a very wide screen. On a large flat
+  // monitor the outer thirds are seen at a slant, and a colour judged at a slant is a
+  // different colour -- pushing the pages inward keeps both in the straight-on zone while
+  // staying symmetric, so neither candidate gains from where it sits.
   el.cards.innerHTML = t.cards
-    .map(
-      (c, i) =>
-        `<div class="card" data-i="${i}" style="background:${c.ground};${
-          t.is_duel
-            ? `flex:1 1 0;min-width:0;overflow:hidden;padding:26px 34px;display:flex;` +
-              `align-items:center;cursor:pointer;justify-content:${i === 0 ? "flex-end" : "flex-start"}`
-            : "padding:28px 32px;max-width:min(1100px,92vw);min-width:0;overflow:hidden"
-        }">${c.html}</div>`
-    )
+    .map((card, index) => {
+      const half = t.is_duel
+        ? `flex:1 1 0;min-width:0;overflow:hidden;padding:26px 34px;display:flex;` +
+          `align-items:center;cursor:pointer;justify-content:${index === 0 ? "flex-end" : "flex-start"}`
+        : "padding:28px 32px;min-width:0;overflow:hidden;display:flex;justify-content:center";
+      return (
+        `<div class="card" data-i="${index}" style="background:${card.ground};${half}">` +
+        `<div class="page">${card.html}</div></div>`
+      );
+    })
     .join("");
   el.cover.style.background = t.page_bg;
   // Gated at the start of a run, and ALWAYS on the first trial after a page load --
