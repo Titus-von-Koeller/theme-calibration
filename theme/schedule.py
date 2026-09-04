@@ -340,9 +340,26 @@ def _conspicuous_grid(grid, polarity):
     return sorted(built, key=lambda pair: -pair[1]["salience"])[:1]
 
 
+def _pool_theme(pool, rng):
+    index = rng.randrange(len(pool))
+    return np.array(pool[index][0]), pool[index][1]
+
+
 def _search_trial(n, history, polarity, fit, pool, rng, numpy_rng):
     base = _champion_theta(fit, polarity, pool, rng, numpy_rng, n)
     usable = _conspicuous_grid(_find_axis_grid(base), polarity)
+    if not usable:
+        # No highlight at all can be realized over this page's swept axes, so there is
+        # nothing to choose between and the sweep is skipped for a known-good page.
+        #
+        # Reachable, not defensive: the champion's own theme is realizable, but the sweep
+        # replaces axes 7 and 8 with a fixed 7x7 lattice that need not include the values
+        # that made it realizable. A base of [0.995, 0.316, 0.183, 0.88, 0.812, 0.668,
+        # 0.958, 0.926, 0.748] on the day page has all 49 variants refused. Without this the
+        # arm raised on an empty list, which on the click path means a 500 and a stalled
+        # sitting.
+        theta, theme = _pool_theme(pool, rng)
+        return _search_dict(n, polarity, theta, theme)
     # Sweep the find axes where the LEGIBILITY SURFACE is least certain, not uniformly.
     # Measured after 29 uniform hunts: the surface's posterior sd along these axes (~0.38
     # log-units, a factor of 1.5 in time) dwarfed the effect it was trying to see (a 10-15%
@@ -357,8 +374,11 @@ def _search_trial(n, history, polarity, fit, pool, rng, numpy_rng):
     else:
         theta, theme = usable[rng.randrange(len(usable))]
     if theme is None:
-        index = rng.randrange(len(pool))
-        theta, theme = np.array(pool[index][0]), pool[index][1]
+        theta, theme = _pool_theme(pool, rng)
+    return _search_dict(n, polarity, theta, theme)
+
+
+def _search_dict(n, polarity, theta, theme):
     return {
         "mode": "search",
         "surface": "editor",

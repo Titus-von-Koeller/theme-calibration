@@ -6,10 +6,14 @@ so determinism here is not a nicety, it is what makes every archived response de
 stimulus that was actually shown.
 """
 
+import random
+
+import numpy as np
 import pytest
 
 from theme import responses, schedule
 from theme.schedule import duel_surface, run_info, schedule_mode, trial_for
+from theme.space import POOL
 from theme.stimulus import READING_PX, SURFACES
 
 BLOCK = 24  # trials per polarity block
@@ -121,3 +125,18 @@ def test_the_memo_never_serves_a_trial_built_from_a_different_log(answered):
     assert (with_none["mode"], with_none["theta_a"]) != (with_history["mode"], with_history["theta_a"]), (
         "an empty history must not be answered from the cached full-history trial"
     )
+
+
+def test_a_find_hunt_survives_a_page_whose_highlight_cannot_be_realized():
+    """The sweep replaces the find axes with a fixed lattice, which need not contain the
+    values that made the champion's own theme realizable -- so every variant can be refused
+    at once, leaving nothing to choose between. That raised on an empty list, which on the
+    click path is a 500 and a stalled sitting. The base below is such a page."""
+    base = np.array([0.995, 0.316, 0.183, 0.88, 0.812, 0.668, 0.958, 0.926, 0.748])
+    assert schedule._conspicuous_grid(schedule._find_axis_grid(base), "day") == [], (
+        "this base no longer refuses every variant -- find another, or drop this test"
+    )
+    trial = schedule._search_trial(0, [], "day", None, POOL["day"], random.Random(0), np.random.default_rng(0))
+    assert trial["mode"] == "search"
+    assert trial["theme_a"] is not None, "a hunt with no theme is a blank page"
+    assert trial["code_px"] == READING_PX["editor"]
