@@ -1,5 +1,6 @@
 import math
 
+import colour
 import numpy as np
 
 from . import paths
@@ -8,20 +9,21 @@ from .observer import fit as observer_fit
 
 VISION_LOG = paths.VISION_LOG
 
-# The observer is fit in ONE place — _observer.py, the home of the measurement<->
+# The observer is fit in ONE place — observer.py, the home of the measurement <->
 # preference interlock. It refits lazily from the shared vision log (cached beside it),
 # so every new vision trial sharpens these constraints automatically and no instrument
 # carries its own copy of the model. v2 fits the psychometric slope, the lapse, a
 # chromatic confusion-axis rotation, and threshold as a smooth function of ground
-# lightness — all in CAM16-UCS, the same geometry this notebook searches.
+# lightness — all in CAM16-UCS, the same geometry this instrument searches.
 if VISION_LOG.exists():
     VISION_FIT = observer_fit(VISION_LOG)
     DE_MIN = {"day": VISION_FIT.de_min_day, "night": VISION_FIT.de_min_night}
     THRESH_DETAIL = {"day": VISION_FIT.de_dir_day, "night": VISION_FIT.de_dir_night}
     VISION_N = VISION_FIT.n
 else:
-    # No vision data on this machine: the v2.0 fit at 748 trials (2026-09-03),
-    # flagged in the analysis so the substitution is never silent.
+    # No vision data on this machine: the v2.0 fit at 748 trials, flagged in the analysis
+    # so the substitution is never silent.
+    VISION_FIT = None
     DE_MIN = {"day": 3.2, "night": 2.5}
     THRESH_DETAIL = {"day": {}, "night": {}}
     VISION_N = 0
@@ -47,8 +49,8 @@ AXES = [
 # anchors carry alpha in the theme file and are composited onto their page before any
 # appearance math (the rule that caught the 30%-alpha comments). Literals are ONE
 # family on purpose: Horizon's day string #F6661E and number #F77D26 sit ~3 dE apart
-# in CAM16-UCS — inside 2x your measured day threshold — so a string/number split
-# would search a distinction your eyes cannot cash.
+# in CAM16-UCS — inside 2x the measured day threshold — so a string/number split would
+# search a distinction the eye cannot resolve.
 ANCHORS = {
     "day": {
         "keyword": "#8A31B9",
@@ -67,10 +69,11 @@ ROLE_ORDER = ("keyword", "function", "string")
 
 
 def anchor_polar(polarity):
-    _ucs = rgb_to_ucs(hex_to_rgb([ANCHORS[polarity][r] for r in ROLE_ORDER]))
-    _m = np.linalg.norm(_ucs[:, 1:], axis=1)
-    _h = np.degrees(np.arctan2(_ucs[:, 2], _ucs[:, 1])) % 360
-    return _h, _m
+    """The anchor hues (degrees) and chromas of one polarity's accent roles."""
+    ucs = rgb_to_ucs(hex_to_rgb([ANCHORS[polarity][role] for role in ROLE_ORDER]))
+    chroma = np.linalg.norm(ucs[:, 1:], axis=1)
+    hue = np.degrees(np.arctan2(ucs[:, 2], ucs[:, 1])) % 360
+    return hue, chroma
 
 
 ANCHOR_HM = {p: anchor_polar(p) for p in ("day", "night")}
@@ -83,14 +86,18 @@ PRIOR_CACHE = {}
 
 
 def theta_key(theta, polarity):
-    return (tuple(round(float(_v), 6) for _v in theta), polarity)
+    """The cache key for one candidate. Thetas within 1e-6 on every axis are one point:
+    that is far finer than 8-bit quantization can express, so collapsing them cannot
+    change a rendered theme, and it lets a re-proposed candidate hit the cache."""
+    return (tuple(round(float(value), 6) for value in theta), polarity)
 
 
-# NOTE (marimo name mangling, measured 2026-09-03): a cell-local (underscore) name
-# referenced from inside an exported function resolves only if it is defined ABOVE
-# that function in the cell — a later definition stays unmangled in the function body
-# and NameErrors at call time under `marimo run`, invisibly to script execution.
-# Helpers therefore precede their exported callers.
+# NOTE (marimo name mangling): this code also exists as marimo cells in the analysis
+# notebook, and there a cell-local (underscore) name referenced from inside an exported
+# function resolves only if it is defined ABOVE that function in the cell — a later
+# definition stays unmangled in the function body and NameErrors at call time under
+# `marimo run`, invisibly to script execution. Nothing in this module is cell-local any
+# more, but helpers still precede their callers here so the two stay transposable.
 # The roles solve_j walks to the contrast bar, in the order their rows appear.
 WALKED_ROLES = ("keyword", "function", "string", "ink", "comment", "punct")
 #: APCA floors per walked role. Body tokens carry meaning; comments are context.
@@ -284,8 +291,8 @@ def _realize_batch(thetas, polarity):
 #: the active sampler sought exactly those out because an unexplored corner is where a
 #: GP's variance is highest.
 #:
-#: 4x, from his own hunts. Over 33 usable trials, salience correlates with log find time at
-#: -0.43 (day) and -0.37 (night) -- more conspicuous really is faster -- and splitting at
+#: 4x, from the logged hunts. Over 33 usable trials, salience correlates with log find time
+#: at -0.43 (day) and -0.37 (night) -- more conspicuous really is faster -- and splitting at
 #: the median gives 3489 ms against 2066 ms by day, 2897 against 2225 by night. A faint
 #: highlight costs well over a second, which is not a measurement of the theme but of
 #: patience. 4x excludes roughly the slowest quarter of what has been shown.
@@ -337,97 +344,118 @@ def realize(theta, polarity):
     """theta in [0,1]^9 -> a full, floor-satisfying theme (hexes + meta), or None when
     the hard constraints cannot be met. Floors are constraints, never objectives: WCAG
     4.5:1 and APCA |Lc| >= 60 for body tokens (comments >= 4.5:1, |Lc| >= 45), and
-    pairwise CAM16-UCS separation >= 2x your measured 104-px threshold between any two
+    pairwise CAM16-UCS separation >= 2x the measured 104-px threshold between any two
     colored roles and ink — doubled because discrimination collapses toward glyph
     scale; the comprehension probes measure the truth of that margin directly."""
-    _key = theta_key(theta, polarity)
-    if _key in REALIZE_CACHE:
-        return REALIZE_CACHE[_key]
-    _theme = realize_uncached(theta, polarity)
-    REALIZE_CACHE[_key] = _theme
-    return _theme
+    key = theta_key(theta, polarity)
+    if key in REALIZE_CACHE:
+        return REALIZE_CACHE[key]
+    theme = realize_uncached(theta, polarity)
+    REALIZE_CACHE[key] = theme
+    return theme
 
 
 # ------------------------------------------------------------------ the prior mean
 def lab(hexes):
-    _xyz = np.atleast_2d(hex_to_rgb(hexes))
-    import colour as _colour
-
-    return _colour.XYZ_to_Lab(
-        _colour.sRGB_to_XYZ(_xyz),
-        _colour.CCS_ILLUMINANTS["CIE 1931 2 Degree Standard Observer"]["D65"],
+    """CIELAB under D65 for one or more hexes. The harmony model below is published in
+    CIELAB, so it is transcribed and evaluated there rather than in CAM16-UCS."""
+    rgb = np.atleast_2d(hex_to_rgb(hexes))
+    return colour.XYZ_to_Lab(
+        colour.sRGB_to_XYZ(rgb),
+        colour.CCS_ILLUMINANTS["CIE 1931 2 Degree Standard Observer"]["D65"],
     )
 
 
 def ou_luo_pair(lab1, lab2):
     """Two-colour harmony CH = HC + HL + HH, Ou & Luo (2006), transcribed from the
-    published model. Prior-mean duty only: it tilts where the search starts, your
-    clicks decide where it ends."""
-    _L1, _a1, _b1 = lab1
-    _L2, _a2, _b2 = lab2
-    _C1, _C2 = math.hypot(_a1, _b1), math.hypot(_a2, _b2)
-    _h1, _h2 = math.degrees(math.atan2(_b1, _a1)) % 360, math.degrees(math.atan2(_b2, _a2)) % 360
-    _dhab = math.radians((_h1 - _h2 + 180) % 360 - 180)
-    _dH = 2 * math.sqrt(max(_C1 * _C2, 0.0)) * abs(math.sin(_dhab / 2))
-    _dC = math.hypot(_dH, (_C1 - _C2) / 1.46)
-    _hc = 0.04 + 0.53 * math.tanh(0.8 - 0.045 * _dC)
-    _hl = (0.28 + 0.54 * math.tanh(-3.88 + 0.029 * (_L1 + _L2))) + (0.14 + 0.15 * math.tanh(-2 + 0.2 * abs(_L1 - _L2)))
+    published model. Prior-mean duty only: it tilts where the search starts, the
+    responses decide where it ends.
 
-    def _hsy(_L, _C, _h):
-        _ec = 0.5 + 0.5 * math.tanh(-2 + 0.5 * _C)
-        _hs = -0.08 - 0.14 * math.sin(math.radians(_h + 50)) - 0.07 * math.sin(math.radians(2 * _h + 90))
-        _y = (90 - _h) / 10
-        _ey = ((0.22 * _L - 12.8) / 10) * math.exp(min(_y - math.exp(_y), 50))
-        return _ec * (_hs + _ey)
+    Names below are the paper's quantities spelled out: chromatic_effect is its H_C,
+    lightness_effect its H_L, and hue_effect its H_SY summed over the two colours.
+    """
+    lightness_1, a_1, b_1 = lab1
+    lightness_2, a_2, b_2 = lab2
+    chroma_1, chroma_2 = math.hypot(a_1, b_1), math.hypot(a_2, b_2)
+    hue_1 = math.degrees(math.atan2(b_1, a_1)) % 360
+    hue_2 = math.degrees(math.atan2(b_2, a_2)) % 360
+    hue_difference = math.radians((hue_1 - hue_2 + 180) % 360 - 180)
+    hue_distance = 2 * math.sqrt(max(chroma_1 * chroma_2, 0.0)) * abs(math.sin(hue_difference / 2))
+    colour_distance = math.hypot(hue_distance, (chroma_1 - chroma_2) / 1.46)
+    chromatic_effect = 0.04 + 0.53 * math.tanh(0.8 - 0.045 * colour_distance)
+    lightness_effect = (0.28 + 0.54 * math.tanh(-3.88 + 0.029 * (lightness_1 + lightness_2))) + (
+        0.14 + 0.15 * math.tanh(-2 + 0.2 * abs(lightness_1 - lightness_2))
+    )
 
-    return _hc + _hl + _hsy(_L1, _C1, _h1) + _hsy(_L2, _C2, _h2)
+    def hue_effect(lightness, chroma, hue):
+        chroma_weight = 0.5 + 0.5 * math.tanh(-2 + 0.5 * chroma)
+        hue_preference = -0.08 - 0.14 * math.sin(math.radians(hue + 50)) - 0.07 * math.sin(math.radians(2 * hue + 90))
+        yellowness = (90 - hue) / 10
+        # y - exp(y) peaks at -1, so the exponent can never overflow; the cap is belt and
+        # braces against a hue arriving outside [0, 360).
+        yellow_effect = ((0.22 * lightness - 12.8) / 10) * math.exp(min(yellowness - math.exp(yellowness), 50))
+        return chroma_weight * (hue_preference + yellow_effect)
+
+    return (
+        chromatic_effect
+        + lightness_effect
+        + hue_effect(lightness_1, chroma_1, hue_1)
+        + hue_effect(lightness_2, chroma_2, hue_2)
+    )
 
 
 def raw_prior(theta, polarity, theme):
-    _t = np.asarray(theta, dtype=float)
-    _hx = [theme[r] for r in ROLE_ORDER] + [theme["ground"]]
-    _labs = lab(_hx)
-    _pairs = [(0, 1), (0, 2), (1, 2), (0, 3), (1, 3), (2, 3)]
-    _harm = float(np.mean([ou_luo_pair(_labs[a], _labs[b]) for a, b in _pairs]))
+    theta = np.asarray(theta, dtype=float)
+    labs = lab([theme[role] for role in ROLE_ORDER] + [theme["ground"]])
+    pairs = [(0, 1), (0, 2), (1, 2), (0, 3), (1, 3), (2, 3)]
+    harmony = float(np.mean([ou_luo_pair(labs[a], labs[b]) for a, b in pairs]))
     # Berlyne: pleasure peaks at intermediate complexity — interior optima on the
     # complexity axes, never a monotone pull to either wall.
-    _berlyne = -1.2 * sum((float(_t[i]) - 0.55) ** 2 for i in (3, 4, 5))
-    # Ecological-valence stand-in until Titus names his loved colors: his stated warm
+    complexity = -1.2 * sum((float(theta[i]) - 0.55) ** 2 for i in (3, 4, 5))
+    # Ecological-valence stand-in until specific loved colors are named: the stated warm
     # preference, gently.
-    _warm = 0.5 * (float(_t[1]) - 0.5)
-    return _harm + _berlyne + _warm
+    warmth = 0.5 * (float(theta[1]) - 0.5)
+    return harmony + complexity + warmth
 
 
-# A fixed, deterministic candidate pool per polarity: the acquisition shops here (plus
-# per-trial local refinements around the champion), the prior is standardized here, and
-# infeasible corners are carved away by the floors rather than penalized.
-pool_rng = np.random.default_rng(0xA55)
-POOL_THETA = pool_rng.random((512, 9))
-POOL = {}
-PRIOR_STATS = {}
-for pool_polarity in ("day", "night"):
-    pool_items = []
-    for pool_idx in range(len(POOL_THETA)):
-        pool_th = POOL_THETA[pool_idx]
-        pool_realized = realize(pool_th, pool_polarity)
-        if pool_realized is not None:
-            pool_items.append((pool_th, pool_realized, raw_prior(pool_th, pool_polarity, pool_realized)))
-    pool_priors = np.array([it[2] for it in pool_items])
-    PRIOR_STATS[pool_polarity] = (float(pool_priors.mean()), float(pool_priors.std() + 1e-9))
-    POOL[pool_polarity] = [(it[0], it[1]) for it in pool_items]
+def _build_pool(pool_thetas):
+    """The feasible pool per polarity, and the prior's location and scale over it.
+
+    A fixed, deterministic candidate pool: the acquisition shops here (plus per-trial
+    local refinements around the champion), the prior is standardized here, and
+    infeasible corners are carved away by the floors rather than penalized.
+    """
+    pool, stats = {}, {}
+    for polarity in ("day", "night"):
+        feasible = []
+        priors = []
+        for theta in pool_thetas:
+            theme = realize(theta, polarity)
+            if theme is not None:
+                feasible.append((theta, theme))
+                priors.append(raw_prior(theta, polarity, theme))
+        priors = np.array(priors)
+        stats[polarity] = (float(priors.mean()), float(priors.std() + 1e-9))
+        pool[polarity] = feasible
+    return pool, stats
+
+
+POOL_THETA = np.random.default_rng(0xA55).random((512, 9))
+POOL, PRIOR_STATS = _build_pool(POOL_THETA)
 
 
 def prior_mean(theta, polarity, theme=None):
     """Standardized prior utility (mean 0, sd 0.8 over the feasible pool) so the GP's
     signal variance, not the prior's arbitrary units, sets the scale."""
-    _key = theta_key(theta, polarity)
-    if _key in PRIOR_CACHE:
-        return PRIOR_CACHE[_key]
-    theme = theme or realize(theta, polarity)
+    key = theta_key(theta, polarity)
+    if key in PRIOR_CACHE:
+        return PRIOR_CACHE[key]
     if theme is None:
-        _val = 0.0
+        theme = realize(theta, polarity)
+    if theme is None:
+        value = 0.0
     else:
-        _m, _s = PRIOR_STATS[polarity]
-        _val = 0.8 * (raw_prior(theta, polarity, theme) - _m) / _s
-    PRIOR_CACHE[_key] = _val
-    return _val
+        mean, sd = PRIOR_STATS[polarity]
+        value = 0.8 * (raw_prior(theta, polarity, theme) - mean) / sd
+    PRIOR_CACHE[key] = value
+    return value
