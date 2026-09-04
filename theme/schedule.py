@@ -16,6 +16,7 @@ import numpy as np
 from .model import (
     GH_W,
     GH_X,
+    best_set,
     bilinear_against,
     candidates,
     coords,
@@ -193,6 +194,56 @@ def _most_informative_challenger(fit, thetas, polarity, mean, variance, cross, p
     return int(np.argmax(information_gain))
 
 
+#: Share of duels that pit two members of the credible set against each other, once a
+#: plateau exists to separate.
+#:
+#: This closes an objective mismatch. The information-gain challenger maximises information
+#: about WHO WINS THIS DUEL, which any uncertain pairing anywhere in the space provides.
+#: What the verdict needs is information about WHICH THEME IS BEST, and once a plateau
+#: forms, all of the remaining uncertainty about that lives in comparisons BETWEEN shelf
+#: members. Measured before this existed: of the next sixteen day duels, ZERO put two
+#: shelf-adjacent themes together, and the median utility gap between arms was 0.59 -- the
+#: instrument was busy separating themes it could already tell apart.
+#:
+#: Not all duels, because the shelf is only trustworthy while the rest of the space is still
+#: being checked: a run confined to five candidates cannot notice a sixth.
+SHELF_DUEL_SHARE = 0.4
+
+
+def _shelf_indices(fit, polarity, thetas):
+    """Indices, within `thetas`, of the themes sharing half the probability of being best.
+
+    Recomputed per trial from the same grouped P(best) the verdict reports, so the shelf the
+    duels attack is exactly the shelf the analysis shows. Returns an empty list when there
+    is no plateau to separate -- a single clear leader needs confirming against the field,
+    not against itself.
+    """
+    best = best_set(fit, polarity, thetas, seed=17)
+    if best["verdict"] == "single":
+        return []
+    return [int(index) for index in best["credible"]]
+
+
+def _closest_pair_on_the_shelf(fit, polarity, thetas, mean, shelf_indices, rng):
+    """Two shelf members whose predicted duel is closest to a coin flip.
+
+    The maximum-entropy comparison among the contenders, which is the one that most reduces
+    uncertainty about their ordering. Ties broken at random so a sitting does not ask the
+    same question repeatedly.
+    """
+    pairs = [
+        (abs(mean[first] - mean[second]), first, second)
+        for position, first in enumerate(shelf_indices)
+        for second in shelf_indices[position + 1 :]
+    ]
+    if not pairs:
+        return None
+    smallest = min(pair[0] for pair in pairs)
+    contenders = [pair for pair in pairs if pair[0] <= smallest + 1e-9]
+    _gap, first, second = contenders[rng.randrange(len(contenders))]
+    return first, second
+
+
 def _duel_arms(fit, polarity, n, pool, rng, numpy_rng):
     """(kind, (theta, theme), (theta, theme)) -- the two candidates a duel compares.
 
@@ -213,6 +264,17 @@ def _duel_arms(fit, polarity, n, pool, rng, numpy_rng):
     if rng.random() < ANCHOR_DUEL_SHARE:
         champion, challenger = int(np.argmax(mean)), int(np.argmin(mean))
         kind = "anchor"
+    elif rng.random() < SHELF_DUEL_SHARE and (shelf := _shelf_indices(fit, polarity, thetas)):
+        pair = _closest_pair_on_the_shelf(fit, polarity, thetas, mean, shelf, rng)
+        if pair is None:
+            champion = _thompson_champion(mean, variance, n_standing, rng, numpy_rng)
+            challenger = _most_informative_challenger(
+                fit, thetas, polarity, mean, variance, cross, precision, champion
+            )
+            kind = "eig"
+        else:
+            champion, challenger = pair
+            kind = "shelf"
     else:
         champion = _thompson_champion(mean, variance, n_standing, rng, numpy_rng)
         challenger = _most_informative_challenger(fit, thetas, polarity, mean, variance, cross, precision, champion)

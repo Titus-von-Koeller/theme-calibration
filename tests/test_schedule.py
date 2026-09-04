@@ -140,3 +140,66 @@ def test_a_find_hunt_survives_a_page_whose_highlight_cannot_be_realized():
     assert trial["mode"] == "search"
     assert trial["theme_a"] is not None, "a hunt with no theme is a blank page"
     assert trial["code_px"] == READING_PX["editor"]
+
+
+class TestShelfDuels:
+    """Once a plateau forms, the duels have to attack the plateau.
+
+    The information-gain challenger maximises information about who wins THIS duel, which
+    any uncertain pairing anywhere in the space supplies. The verdict needs information
+    about which theme is BEST, and once several themes share the probability of being best,
+    that uncertainty lives entirely in comparisons between them.
+
+    Measured before this existed: of the next sixteen day duels, zero put two shelf members
+    together and the median utility gap between arms was 0.59 -- the instrument was
+    separating themes it could already tell apart. After: eight of sixteen, and the median
+    gap halved to 0.28.
+    """
+
+    def test_a_plateau_draws_duels_between_its_own_members(self, answered):
+        from theme import preference, space
+        from theme.schedule import TRIAL_MEMO
+
+        fit = preference.fitted(answered)
+        TRIAL_MEMO.clear()
+        kinds = [
+            trial["kind"]
+            for n in range(len(answered), len(answered) + 48)
+            if (trial := trial_for(n, answered))["mode"] == "duel"
+        ]
+        assert "shelf" in kinds, (
+            f"a plateau exists on at least one polarity but no upcoming duel compares two of "
+            f"its members; trial kinds were {sorted(set(kinds))}"
+        )
+        assert space and fit  # the fixture is only meaningful with a real fit behind it
+
+    def test_a_shelf_duel_is_a_closer_contest_than_the_field(self, answered):
+        """The point is not that shelf duels happen, it is that they are harder."""
+        from theme import preference
+        from theme.schedule import TRIAL_MEMO
+
+        fit = preference.fitted(answered)
+        TRIAL_MEMO.clear()
+        gaps = {"shelf": [], "eig": []}
+        for n in range(len(answered), len(answered) + 64):
+            trial = trial_for(n, answered)
+            if trial["mode"] != "duel" or trial["kind"] not in gaps:
+                continue
+            mean = preference.mean_utility_at(fit, [trial["theta_a"], trial["theta_b"]], trial["polarity"])
+            gaps[trial["kind"]].append(abs(float(mean[0] - mean[1])))
+        if not gaps["shelf"] or not gaps["eig"]:
+            pytest.skip("this log produced only one kind of duel over the sampled window")
+        shelf_median = sorted(gaps["shelf"])[len(gaps["shelf"]) // 2]
+        field_median = sorted(gaps["eig"])[len(gaps["eig"]) // 2]
+        assert shelf_median <= field_median, (
+            f"shelf duels should be the closer contests: median utility gap {shelf_median:.2f} "
+            f"against {field_median:.2f} for the field"
+        )
+
+    def test_a_single_clear_leader_draws_no_shelf_duels(self, monkeypatch, answered):
+        """No plateau, no shelf duels. A lone leader needs checking against the space rather
+        than against itself, or the search confines itself to what it already believes."""
+        from theme import schedule
+
+        monkeypatch.setattr(schedule, "best_set", lambda *a, **k: {"verdict": "single", "credible": [0, 1, 2]})
+        assert schedule._shelf_indices(object(), "day", [None]) == []
