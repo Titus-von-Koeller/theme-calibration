@@ -85,13 +85,28 @@ def _():
     import numpy as np
     import pandas as pd
 
+    try:
+        import theme  # noqa: F401  -- an environment check, not a use; see below
+    except ModuleNotFoundError as no_package:
+        # theme-calibration is installed editable into this project's pixi environment and
+        # into no other, so a missing `theme` means this notebook is running on the wrong
+        # interpreter -- an editor kernel resolved for a parent folder is the way it
+        # happens. Left unguarded that surfaces as NameError on every cell downstream of
+        # this one, which names the symptom in a dozen places and the cause in none.
+        raise ModuleNotFoundError(
+            "analysis.py is running on an interpreter that does not have theme-calibration "
+            "installed, so nothing below this cell can run. Start it with `pixi run analyse`, or "
+            "select .pixi/envs/default/bin/python as this folder's interpreter. "
+            "README, 'Running it', has both."
+        ) from no_package
+
     from theme.model import (
         axis_consensus,
         best_set,
         candidates,
         factor_effect,
         fitted,
-        mu_at,
+        mean_utility_at,
         progress_report,
         rt_at,
         rt_exponent,
@@ -119,7 +134,7 @@ def _():
         factor_effect,
         fitted,
         json,
-        mu_at,
+        mean_utility_at,
         np,
         pd,
         progress_report,
@@ -163,8 +178,8 @@ def _(
     fitted,
     get_responses,
     json,
+    mean_utility_at,
     mo,
-    mu_at,
     np,
     pd,
     progress_report,
@@ -265,7 +280,7 @@ def _(
                             )
                         _thetas = [_thetas[_i] for _i in _keep_idx]
                         _themes = [_themes[_i] for _i in _keep_idx]
-                _mu = mu_at(_fit, _thetas, _pol)
+                _mu = mean_utility_at(_fit, _thetas, _pol)
                 _ci = int(np.argmax(_mu))
                 _champ_theta, _champ = _thetas[_ci], _themes[_ci]
                 _beats = float(np.mean(1.0 / (1.0 + np.exp(-(_mu[_ci] - _mu)))))
@@ -463,7 +478,7 @@ def _(
                     _lo_t = np.array(_champ_theta, dtype=float)
                     _hi_t = _lo_t.copy()
                     _lo_t[_ax], _hi_t[_ax] = 0.15, 0.85
-                    _mm = mu_at(_fit, [_lo_t, _hi_t], _pol)
+                    _mm = mean_utility_at(_fit, [_lo_t, _hi_t], _pol)
                     _sweep.append(
                         {
                             "axis": AXES[_ax],
