@@ -27,6 +27,11 @@ APCA_REV_BG, APCA_REV_TEXT = 0.65, 0.62
 APCA_SCALE, APCA_OFFSET, APCA_LOW_CLIP = 1.14, 0.027, 0.1
 
 
+#: Byte -> two lowercase hex digits, so `rgb_to_hex` formats by table lookup instead of
+#: building a format string per channel.
+_HEX_PAIRS = [f"{byte:02x}" for byte in range(256)]
+
+
 def hex_to_rgb(hexes):
     strings = [hexes] if isinstance(hexes, str) else list(hexes)
     return np.array([[int(s.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4)] for s in strings])
@@ -36,10 +41,12 @@ def rgb_to_hex(rgb):
     """An (n, 3) array of channels in [0, 1] -> a list of `#rrggbb` strings.
 
     This is the quantization the contrast floors are ultimately promised on, so the
-    rounding lives in exactly one place.
+    rounding lives in exactly one place. np.rint rounds half to even, which is what
+    Python's round() did here before it was vectorized.
     """
     rgb = np.clip(np.atleast_2d(rgb), 0, 1)
-    return ["#" + "".join(f"{round(255 * float(channel)):02x}" for channel in row) for row in rgb]
+    codes = np.rint(255 * rgb).astype(np.uint8)
+    return ["#" + _HEX_PAIRS[row[0]] + _HEX_PAIRS[row[1]] + _HEX_PAIRS[row[2]] for row in codes]
 
 
 def rgb_to_ucs(rgb):
