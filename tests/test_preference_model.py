@@ -270,9 +270,12 @@ def test_the_realistic_regime_favours_bred_candidates(search_model):
 def clone_and_spread_candidates():
     """20 near-identical themes and 20 spread across the cube.
 
-    The clones sit within 0.004 of one another on every axis -- far below anything he could
-    see -- so they are one theme as far as any verdict is concerned. Imported by
+    The clones sit within 0.004 of one another on every axis -- far below anything an eye
+    could see -- so they are one theme as far as any verdict is concerned. Imported by
     test_diagnostics, whose progress readout needs the same fixed candidate set.
+
+    Clones come FIRST in the candidate list, because the grouping tests read the group of
+    candidate i for i below len(clones).
     """
     base = np.random.default_rng(11).random(9)
     clones = [np.clip(base + np.random.default_rng(50 + i).normal(0, 0.004, 9), 0, 1) for i in range(20)]
@@ -293,10 +296,16 @@ def test_near_identical_themes_count_once(grouped_best_set):
 
     On the real log that failure read as a plateau while the leader held 1.6% -- a number
     that says nothing about whether one theme leads.
+
+    Read off `group_of`, which is the assignment the grouping actually made. An earlier
+    version of this assertion took the nearest of `groups` -- a list of candidate INDICES
+    -- to each clone VECTOR, so it compared an integer against nine coordinates. Every
+    clone got the same meaningless answer, the count came out at 1, and the test passed
+    without touching the grouping at all.
     """
     best, clones = grouped_best_set
-    n_clone_groups = len({int(np.argmin([np.linalg.norm(np.asarray(g) - c) for g in best["groups"]])) for c in clones})
-    assert n_clone_groups <= 2, f"20 clones fell into {n_clone_groups} group(s)"
+    clone_groups = {int(best["group_of"][i]) for i in range(len(clones))}
+    assert len(clone_groups) <= 2, f"{len(clones)} clones fell into {len(clone_groups)} group(s)"
 
 
 def test_p_best_counts_contenders_rather_than_coordinates(grouped_best_set):
@@ -308,3 +317,19 @@ def test_p_best_counts_contenders_rather_than_coordinates(grouped_best_set):
     """
     best, _clones = grouped_best_set
     assert len(best["groups"]) <= 25, f"{len(best['groups'])} groups from 40 candidates"
+
+
+def test_the_fit_memo_names_the_log_it_cached(search_model):
+    """Two different logs of the same length must not be served one fit.
+
+    The memo key was (duel count, RT exponent): how MUCH data was fitted, never WHICH. Two
+    logs of equal length collide, and the second caller gets the first log's utilities back
+    with nothing to say they are not its own. Reachable from `progress_report`, which fits
+    a truncated history alongside the full one, and from any analysis that compares two
+    logs -- and the returned object looks exactly like a measurement either way.
+    """
+    search_model.FIT_MEMO.clear()
+    search_model.RTP_MEMO.clear()
+    first = search_model.fitted(duel_log(search_model, 60, active=(0, 3, 6), seed=1))
+    second = search_model.fitted(duel_log(search_model, 60, active=(2, 5, 8), seed=2))
+    assert not np.array_equal(first["f"], second["f"]), "two different 60-duel logs were served one fit"
