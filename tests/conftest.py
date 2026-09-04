@@ -30,18 +30,24 @@ POOL_THETA = np.random.default_rng(0xA55).random((512, 9))
 def search_model():
     """The real model, with the colour layer stubbed out.
 
-    Session-scoped and mutating module globals is deliberate: `theme.model` reads POOL and
-    realize at call time, and every test in this suite wants the same stub. Restoring them
-    afterwards keeps the process honest for anything that runs later in the same session.
+    The stub replaces `realize_many`, which is the seam the search actually calls -- it
+    realizes candidates in batches, because colour-science costs the same for one colour as
+    for sixty. Stubbing the older per-theme `realize` here silently did nothing once that
+    changed, and the suite caught it as a fixture error rather than as a wrong number,
+    which is the good outcome.
+
+    Session-scoped and mutating module globals deliberately: `theme.model` reads these at
+    call time and every test in this suite wants the same stub. Restoring them afterwards
+    keeps the process honest for anything running later in the same session.
     """
     from theme import model
 
-    original = (model.POOL, model.realize, model.prior_mean)
+    original = (model.POOL, model.realize_many, model.prior_mean)
     model.POOL = {"day": [(t, {"ok": True}) for t in POOL_THETA], "night": []}
-    model.realize = lambda theta, polarity: {"ok": True}
+    model.realize_many = lambda thetas, polarity: [{"ok": True} for _ in np.atleast_2d(thetas)]
     model.prior_mean = lambda theta, polarity: 0.0
     yield model
-    model.POOL, model.realize, model.prior_mean = original
+    model.POOL, model.realize_many, model.prior_mean = original
 
 
 @pytest.fixture

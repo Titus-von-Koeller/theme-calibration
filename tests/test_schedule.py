@@ -1,0 +1,95 @@
+"""What the trial schedule must guarantee.
+
+The recorder rebuilds a trial from the log rather than trusting what the page sent back.
+That only works if trial generation is a pure function of the trial number and the log --
+so determinism here is not a nicety, it is what makes every archived response describe the
+stimulus that was actually shown.
+"""
+
+import pytest
+
+from theme import responses
+from theme.schedule import duel_surface, run_info, schedule_mode, trial_for
+from theme.stimulus import READING_PX, SURFACES
+
+BLOCK = 24  # trials per polarity block
+DUELS_PER_BLOCK = 16
+
+
+@pytest.fixture(scope="module")
+def answered():
+    """The real log, read only. Its length and composition drive the schedule."""
+    return responses.DEFAULT_LOG.read()
+
+
+def test_generating_the_same_trial_twice_gives_the_same_trial(answered):
+    """The property the whole recording scheme rests on."""
+    n = len(answered)
+    first, second = trial_for(n, answered), trial_for(n, answered)
+    assert first["theta_a"] == second["theta_a"]
+    assert first.get("theta_b") == second.get("theta_b")
+    assert (first["mode"], first["polarity"], first["snippet"], first["code_px"]) == (
+        second["mode"],
+        second["polarity"],
+        second["snippet"],
+        second["code_px"],
+    )
+
+
+def test_a_duel_varies_the_theme_and_nothing_else(answered):
+    """Both halves render the SAME page, so the only difference is the theme under test."""
+    n = next(i for i in range(len(answered), len(answered) + BLOCK) if trial_for(i, answered)["mode"] == "duel")
+    trial = trial_for(n, answered)
+    assert trial["theta_a"] != trial["theta_b"], "a duel against itself measures nothing"
+    assert "snippet" in trial and isinstance(trial["snippet"], int)
+
+
+@pytest.mark.parametrize("slot,expected", [(0, "duel"), (15, "duel"), (16, "comprehension"), (20, "search")])
+def test_a_run_batches_trials_of_one_kind(slot, expected):
+    """Sixteen duels, then four probes, then four hunts: one instruction serves a whole run,
+    so no click is spent re-reading it and the task never switches mid-stride."""
+    _polarity, arm = schedule_mode(slot, n_duels=999)
+    assert arm == expected
+
+
+def test_polarity_alternates_by_block():
+    """Blocked rather than interleaved, so his adaptation state is part of the measurement
+    instead of noise in it -- a light page judged with dark-adapted eyes is a different
+    stimulus."""
+    assert schedule_mode(0, 999)[0] != schedule_mode(BLOCK, 999)[0]
+    assert schedule_mode(0, 999)[0] == schedule_mode(2 * BLOCK, 999)[0]
+
+
+def test_surfaces_are_sampled_equally_often():
+    """NOT `n % 3`. The block is 24 trials of which 16 are duels, and 3 divides 24, so a
+    modular rotation never de-phases: one surface would take 6 of every 16 duels and the
+    others 5, forever. The log showed exactly that lock before it was fixed."""
+    duels = [duel_surface(n, 200) for n in range(BLOCK * 12) if n % BLOCK < DUELS_PER_BLOCK]
+    counts = {surface: duels.count(surface) for surface in SURFACES}
+    assert max(counts.values()) - min(counts.values()) <= 1, f"unbalanced over 12 blocks: {counts}"
+
+
+def test_the_first_duel_of_a_run_is_not_always_the_same_surface():
+    """Position within a run carries its own effects -- freshest eyes, and the largest
+    adaptation step from whatever was on screen before -- so it must not be confounded
+    with which surface is being shown."""
+    first_of_run = {duel_surface(BLOCK * block, 200) for block in range(12)}
+    assert len(first_of_run) == len(SURFACES), f"slot 0 only ever shows {sorted(first_of_run)}"
+
+
+def test_each_surface_is_shown_at_the_size_he_reads_it_at(answered):
+    """Preference measured at 12-13px was being applied to reading at 14 and 16. Contrast
+    sensitivity falls with glyph scale, so that is not a free assumption in a colour
+    experiment."""
+    for n in range(len(answered), len(answered) + BLOCK):
+        trial = trial_for(n, answered)
+        if trial["mode"] == "duel":
+            assert trial["code_px"] == READING_PX[trial["surface"]]
+
+
+def test_run_info_agrees_with_the_arm_schedule():
+    """Two functions describe the same schedule; they must not drift apart."""
+    for n in range(3 * BLOCK):
+        polarity, arm, position, run_length = run_info(n, 999)
+        assert (polarity, arm) == schedule_mode(n, 999)
+        assert 0 <= position < run_length
