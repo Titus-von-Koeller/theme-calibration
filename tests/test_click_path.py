@@ -123,6 +123,39 @@ def test_the_first_trial_is_gated_so_no_clock_runs_on_an_empty_room(client):
     assert trial["gate_text"], "a gate with no instruction is a dead end"
 
 
+def test_the_clock_is_baselined_only_by_a_reveal():
+    """The one invariant behind every reaction time, checked in the source because that is
+    where it lives: nothing but reveal() may set the clock's baseline.
+
+    A `t_render` set while the stimulus was still covered would silently fold the time
+    spent reading an instruction, or sitting in another tab, into the measurement -- and
+    every row would still look like a perfectly ordinary reaction time.
+    """
+    source = APP_JS.read_text()
+    assignments = [line.strip() for line in source.splitlines() if re.match(r"^\s*(let\s+)?t0\s*=", line)]
+    assert assignments, "app.js no longer has a clock baseline called t0 -- update this test"
+    for line in assignments:
+        assert "-1" in line or "performance.now()" in line, f"unexpected clock baseline: {line}"
+    now_assignments = [line for line in assignments if "performance.now()" in line]
+    assert len(now_assignments) == 1, (
+        f"the clock must be baselined in exactly one place (reveal); found {len(now_assignments)}"
+    )
+    reveal = source.split("function reveal()", 1)[1].split("\nfunction ", 1)[0]
+    assert now_assignments[0] in reveal, "the clock's baseline must be set inside reveal()"
+    assert "t0 < 0" in source, "answering with no baseline must be refused, not timed from -1"
+
+
+def test_a_refused_answer_is_shown_to_whoever_gave_it():
+    """A dropped answer that the page swallows is worse than an error: the trial advances,
+    the response is gone, and nothing on screen says so. That cost a sitting once."""
+    source = APP_JS.read_text()
+    assert "out.ok === false" in source, "the page must inspect the server's refusal"
+    stale_branch = source.split("out.ok === false", 1)[1].split("\n  }", 1)[0]
+    assert "interrupt(" in stale_branch or "cover(" in stale_branch, (
+        "a refused answer must put something on screen, not advance in silence"
+    )
+
+
 def test_a_stale_answer_is_refused_rather_than_misrecorded(client, scratch_log):
     """A double click, or a page left open across a restart, must not write to another row.
 
