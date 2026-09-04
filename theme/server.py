@@ -122,7 +122,12 @@ def payload(n: int, answered: list[dict]) -> dict:
     The keys here are a contract with static/app.js and are read nowhere else.
     """
     trial = trial_for(n, answered)
-    polarity, _arm, position, run_length = run_info(n, len(answered))
+    # The duel count, not the row count: run_info's second argument means duels, and only
+    # the two agree while every row so far has been a duel. Passing the row count made the
+    # progress readout and the run gate disagree with the arm the moment a log's first six
+    # rows were not all duels.
+    n_duels = sum(1 for row in answered[:n] if row.get("mode") == "duel")
+    polarity, _arm, position, run_length = run_info(n, n_duels)
     page = page_for(trial)
     return {
         "n": n,
