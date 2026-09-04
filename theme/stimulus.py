@@ -155,6 +155,10 @@ for sid, (prov, code, ident) in SOURCES.items():
             "ident_ids": [_i for _i, _s in enumerate(sp) if _s["text"] == ident],
             "hash": f"control-{sid}",
             "kind": "control",
+            # Seen before by construction. `theme.responses` defaults a missing `fresh`
+            # to True, so omitting it here logged a reused page as a first showing -- and
+            # a remembered page turns a find task into a memory test.
+            "fresh": False,
         }
     )
 
@@ -201,12 +205,17 @@ def snippet_for(seed, width=None, target_kind=None, lines=None):
                 _s = dict(codegen.snippet(int(seed), **_kw))
                 _s.setdefault("ident", _s.get("target"))
                 break
-            except Exception:
+            except ValueError, RuntimeError:
+                # The two ways the generator declines: an unusable request (ValueError)
+                # and no page it can build for this seed at this shape (RuntimeError).
+                # Anything else is a bug in the generator and must not be relaxed away.
                 continue
         if _s is not None:
             break
     if _s is None:
-        _s = CONTROL[int(seed) % len(CONTROL)]
+        # Copied: the record is handed to callers that annotate it, and CONTROL has to
+        # stay the pristine reference for every later trial that falls back to it.
+        _s = dict(CONTROL[int(seed) % len(CONTROL)])
     SNIP_MEMO[_key] = _s
     return _s
 
@@ -295,7 +304,10 @@ def render_card(theme, snippet, code_px, find_current=None, task=False, prose=Tr
             _out.append("\n")
             _pr, _pc = _pr + 1, 0
         if _c > _pc:
-            _out.append(_lines[_r][_pc:_c])
+            # Escaped like the token text: whitespace on every page the generator will
+            # pass, so this changes no byte there, and a renderer that emits HTML should
+            # not have a path that does not escape.
+            _out.append(html.escape(_lines[_r][_pc:_c]))
         _style = f"color:{theme[_s['role']]}"
         if _s["role"] == "comment":
             _style += ";font-style:italic"
