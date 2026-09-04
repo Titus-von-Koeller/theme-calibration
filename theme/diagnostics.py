@@ -96,6 +96,11 @@ def _candidate_fingerprint(thetas):
     return hash(np.ascontiguousarray(np.asarray(thetas, dtype=float)).tobytes())
 
 
+def _group_masses(group_of, p_best, n_groups):
+    """Each group's share of the argmax probability."""
+    return np.bincount(group_of, weights=p_best, minlength=n_groups)
+
+
 def _credible_groups(group_p, group_order, mass):
     """The smallest set of leading groups holding `mass` of the argmax probability."""
     keep, accumulated = [], 0.0
@@ -129,9 +134,7 @@ def best_set(fit, polarity, thetas, samples=2048, mass=0.5, seed=0, radius=0.9):
 
     scaled = scale_thetas(thetas, fit.get("ls"))
     representatives, group_of, order = _group_by_resolution(scaled, p_best, radius)
-    group_p = np.zeros(len(representatives))
-    for i in range(len(thetas)):
-        group_p[group_of[i]] += p_best[i]
+    group_p = _group_masses(group_of, p_best, len(representatives))
     group_order = np.argsort(-group_p)
     keep = _credible_groups(group_p, group_order, mass)
     lead = float(group_p[group_order[0]])
@@ -359,6 +362,50 @@ def _tilt_gain(axis_differences, levels_of_row, n_levels, n_seeds, tilt_free=Non
     return float(with_tilt - tilt_free)
 
 
+def _factor_cache_key(rows, key, polarity, nperm, seed):
+    """Everything about this call that changes its answer.
+
+    nperm and seed belong in it. Without them a coarse call -- a quick 20-permutation
+    sanity check, say -- poisons the cache for the careful 200-permutation reading that
+    follows, and the caller gets a p-value computed against a null it never asked for.
+    So do both thetas in full: the key named `theta_a[0]` and nothing of `theta_b`, while
+    the statistic is built from theta_a - theta_b on all nine axes, so a hit could return
+    a permutation test run against data the caller never supplied.
+    """
+    return (
+        "f",
+        key,
+        polarity,
+        nperm,
+        seed,
+        hash(tuple((row["choice"], str(row[key])) for row in rows)),
+        _candidate_fingerprint([row["theta_a"] for row in rows] + [row["theta_b"] for row in rows]),
+    )
+
+
+def _factor_verdict(key, p_value):
+    """Three-state, because "quiet" is not "absent" when the test has little power."""
+    if p_value < 0.02:
+        return f"{key} changes the optimum -- one theme is the wrong answer shape"
+    if p_value < 0.10:
+        return f"suggestive; keep {key} balanced and re-read"
+    return f"no {key} effect this data can see"
+
+
+def _permutation_null(axis_differences, levels_of_row, n_levels, nperm, seed):
+    """The gain statistic under `nperm` shuffles of the level labels.
+
+    The tilt-free half of the gain is the same number for every permutation -- with no
+    tilt the design matrix never sees the labels -- so it is computed once. Half the
+    permutation test was recomputing it.
+    """
+    tilt_free = _tilt_free_loglik(axis_differences, 2)
+    rng = np.random.default_rng(seed)
+    return np.array(
+        [_tilt_gain(axis_differences, rng.permutation(levels_of_row), n_levels, 2, tilt_free) for _ in range(nperm)]
+    )
+
+
 def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
     """Does the preferred theme depend on some logged property of how it was SHOWN?
 
@@ -373,46 +420,15 @@ def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
     levels = sorted({row[key] for row in rows}, key=str)
     if len(rows) < min_n or len(levels) < 2:
         return len(rows), 0.0, 1.0, f"not enough {polarity} duels with a {key} to compare"
-    # nperm and seed belong in the key. Without them a coarse call -- a quick 20-permutation
-    # sanity check, say -- poisons the cache for the careful 200-permutation reading that
-    # follows, and the caller gets a p-value computed against a null it never asked for.
-    # A cache key must name every input that changes the answer.
-    cache_key = (
-        "f",
-        key,
-        polarity,
-        nperm,
-        seed,
-        hash(tuple((row["choice"], str(row[key])) for row in rows)),
-        # Both thetas in full. The key named `theta_a[0]` and nothing of `theta_b`, while
-        # the statistic is built from theta_a - theta_b on all nine axes -- so a hit could
-        # return a permutation test run against data the caller never supplied.
-        _candidate_fingerprint([row["theta_a"] for row in rows] + [row["theta_b"] for row in rows]),
-    )
+    cache_key = _factor_cache_key(rows, key, polarity, nperm, seed)
     if cache_key in SURF_MEMO:
         return SURF_MEMO[cache_key]
     levels_of_row = np.array([levels.index(row[key]) for row in rows])
     axis_differences = _winner_minus_loser(rows)
-
     observed = _tilt_gain(axis_differences, levels_of_row, len(levels), 6)
-    # The null's tilt-free term is the same number for every permutation, so it is
-    # computed once. Half the permutation test was recomputing it.
-    null_tilt_free = _tilt_free_loglik(axis_differences, 2)
-    rng = np.random.default_rng(seed)
-    null = np.array(
-        [
-            _tilt_gain(axis_differences, rng.permutation(levels_of_row), len(levels), 2, null_tilt_free)
-            for _ in range(nperm)
-        ]
-    )
+    null = _permutation_null(axis_differences, levels_of_row, len(levels), nperm, seed)
     p_value = float((null >= observed).mean())
-    if p_value < 0.02:
-        verdict = f"{key} changes the optimum -- one theme is the wrong answer shape"
-    elif p_value < 0.10:
-        verdict = f"suggestive; keep {key} balanced and re-read"
-    else:
-        verdict = f"no {key} effect this data can see"
-    result = (len(rows), observed, p_value, verdict)
+    result = (len(rows), observed, p_value, _factor_verdict(key, p_value))
     if len(SURF_MEMO) > 8:
         SURF_MEMO.pop(next(iter(SURF_MEMO)))
     SURF_MEMO[cache_key] = result
