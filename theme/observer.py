@@ -1,15 +1,16 @@
 """The measured observer — one model, one fit, every instrument reads from here.
 
-This module owns the measurement<->preference interlock: it fits Titus's color
+This module owns the measurement<->preference interlock: it fits the observer's colour
 discrimination from ``calibration-responses.jsonl`` and serves thresholds to whatever
-needs them — calibrate-vision's trial generation and verdicts, calibrate-aesthetics'
-hard constraints, theme-gallery's discriminability ranking. Constraints can therefore
-never fork from the data: a sharper fit here IS the new constraint set everywhere.
+needs them — the vision instrument's trial generation and verdicts, the aesthetics
+search's hard constraints, the gallery's discriminability ranking. Constraints can
+therefore never fork from the data: a sharper fit here IS the new constraint set
+everywhere.
 
 Torch-free on purpose (imported by pages served under ``marimo run``, whose kernels
 instantiate in worker threads where a torch import can die mid-import).
 
-The model (v2, replacing calibrate-vision's v1 LMS-opponent Weibull):
+The model (v2, replacing a v1 LMS-opponent Weibull):
 
 - Geometry: CAM16-UCS (J', a', b') under fixed viewing conditions (D65, average
   surround, L_A 40, Y_b 20) — the same space the aesthetics instrument searches, so
@@ -23,12 +24,21 @@ The model (v2, replacing calibrate-vision's v1 LMS-opponent Weibull):
 - Threshold surface: tau_eff = tau0 * exp(gL * (J'_ground/100 - 0.5)) *
   (104 / size_px)^gamma. Ground enters as a smooth function of its measured
   lightness — not a per-ground axis — so the fit generalizes to grounds never
-  shown (the ground-search stage feeds this directly). gamma is the small-field
-  exponent; until the glyph-scale stage logs varied sizes it is pinned at 0 by its
-  prior (all current data is 104 px, where it is unidentifiable). Ground *warmth*
-  is deliberately absent for now: with only two grounds measured, lightness and
-  warmth are confounded; the ground-search stage decouples them, and the axis is
-  added here when its data exists.
+  shown (the ground-search stage feeds this directly).
+
+  gamma is the small-field exponent, and READ ITS MARGINAL BEFORE BELIEVING A
+  SIZE-DEPENDENT NUMBER FROM THIS MODEL. It is unidentifiable while every trial in
+  the log is at one patch size, and the whole log is at 104 px, so its marginal comes
+  back exactly flat (0.2 on each of the five grid values) and ``gamma_mean`` is the
+  grid's midpoint of 0.7 — the prior's centre of mass, not a measurement. Every
+  quantity that scales by (104 / size_px)^gamma therefore carries the prior rather
+  than data away from 104 px: at 10 px that is a factor of ~4.7 on the threshold,
+  asserted by the grid alone. ``marginals["gamma"]`` is in the payload precisely so a
+  consumer can check this rather than take the mean on trust.
+
+  Ground *warmth* is deliberately absent for now: with only two grounds measured,
+  lightness and warmth are confounded; the ground-search stage decouples them, and
+  the axis is added here when its data exists.
 - Inference: exact posterior over a dense parameter grid (QUEST+ style, no sampler
   to tune), chunked so peak memory stays modest, cached to ``observer-fit.json``
   beside the log and keyed by (model version, log length) — instruments load the
@@ -63,7 +73,8 @@ def hex_to_ucs(hexes):
 # -- the parameter grid ------------------------------------------------------------------
 # Axes: phi (confusion-axis angle, deg), w1 (weight along phi), w2 (weight across),
 # beta (Weibull slope), lam (lapse), tau0 (threshold scale), gL (ground-lightness slope),
-# gamma (small-field exponent; single value 0 until size varies in the log).
+# gamma (small-field exponent, over a five-point grid that the current log cannot
+# separate -- see the gamma paragraph in the module docstring).
 _PHI = np.linspace(-40.0, 40.0, 9)
 _W1 = np.geomspace(0.05, 12.0, 7)
 _W2 = np.geomspace(0.05, 12.0, 7)
@@ -184,11 +195,23 @@ class ObserverFit:
             raise AttributeError(k) from e
 
     def de_threshold(self, ground_hex, direction="min", size_px=104.0):
-        """Threshold dE against an ARBITRARY ground (the smooth tau(ground) at work)."""
+        """Threshold dE against an ARBITRARY ground and size (the smooth tau at work).
+
+        Interpolated from the thresholds tabulated at the reference ground rather than
+        re-integrated over the posterior: tau is separable in ground and size, so dE
+        scales by exp(gL*(J' - .5)) and by (104/size_px)^gamma, and posterior means are
+        used pointwise for both — the same cheap, monotone-faithful stand-in
+        `discriminability` makes.
+
+        The size factor is exactly 1 at the reference 104 px, which is what every trial
+        in the log was shown at, and away from it the factor is the gamma PRIOR (see the
+        module docstring): this method previously took `size_px` and ignored it, which
+        made an unmeasured extrapolation look like a measured threshold in the one
+        direction where it silently understated the floor.
+        """
         g_j = float(hex_to_ucs(ground_hex)[0, 0] / 100.0)
-        # interpolate in log-tau over the fitted gL: de scales by exp(gL*(gJ - .5))
         base = self._p["de_dir_at_mid"]
-        scale = float(np.exp(self._p["gL_mean"] * (g_j - 0.5)))
+        scale = float(np.exp(self._p["gL_mean"] * (g_j - 0.5))) * float((104.0 / size_px) ** self._p["gamma_mean"])
         if direction == "min":
             return min(base.values()) * scale
         return base[direction] * scale
@@ -239,14 +262,16 @@ def fit(log_path, cache=True, force=False):
     payload["confusion_weight_ratio"] = float(
         min(payload["w1_mean"], payload["w2_mean"]) / max(payload["w1_mean"], payload["w2_mean"])
     )
-    # Posterior-marginal tables for the instruments' analysis cells.
-    payload["marginals"] = {
-        name: {
-            "values": [float(v) for v in marginal(post, name)[0]],
-            "p": [float(v) for v in marginal(post, name)[1]],
+    # Posterior-marginal tables for the instruments' analysis cells. One marginal() per
+    # axis: each is a reshape and a sum over 3.6M cells, and calling it once per key
+    # rather than once per axis doubled that for nothing (measured 98 ms against 25 ms).
+    payload["marginals"] = {}
+    for name in _AXES:
+        values, probabilities = marginal(post, name)
+        payload["marginals"][name] = {
+            "values": [float(v) for v in values],
+            "p": [float(v) for v in probabilities],
         }
-        for name in _AXES
-    }
     if cache:
         cache_path.write_text(json.dumps(payload, indent=1))
     return ObserverFit(payload)
