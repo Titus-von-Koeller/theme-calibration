@@ -58,5 +58,13 @@ theme-calibration = { path = ".", editable = true }
 [tasks]
 serve = { cmd = "uvicorn theme.server:app --host 127.0.0.1 --port 2919", description = "Run the trial instrument" }
 analyse = { cmd = "marimo run notebooks/analysis.py --headless --no-token --host 127.0.0.1 -p 2920", description = "Serve the analysis notebook" }
+# Every notebook here imports `theme`, which is installed editable into this environment
+# and into no other. A task cannot choose the wrong interpreter, because it does not choose
+# one: it runs in the environment the lock file describes. Launching a notebook any other
+# way -- an editor kernel picked for a parent folder, a bare `marimo edit` on the PATH
+# python -- fails at the import cell and then reports NameError on every cell below it,
+# which names the symptom and hides the cause. So each notebook gets a task.
+vision = { cmd = "marimo run notebooks/vision.py --headless --no-token --host 127.0.0.1 -p 2921", description = "Take a colour-discrimination sitting" }
+gallery = { cmd = "marimo run notebooks/gallery.py --headless --no-token --host 127.0.0.1 -p 2922", description = "Serve the palette gallery" }
 test = { cmd = "pytest -q", description = "Run the recovery tests" }
 check = { cmd = "ruff format --check . && ruff check .", description = "Lint and format check" }

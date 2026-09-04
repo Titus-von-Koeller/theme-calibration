@@ -19,12 +19,20 @@ engineering contract, including the procedure for several agents working at once
   holds the findings of the instrument it belongs to: findings live WITH their instrument.
 - `data/` — the measurements. Append-only text, tracked. Derived caches are not.
 - `tests/` — recovery tests (plant a truth, check it comes back), property tests over the
-  whole parameter space, and a flow test through the real app.
+  whole parameter space, a flow test through the real app, and static contract tests over
+  the notebooks (their `theme` imports resolve; each has a task that launches it).
 
 ## Where the work stands
 
 The instrument is served at `127.0.0.1:2919` (`pixi run serve`) and answered daily. The
 analysis notebook reads the log and reports what the model believes.
+
+Run every notebook through its task — `pixi run vision`, `pixi run analyse`, `pixi run
+gallery`. A task runs in the environment the lock file describes; an editor's kernel is
+resolved per workspace folder, and with a parent directory open it hands a notebook a
+sibling project's environment, where `import theme` fails and marimo then reports
+`NameError` on every cell downstream. `.vscode/settings.json` pins the interpreter for when
+this directory is the open folder.
 
 Open questions, most valuable first. Figures are from 192 responses, 127 duels.
 

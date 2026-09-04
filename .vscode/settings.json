@@ -1,0 +1,27 @@
+{
+  // The interpreter for this project is its own pixi environment, and not whatever VSCode
+  // picked for the folder above it. Every notebook here imports `theme`, which is
+  // installed editable into that environment and nowhere else. On any other interpreter
+  // the import cell raises ModuleNotFoundError and marimo then reports `NameError` on each
+  // of the thirteen cells downstream of it -- one wrong interpreter wearing thirteen
+  // different names, none of which points at the interpreter.
+  //
+  // VSCode reads this file when theme-calibration is the open folder. With a PARENT
+  // directory open instead (a ~/src workspace holding several projects), it never reads
+  // it, and the Python extension resolves one interpreter for the whole workspace: declare
+  // this directory in that workspace's settings under `python-envs.pythonProjects` with
+  // envManager `ms-python.python:pixi`, or run the notebooks through their pixi tasks,
+  // which cannot pick the wrong interpreter because they do not choose one.
+  "python.defaultInterpreterPath": "${workspaceFolder}/.pixi/envs/default/bin/python",
+
+  // marimo starts a kernel in the notebook's own directory by default. theme.paths finds
+  // the data directory by walking up to pyproject.toml, so a sitting records to the right
+  // log either way -- but the repo root is the cwd `pixi run` gives and the tests assume,
+  // and one cwd across all three entry points is one fewer thing that can differ.
+  "marimo.notebookFileRoot": "${workspaceFolder}",
+
+  // .pixi is a materialised conda environment: tens of thousands of files that are never
+  // edited and never searched. Watching and indexing it costs real interactivity.
+  "files.watcherExclude": { "**/.pixi/**": true },
+  "search.exclude": { "**/.pixi": true }
+}

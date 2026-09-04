@@ -9,6 +9,11 @@
 # metadata is merged over the project config at the highest precedence, so a notebook opts
 # in on its own. `auto_instantiate` cannot be set here (marimo strips it from script
 # metadata), so opening this file still runs nothing.
+#
+# Dependencies are deliberately NOT declared in that block. pixi.toml and pixi.lock are
+# this project's one source of truth for the environment; a PEP 723 dependency list here
+# would let `marimo edit --sandbox`, or an editor's uv integration, build a second and
+# unlocked one behind the first -- the same wrong-environment failure with extra steps.
 import marimo
 
 __generated_with = "0.24.0"
@@ -68,6 +73,21 @@ def _():
     import altair as alt
     import numpy as np
     import pandas as pd
+
+    try:
+        import theme  # noqa: F401  -- an environment check, not a use; see below
+    except ModuleNotFoundError as no_package:
+        # theme-calibration is installed editable into this project's pixi environment and
+        # into no other, so a missing `theme` means this notebook is running on the wrong
+        # interpreter -- an editor kernel resolved for a parent folder is the way it
+        # happens. Left unguarded that surfaces as NameError on every cell downstream of
+        # this one, which names the symptom in a dozen places and the cause in none.
+        raise ModuleNotFoundError(
+            "gallery.py is running on an interpreter that does not have theme-calibration "
+            "installed, so nothing below this cell can run. Start it with `pixi run gallery`, or "
+            "select .pixi/envs/default/bin/python as this folder's interpreter. "
+            "README, 'Running it', has both."
+        ) from no_package
 
     from theme.color import apca_lc, composite, hex_to_rgb, rel_lum, ucs_dist, wcag
     from theme.observer import discriminability

@@ -109,17 +109,26 @@ hand-edit it.
 
     pixi run serve      # the trials, at 127.0.0.1:2919
     pixi run analyse    # the analysis notebook, at 127.0.0.1:2920
+    pixi run vision     # a colour-discrimination sitting, at 127.0.0.1:2921
+    pixi run gallery    # the palette gallery, at 127.0.0.1:2922
     pixi run test       # the recovery tests
     pixi run check      # ruff format --check and ruff check
 
-The other two notebooks have no task of their own; serve them the same way, on any free
-port:
-
-    pixi run marimo run notebooks/vision.py --headless --no-token --host 127.0.0.1 -p 2921
-    pixi run marimo run notebooks/gallery.py --headless --no-token --host 127.0.0.1 -p 2922
-
 Two of the three notebooks import `theme.space`, which realises its whole candidate pool
 at import time; expect the first cell to take a while.
+
+Every notebook here imports `theme`, which is installed editable into this project's pixi
+environment and into no other one. Prefer the tasks above over an editor's kernel for that
+reason: a task does not choose an interpreter, it runs in the one the lock file describes.
+An editor does choose, and it chooses per *workspace folder* -- so with a parent directory
+open (a `~/src` holding several projects), VSCode will hand this notebook whichever
+interpreter it resolved for that parent, and a sibling project's environment satisfies
+`import marimo` while having no `theme` in it at all. The import cell then fails and marimo
+reports `NameError` on each of the dozen cells below it, naming the symptom a dozen times
+and the cause not once. `.vscode/settings.json` here pins the interpreter for when this
+directory is the open folder; for a parent workspace, declare this directory under
+`python-envs.pythonProjects` with envManager `ms-python.python:pixi`. The import cells now
+say all of this in their exception when it happens anyway.
 
 ## On the tests
 

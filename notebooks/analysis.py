@@ -9,6 +9,11 @@
 # stale cell is a wrong number wearing the same typeface as a right one. Script metadata
 # is merged over the project config at the highest precedence, so a notebook opts in on
 # its own.
+#
+# Dependencies are deliberately NOT declared in that block. pixi.toml and pixi.lock are
+# this project's one source of truth for the environment; a PEP 723 dependency list here
+# would let `marimo edit --sandbox`, or an editor's uv integration, build a second and
+# unlocked one behind the first -- the same wrong-environment failure with extra steps.
 import marimo
 
 __generated_with = "0.24.0"
