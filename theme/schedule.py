@@ -21,7 +21,7 @@ from .model import (
     rt_at,
     rt_fit,
 )
-from .space import POOL, realize
+from .space import POOL, conspicuous_enough, realize_many
 from .stimulus import DUEL_WIDTH, READING_PX, SURFACES
 
 
@@ -231,21 +231,31 @@ def trial_for(n, responses):
         # A quarter of hunts stay uniform, because an acquisition that only ever probes
         # its own uncertainty can leave a region unvisited that it is wrongly confident
         # about.
-        _bt = _base.copy()
+        # Every candidate the sweep may choose has to clear the conspicuity floor first.
+        # Without that the sampler picks the faintest highlight in the grid, because an
+        # unexplored corner is where a GP's variance is highest -- and a highlight he
+        # cannot see measures how long he was willing to hunt, not what the theme costs.
+        # Filtering the grid BEFORE the acquisition, rather than rejecting afterwards,
+        # keeps the choice the best available one rather than the first acceptable one.
+        _grid = []
+        for _v7 in np.linspace(0.05, 0.95, 7):
+            for _v8 in np.linspace(0.05, 0.95, 7):
+                _c = _base.copy()
+                _c[7], _c[8] = _v7, _v8
+                _grid.append(_c)
+        _themes = realize_many(np.array(_grid), _pol)
+        _usable = [(_c, _th) for _c, _th in zip(_grid, _themes, strict=True) if conspicuous_enough(_th, _pol)]
+        if not _usable:
+            # Nothing on this champion's page can carry a loud enough highlight. Take the
+            # loudest that exists rather than showing an unmeasurable trial.
+            _built = [(_c, _th) for _c, _th in zip(_grid, _themes, strict=True) if _th is not None]
+            _usable = sorted(_built, key=lambda pair: -pair[1]["salience"])[:1]
         _rf_now = rt_fit(_hist, _pol, _fit.get("ls") if _fit else None)
         if _rf_now is not None and _rng.random() > 0.25:
-            _g = np.linspace(0.05, 0.95, 7)
-            _cands_h = []
-            for _v7 in _g:
-                for _v8 in _g:
-                    _c = _base.copy()
-                    _c[7], _c[8] = _v7, _v8
-                    _cands_h.append(_c)
-            _var_h = rt_at(_rf_now, _cands_h, _pol)[1]
-            _bt = _cands_h[int(np.argmax(_var_h))]
+            _variance = rt_at(_rf_now, [_c for _c, _ in _usable], _pol)[1]
+            _bt, _tha = _usable[int(np.argmax(_variance))]
         else:
-            _bt[7], _bt[8] = _rng.random(), _rng.random()
-        _tha = realize(_bt, _pol)
+            _bt, _tha = _usable[_rng.randrange(len(_usable))]
         if _tha is None:
             _idx = _rng.randrange(len(_pool))
             _bt, _tha = np.array(_pool[_idx][0]), _pool[_idx][1]

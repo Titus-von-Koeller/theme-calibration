@@ -1,11 +1,13 @@
 /* The instrument's own chrome. Everything that carries a THEME is inlined by the server
    into the card HTML; nothing here may colour a token, or the stylesheet would be a
    silent extra variable in a colour experiment. */
-:root { --ink: #cfcac6; }
+/* The chrome's ink is set per trial from the payload, never here: the surround flips with
+   polarity, so any colour this file asserted would be wrong for half the trials. What
+   follows is only the instant before the first trial arrives. */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
-  margin: 0; background: #14161c; color: var(--ink);
+  margin: 0; background: #14161c; color: #cfcac6;
   font-family: "IBM Plex Serif", Literata, serif;
   overflow: hidden;                 /* a trial is the whole screen; nothing scrolls */
 }

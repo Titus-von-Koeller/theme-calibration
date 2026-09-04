@@ -57,6 +57,11 @@ async def warm_the_model(_app: FastAPI):
 app = FastAPI(title="theme trials", lifespan=warm_the_model)
 
 
+#: Ink for the instrument's own chrome, per polarity. Deliberately not part of any theme:
+#: the chrome is furniture, and a theme under test must never colour the frame it is judged
+#: in. Both clear 7:1 on their polarity's surround.
+CHROME_INK = {"day": "#3a3634", "night": "#cfcac6"}
+
 # What the chip in the corner calls each arm: short, so the eye takes it in one hit.
 ARM_LABEL = {"duel": "duel", "comprehension": "spot", "search": "find"}
 
@@ -96,6 +101,12 @@ def payload(n: int, answered: list[dict]) -> dict:
         # candidate's ground would advantage it; a single-card trial paints the page with
         # the theme under test, which is what a theme owning the screen actually looks like.
         "page_bg": (responses.DUEL_SURROUND[polarity] if is_duel else trial["theme_a"]["ground"]),
+        # The instrument's OWN chrome -- prompt, chip, progress, the gate -- has to contrast
+        # with whatever surround this trial paints, and the surround flips with polarity. A
+        # stylesheet cannot know that, so it is sent per trial. Getting it wrong is not
+        # cosmetic: a light chrome on a light day page is an invisible instruction and an
+        # invisible begin button.
+        "chrome_ink": CHROME_INK[polarity],
         "keys": "← →  or click" if is_duel else "space pauses",
         "progress": f"{position + 1} of {run_length}",
         # A gate only at the START of a run: one instruction serves the whole run, and no

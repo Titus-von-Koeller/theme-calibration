@@ -21,6 +21,7 @@ let pauses = 0;
 let inputMethod = "mouse";
 let idleTimer = null;
 let busy = false;        // one answer in flight at a time
+let started = false;     // has begin been pressed at all since this page loaded?
 
 const IDLE_MS = 25000;
 
@@ -46,6 +47,7 @@ function show(t) {
   inputMethod = "mouse";
   el.body.classList.toggle("duel", t.is_duel);
   el.body.style.background = t.page_bg;
+  el.body.style.color = t.chrome_ink;
   el.chip.textContent = t.chip;
   el.keys.textContent = t.keys;
   el.progress.textContent = t.progress;
@@ -62,7 +64,12 @@ function show(t) {
     )
     .join("");
   el.cover.style.background = t.page_bg;
-  if (t.gate) {
+  // Gated at the start of a run, and ALWAYS on the first trial after a page load --
+  // otherwise opening the tab and walking away starts a clock on an empty room, and the
+  // first reaction time of a sitting is however long it took to look at the screen.
+  // Inside a run the next trial reveals at once, which is the point of batching a run: no
+  // click is spent re-reading an instruction that has not changed.
+  if (t.gate || !started) {
     cover(t.gate_text, "begin");
   } else {
     reveal();
@@ -80,6 +87,7 @@ function cover(text, label) {
 }
 
 function reveal() {
+  started = true;
   el.cover.hidden = true;
   el.cards.dataset.hidden = "0";
   el.pause.hidden = false;
@@ -134,7 +142,7 @@ async function answer(choice) {
   }
 }
 
-el.go.onclick = () => (trial && !revealed ? reveal() : reveal());
+el.go.onclick = reveal;
 el.pause.onclick = () => doPause("paused");
 
 el.cards.onclick = (ev) => {
