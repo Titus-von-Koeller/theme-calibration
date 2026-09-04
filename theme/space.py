@@ -495,17 +495,24 @@ def _build_pool(pool_thetas):
     A fixed, deterministic candidate pool: the acquisition shops here (plus per-trial
     local refinements around the champion), the prior is standardized here, and
     infeasible corners are carved away by the floors rather than penalized.
+
+    ONE realize_many per polarity, not 512 realize() calls. This runs at import, and
+    colour-science costs the same for sixty-four colours as for one, so realizing the pool
+    a theme at a time paid the library's per-call argument validation 1024 times: importing
+    theme.space took 29 s, which is 29 s of a freshly started server accepting no
+    connections. Batched it is 1.9 s. realize_many populates REALIZE_CACHE on the way
+    through, so the per-theta realize() the analysis and prior_mean still use hit it warm
+    -- checked, not assumed: all 512 pool thetas are in the cache after import.
+
+    The ORDER of the surviving pool is load-bearing twice over, so it is preserved exactly:
+    the index where the standing stratum ends is declared against it, and PRIOR_STATS is
+    computed over the same survivors in the same sequence.
     """
     pool, stats = {}, {}
     for polarity in ("day", "night"):
-        feasible = []
-        priors = []
-        for theta in pool_thetas:
-            theme = realize(theta, polarity)
-            if theme is not None:
-                feasible.append((theta, theme))
-                priors.append(raw_prior(theta, polarity, theme))
-        priors = np.array(priors)
+        themes = realize_many(pool_thetas, polarity)
+        feasible = [(theta, theme) for theta, theme in zip(pool_thetas, themes, strict=True) if theme is not None]
+        priors = np.array([raw_prior(theta, polarity, theme) for theta, theme in feasible])
         stats[polarity] = (float(priors.mean()), float(priors.std() + 1e-9))
         pool[polarity] = feasible
     return pool, stats
