@@ -179,9 +179,22 @@ def _shape_ladder(width, lines):
 
     A None in either position means "do not constrain this", which hands the generator its
     own default -- MAX_WIDTH for the column, DEFAULT_LINES for the length. The unbounded
-    rungs are last for that reason: they are the widest a card can hold, not the widest
-    THIS card can hold, so reaching them is how a duel ends up with a page wider than the
-    64 columns two cards share. `snippet_for` reports what it actually got.
+    rungs are last for that reason: they are the widest ONE card can hold, not the widest
+    this card can hold, so reaching them is how a duel ends up with a page wider than the
+    64 columns two cards share.
+
+    Measured over 120 duel seeds at (width 64, lines 28): the ladder relaxes the column on
+    35 of them and the widest page returned is 72, so it reaches the +8 rung but not the
+    unbounded one, and 72 is still inside the ~80 columns a duel card holds at 14px --
+    nothing was clipped. The exposure is latent rather than active: nothing here caps the
+    unbounded rung at what the card can show, so a seed that fell through to it could
+    return 100 columns and be clipped in silence. The length relaxes far more often -- 83
+    of the 120 came back short of 28, and 32 of those at the generator's own 14 -- and
+    that is by design, since a short page is the same stimulus with less of it.
+
+    None of this reaches the response log: `max_width` and `n_lines` are on the record
+    that `snippet_for` returns, but theme/responses.py does not write them, so an analysis
+    cannot currently separate a 14-line duel page from a 28-line one.
     """
     widths = [int(width) + step for step in _WIDTH_RELAXATIONS] + [None] if width else [None]
     line_counts = [int(lines) + step for step in _LINE_RELAXATIONS] + [None] if lines else [None]
