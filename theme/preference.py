@@ -13,7 +13,7 @@ against.
 
 import numpy as np
 
-from .kernel import N_AXES, POLARITY_AXIS, SIGNAL_VARIANCE, ard_scales, coords, kmat
+from .kernel import N_AXES, POLARITY_AXIS, SIGNAL_VARIANCE, ard_scales, coords, kmat, quadratic_form
 
 
 def realized_space():
@@ -124,12 +124,13 @@ def duel_difference_matrix(duels, n_points):
     contributes q_k (e_win - e_lose)(e_win - e_lose)^T to the Hessian, which is exactly
     D^T diag(q) D for this matrix -- so the whole update is two matrix products. Measured
     on the live log: the loop cost 108 ms per fit, an np.add.at scatter cost 166 ms
-    (add.at is unbuffered and slow), and this costs 128 ms -- SLOWER than the loop at 121
-    duels, because building D dominates at that size. Kept anyway: the loop pays one
-    interpreter trip per duel per Newton step, so it degrades linearly in log length where
-    this is one BLAS call, and 20 ms is noise against a 350 ms trial. Revisit only if a
-    fit ever dominates again. Identical arithmetic either way -- the recovery tests
-    reproduce every number.
+    (add.at is unbuffered and slow), and this cost 128 ms -- SLOWER than the loop at 121
+    duels, because building D dominated at that size. Those three figures were taken while
+    the caller rebuilt this matrix once per alternation round; it is built once per fit
+    now, which is where the 128 came from. Kept anyway: the loop pays one interpreter trip
+    per duel per Newton step, so it degrades linearly in log length where this is one BLAS
+    call. Revisit only if a fit ever dominates again. Identical arithmetic either way --
+    the recovery tests reproduce every number.
     """
     differences = np.zeros((len(duels), n_points))
     for k, (winner, loser) in enumerate(duels):
@@ -226,30 +227,6 @@ def predict(
     variance_reduction = prior_precision - prior_precision @ utility_cov @ prior_precision
     variance = np.maximum(SIGNAL_VARIANCE - quadratic_form(cross_cov, variance_reduction), 1e-9)
     return mean, variance, cross_cov, variance_reduction
-
-
-def quadratic_form(rows, matrix):
-    """Row-wise r A r^T, i.e. the diagonal of `rows @ matrix @ rows.T`.
-
-    Written as one matrix product and an elementwise reduction rather than
-    `np.einsum("ij,jk,ik->i", rows, matrix, rows)`. A three-operand einsum without
-    `optimize` runs numpy's own C loop: m*n*n scalar operations, no BLAS, one thread.
-    This is the same FLOP count through a tuned kernel, and the difference is the
-    difference between the instrument keeping up and not. Measured single-threaded, on
-    the shapes this is called with:
-
-        m x n        einsum      this   speedup
-        40 x 60      0.134 ms   0.008    16.9x
-        300 x 242   31.5 ms     0.536    58.8x
-        600 x 242   91.0 ms     1.056    86.2x
-        1200 x 600  594 ms     24.6      24.1x
-
-    Not bit-identical, because a different summation order rounds differently: the
-    agreement is 1.5e-15 to 4.2e-15 relative, a few ulps of double precision. The
-    decisions the variance feeds -- the Thompson champion and the information-gain
-    challenger -- were checked over 400-candidate sets and did not move.
-    """
-    return (rows @ matrix * rows).sum(1)
 
 
 def query_inputs_for(thetas, polarity):

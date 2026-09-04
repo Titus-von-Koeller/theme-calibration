@@ -22,8 +22,7 @@ import math
 
 import numpy as np
 
-from .kernel import SIGNAL_VARIANCE, coords, kmat
-from .preference import quadratic_form
+from .kernel import SIGNAL_VARIANCE, coords, kmat, quadratic_form
 
 # A trial faster than this is a slip and one slower is a distraction, neither of them a
 # reading time.

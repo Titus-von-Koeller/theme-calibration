@@ -53,7 +53,8 @@ def sobol_block(n_log2, offset_blocks):
     """A power-of-two block from one fixed scrambled Sobol sequence.
 
     Deterministic in the block index, so trial n always draws the same immigrants and
-    successive trials continue the sequence instead of resampling the same clumps.
+    successive trials continue the sequence instead of resampling the same clumps -- until
+    the wrap at SOBOL_WRAP draws, after which the blocks repeat.
     random() rather than random_base2(): the latter also demands that the TOTAL drawn
     be a power of two, which a fast-forwarded engine cannot satisfy. n itself is a
     power of two, which is what the balance property needs.

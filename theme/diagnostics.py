@@ -38,6 +38,11 @@ def _argmax_probabilities(mean, cov, samples, seed):
     try:
         factor = np.linalg.cholesky(cov)
     except np.linalg.LinAlgError:
+        # posterior_joint symmetrizes and adds 1e-8 to the diagonal, so this is rare -- but
+        # a candidate set holding exact duplicates is singular by construction, and the
+        # breeder can propose one. An eigendecomposition with the negative eigenvalues
+        # clipped gives a usable factor where a Cholesky cannot, and P(best) over duplicates
+        # is meaningful either way because grouping merges them straight afterwards.
         eigenvalues, eigenvectors = np.linalg.eigh(cov)
         factor = eigenvectors * np.sqrt(np.maximum(eigenvalues, 1e-12))
     normals = np.random.default_rng(seed).standard_normal((len(mean), samples))
