@@ -13,7 +13,6 @@ const el = {
 };
 
 let trial = null;        // the trial on screen
-let ahead = null;        // trial n+1, fetched while he answers n
 let t0 = -1;             // the clock's baseline: the latest reveal
 let revealed = false;
 let paused = false;
@@ -23,6 +22,7 @@ let idleTimer = null;
 let busy = false;        // one answer in flight at a time
 let started = false;     // has begin been pressed at all since this page loaded?
 
+// How long a revealed trial waits for an answer before hiding itself.
 const IDLE_MS = 25000;
 
 async function getTrial(n) {
@@ -31,51 +31,65 @@ async function getTrial(n) {
   return r.json();
 }
 
-// Trial n+1 is fetched while he is still answering n, so the swap costs nothing and no
-// network latency can land inside the timed window. The notebook could not do this: its
-// next trial did not exist until the current one had been recorded and every dependent
-// cell had re-run, which at one point was 8.3 s of analysis per click.
-function prefetch(n) {
-  ahead = getTrial(n).catch(() => null);
+// ---- rendering: four separate jobs, so a change to one cannot disturb another ----------
+
+// The surround and the chrome ink both arrive per trial. The ink has to contrast with
+// whatever this trial paints, and the surround flips with polarity, so neither can live in
+// the stylesheet: a light chrome on a light page is an invisible instruction and an
+// invisible begin button, which has happened.
+function paintSurround(t) {
+  el.body.classList.toggle("duel", t.is_duel);
+  el.body.style.background = t.page_bg;
+  el.body.style.color = t.chrome_ink;
+  el.cover.style.background = t.page_bg;
 }
 
-function show(t) {
+function writeChrome(t) {
+  el.chip.textContent = t.chip;
+  el.keys.textContent = t.keys;
+  el.progress.textContent = t.progress;
+  el.prompt.innerHTML = t.prompt_html;
+}
+
+// Each card's HTML is a SEQUENCE of sibling blocks -- prose, the code card, an output line
+// -- so it goes inside one block child. Handing the siblings straight to a flex row lays
+// them out left-to-right instead of stacking them, which squeezes the code to a third of
+// the half and clips it mid-token. That has now happened twice; the wrapper is what
+// prevents it.
+//
+// A duel hugs the centre line: the left page is pushed right and the right page pushed
+// left, so both sit inside the middle half of a very wide screen. On a large flat monitor
+// the outer thirds are seen at a slant, and a colour judged at a slant is a different
+// colour -- pushing the pages inward keeps both in the straight-on zone while staying
+// symmetric, so neither candidate gains from where it sits.
+function cardMarkup(card, index, isDuel) {
+  const layout = isDuel
+    ? `flex:1 1 0;min-width:0;overflow:hidden;padding:26px 34px;display:flex;` +
+      `align-items:center;cursor:pointer;justify-content:${index === 0 ? "flex-end" : "flex-start"}`
+    : "padding:28px 32px;min-width:0;overflow:hidden;display:flex;justify-content:center";
+  return (
+    `<div class="card" data-i="${index}" style="background:${card.ground};${layout}">` +
+    `<div class="page">${card.html}</div></div>`
+  );
+}
+
+function renderCards(t) {
+  el.cards.innerHTML = t.cards.map((card, index) => cardMarkup(card, index, t.is_duel)).join("");
+}
+
+function resetTrialState(t) {
   trial = t;
   revealed = false;
   paused = false;
   pauses = 0;
   inputMethod = "mouse";
-  el.body.classList.toggle("duel", t.is_duel);
-  el.body.style.background = t.page_bg;
-  el.body.style.color = t.chrome_ink;
-  el.chip.textContent = t.chip;
-  el.keys.textContent = t.keys;
-  el.progress.textContent = t.progress;
-  el.prompt.innerHTML = t.prompt_html;
-  // Each card's HTML is a SEQUENCE of sibling blocks -- prose, the code card, an output
-  // line -- so it goes inside one block child. Handing the siblings straight to a flex
-  // row lays them out left-to-right instead of stacking them, which squeezes the code to
-  // a third of the half and clips it mid-token. That has now happened twice; the wrapper
-  // is what prevents it.
-  //
-  // A duel hugs the centre line: the left page is pushed right and the right page pushed
-  // left, so both sit inside the middle half of a very wide screen. On a large flat
-  // monitor the outer thirds are seen at a slant, and a colour judged at a slant is a
-  // different colour -- pushing the pages inward keeps both in the straight-on zone while
-  // staying symmetric, so neither candidate gains from where it sits.
-  el.cards.innerHTML = t.cards
-    .map((card, index) => {
-      const half = t.is_duel
-        ? `flex:1 1 0;min-width:0;overflow:hidden;padding:26px 34px;display:flex;` +
-          `align-items:center;cursor:pointer;justify-content:${index === 0 ? "flex-end" : "flex-start"}`
-        : "padding:28px 32px;min-width:0;overflow:hidden;display:flex;justify-content:center";
-      return (
-        `<div class="card" data-i="${index}" style="background:${card.ground};${half}">` +
-        `<div class="page">${card.html}</div></div>`
-      );
-    })
-    .join("");
-  el.cover.style.background = t.page_bg;
+}
+
+function show(t) {
+  resetTrialState(t);
+  paintSurround(t);
+  writeChrome(t);
+  renderCards(t);
   // Gated at the start of a run, and ALWAYS on the first trial after a page load --
   // otherwise opening the tab and walking away starts a clock on an empty room, and the
   // first reaction time of a sitting is however long it took to look at the screen.
@@ -86,8 +100,9 @@ function show(t) {
   } else {
     reveal();
   }
-  prefetch(t.n + 1);
 }
+
+// ---- the clock and the cover -----------------------------------------------------------
 
 function cover(text, label) {
   el.coverText.textContent = text;
@@ -123,6 +138,8 @@ function doPause(why) {
   cover(`${why} — the stimulus is hidden; the clock re-baselines when you resume`, "resume");
 }
 
+// ---- answering -------------------------------------------------------------------------
+
 async function answer(choice) {
   if (!revealed || paused || busy || !trial) return;
   busy = true;
@@ -144,7 +161,7 @@ async function answer(choice) {
     const out = await r.json();
     show(out.next);                // the server hands back the next trial in the same trip
   } catch (e) {
-    // A failed post must never look like a taken answer. Say so and let him retry, rather
+    // A failed post must never look like a taken answer. Say so and allow a retry, rather
     // than advancing and silently losing the response -- which is exactly the failure the
     // stale-token tab had, and it cost a sitting before anyone noticed.
     cover(`could not save that answer (${e}). Check the server, then resume.`, "retry");
@@ -192,6 +209,6 @@ document.addEventListener("visibilitychange", () => {
 });
 
 (async () => {
-  const s = await (await fetch("/api/status")).json();
-  show(await getTrial(s.responses));
+  const status = await (await fetch("/api/status")).json();
+  show(await getTrial(status.responses));
 })();
