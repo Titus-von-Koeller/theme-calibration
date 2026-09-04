@@ -6,36 +6,54 @@ the surface, the pixel size, which side was shown and both timestamps -- because
 measurement whose conditions were not written down cannot be re-analysed later, and this
 log has already been re-read under three successive models.
 
+The log is an OBJECT holding a path, not a module-level global. That is what lets a test
+exercise the whole click path against a temporary file: a suite that could only run
+against the real log would either be read-only and shallow, or would append junk to a
+year of measurements. Neither is acceptable, and the choice between them is a design
+smell, not a fact of life.
+
 Building a record takes the trial and the page as arguments rather than fetching them, so
-it is a pure function of its inputs and can be tested without a server. Deciding WHICH
-trial a click belongs to is the caller's job, and the caller must derive it from this log
-rather than from whatever the page was holding -- otherwise a stale page writes its answer
-onto somebody else's row.
+it is a pure function of its inputs and can be tested without a server at all. Deciding
+WHICH trial a click belongs to is the caller's job, and the caller must derive it from
+this log rather than from whatever the page was holding -- otherwise a stale page writes
+its answer onto somebody else's row.
 """
 
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 from . import paths
 from .trialspec import rng_for
-
-LOG_PATH = paths.RESPONSE_LOG
 
 # The neutral surround a duel is judged against, per polarity. A duel keeps this rather
 # than taking either candidate's ground, which would advantage that candidate.
 DUEL_SURROUND = {"day": "#d8d2cf", "night": "#14161c"}
 
 
-def read_responses() -> list[dict]:
-    """Every response recorded so far, oldest first; blank lines skipped."""
-    if not LOG_PATH.exists():
-        return []
-    return [json.loads(line) for line in LOG_PATH.read_text().splitlines() if line.strip()]
+class ResponseLog:
+    """An append-only JSONL file of answered trials."""
+
+    def __init__(self, path: Path):
+        self.path = Path(path)
+
+    def read(self) -> list[dict]:
+        """Every response recorded so far, oldest first; blank lines skipped."""
+        if not self.path.exists():
+            return []
+        return [json.loads(line) for line in self.path.read_text().splitlines() if line.strip()]
+
+    def append(self, entry: dict) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.open("a") as handle:
+            handle.write(json.dumps(entry) + "\n")
+
+    def __len__(self) -> int:
+        return len(self.read())
 
 
-def append_response(entry: dict) -> None:
-    with LOG_PATH.open("a") as handle:
-        handle.write(json.dumps(entry) + "\n")
+#: The real log. Injected rather than imported wherever it can be, so tests get their own.
+DEFAULT_LOG = ResponseLog(paths.RESPONSE_LOG)
 
 
 def _stimulus_fields(trial: dict, page: dict, reported: dict) -> dict:

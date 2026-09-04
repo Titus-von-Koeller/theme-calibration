@@ -22,8 +22,9 @@ imports, so the search, the floors and the log format are the ones already calib
 """
 
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -84,9 +85,24 @@ def payload(n: int, answered: list[dict]) -> dict:
     }
 
 
+def get_log() -> responses.ResponseLog:
+    """The response log this app writes to.
+
+    A FastAPI dependency rather than a module import, so a test can point the whole app at
+    a temporary file with `app.dependency_overrides[get_log]`. Without that seam the only
+    honest end-to-end test would append to a year of real measurements.
+    """
+    return responses.DEFAULT_LOG
+
+
+#: Annotated rather than a `Depends()` default: a call in a default argument is evaluated
+#: once at import and is the usual source of surprising shared state.
+LogDep = Annotated[responses.ResponseLog, Depends(get_log)]
+
+
 @app.get("/api/trial/{n}")
-def api_trial(n: int) -> dict:
-    return payload(n, responses.read_responses())
+def api_trial(n: int, log: LogDep) -> dict:
+    return payload(n, log.read())
 
 
 class Answer(BaseModel):
@@ -99,7 +115,7 @@ class Answer(BaseModel):
 
 
 @app.post("/api/response")
-def api_response(a: Answer) -> dict:
+def api_response(a: Answer, log: LogDep) -> dict:
     """Append one answer, then hand back the next trial in the same round trip.
 
     The guard is the same one the notebook had and matters for the same reason: the trial
@@ -107,19 +123,19 @@ def api_response(a: Answer) -> dict:
     to be holding, so a stale page cannot mis-record. A click for a trial that is no longer
     next is dropped rather than written to the wrong row.
     """
-    answered = responses.read_responses()
+    answered = log.read()
     if a.n != len(answered):
         return {"ok": False, "reason": "stale", "next": payload(len(answered), answered)}
     trial = trial_for(a.n, answered)
     entry = responses.build_entry(a.n, trial, page_for(trial), a.model_dump())
-    responses.append_response(entry)
+    log.append(entry)
     answered = [*answered, entry]
     return {"ok": True, "next": payload(len(answered), answered)}
 
 
 @app.get("/api/status")
-def api_status() -> dict:
-    rows = responses.read_responses()
+def api_status(log: LogDep) -> dict:
+    rows = log.read()
     duels = sum(1 for r in rows if r.get("mode") == "duel")
     return {"responses": len(rows), "duels": duels}
 
