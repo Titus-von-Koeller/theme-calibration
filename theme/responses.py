@@ -38,7 +38,11 @@ class ResponseLog:
         self.path = Path(path)
 
     def read(self) -> list[dict]:
-        """Every response recorded so far, oldest first; blank lines skipped."""
+        """Every response recorded so far, oldest first; blank lines skipped.
+
+        A missing file is an empty log rather than an error, which is what a fresh checkout
+        with no data/ directory needs.
+        """
         if not self.path.exists():
             return []
         return [json.loads(line) for line in self.path.read_text().splitlines() if line.strip()]
@@ -54,6 +58,22 @@ class ResponseLog:
 
 #: The real log. Injected rather than imported wherever it can be, so tests get their own.
 DEFAULT_LOG = ResponseLog(paths.RESPONSE_LOG)
+
+
+def surround_for(trial: dict, polarity: str) -> str:
+    """The colour the whole page is painted for this trial.
+
+    A duel keeps the polarity's neutral surround, since painting the page with either
+    candidate's ground would advantage it; a single-card trial paints the page with the
+    theme under test, which is what a theme owning the screen actually looks like.
+
+    Lives here, beside DUEL_SURROUND, because both the page and the recorded row need it
+    and they have to agree: a row whose `page_bg` disagreed with the surround that was
+    actually painted would describe a stimulus nobody saw.
+    """
+    if trial["mode"] == "duel":
+        return DUEL_SURROUND[polarity]
+    return trial["theme_a"]["ground"]
 
 
 def _stimulus_fields(trial: dict, page: dict, reported: dict) -> dict:
@@ -72,7 +92,7 @@ def _stimulus_fields(trial: dict, page: dict, reported: dict) -> dict:
         "code_px": trial["code_px"],
         "theta_a": trial["theta_a"],
         "theme_a": trial["theme_a"],
-        "page_bg": (DUEL_SURROUND[trial["polarity"]] if trial["mode"] == "duel" else trial["theme_a"]["ground"]),
+        "page_bg": surround_for(trial, trial["polarity"]),
         "input_method": reported.get("input_method", "mouse"),
         # rt_ms runs from the LAST reveal -- the first render, or a resume after a pause.
         # A trial that was ever paused is flagged so its time is read as a near-tie
@@ -101,7 +121,7 @@ def _duel_fields(trial: dict, page: dict, reported: dict, rng) -> dict:
 def _comprehension_fields(page: dict, reported: dict, rng) -> dict:
     target_span = rng.choice(page["fn_ids"])
     target_name = page["spans"][target_span]["text"]
-    # Any occurrence of the name counts. He was asked to find the function, not one
+    # Any occurrence of the name counts. The task was to find the function, not one
     # particular character range, so another call site of the same name answers the
     # question that was actually asked.
     accepted = [
@@ -115,12 +135,12 @@ def _comprehension_fields(page: dict, reported: dict, rng) -> dict:
     }
 
 
-def _find_fields(trial: dict, page: dict, reported: dict, rng) -> dict:
-    current_match = rng.choice(page["ident_ids"])
+def _search_fields(trial: dict, page: dict, reported: dict, rng) -> dict:
+    target_span = rng.choice(page["ident_ids"])
     return {
-        "target": current_match,
+        "target": target_span,
         "clicked": reported["choice"],
-        "correct": reported["choice"] == current_match,
+        "correct": reported["choice"] == target_span,
         "salience": trial["theme_a"]["salience"],
         "find_sal_theta": trial["theta_a"][8],
     }
@@ -134,10 +154,9 @@ def build_entry(trial_number: int, trial: dict, page: dict, reported: dict) -> d
     else is recomputed here from the trial itself.
     """
     rng = rng_for(trial_number)
-    entry = {"n": trial_number, **_stimulus_fields(trial, page, reported)}
     per_arm = {
         "duel": lambda: _duel_fields(trial, page, reported, rng),
         "comprehension": lambda: _comprehension_fields(page, reported, rng),
-        "search": lambda: _find_fields(trial, page, reported, rng),
+        "search": lambda: _search_fields(trial, page, reported, rng),
     }[trial["mode"]]
-    return {**entry, **per_arm()}
+    return {"n": trial_number, **_stimulus_fields(trial, page, reported), **per_arm()}

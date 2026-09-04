@@ -32,8 +32,8 @@ button {
 
 /* The instruction sits directly over the code and travels WITH it: the pair is centred as
    a group, so the gap between them is fixed instead of depending on the window height. A
-   left-bound instruction with centred code is a real saccade on a full-screen 8k display,
-   and on a timed arm that travel is inside the measurement. */
+   left-bound instruction with centred code is a real saccade on a full-screen very large
+   display, and on a timed arm that travel is inside the measurement. */
 #stage { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
 #prompt { margin: 0 auto 26px; font-size: 21px; line-height: 1.35; text-align: center; max-width: min(46em, 92vw); }
 #shade { position: relative; display: flex; width: 100%; min-height: 0; justify-content: center; }

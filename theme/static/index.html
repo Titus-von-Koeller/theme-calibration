@@ -5,8 +5,10 @@
 <link rel="stylesheet" href="/static/app.css">
 <body>
   <!-- Built once, here, in markup. Nothing below is ever created, destroyed or reparented
-       at runtime: a trial changes text and innerHTML, never structure. That is the whole
-       point of moving off the notebook, so it is worth saying in the file that holds it. -->
+       at runtime: a trial changes text and innerHTML, never structure. A timed task has to
+       measure against a DOM that outlives the measurement, and the previous version's host
+       rebuilt the widget on every answer -- which is what blanked the stage between
+       trials. Stated here because this file is what guarantees it. -->
   <div id="page">
     <header id="bar">
       <span id="chip"></span>
