@@ -264,6 +264,19 @@ interact, and choose the best combination — every step from measurement.
   nothing. Scope specificity still beats order, which is usually what you want: a
   hand-written `variable.parameter` survives a generated `variable`, so refinements the
   instrument does not model (the body-versus-definition split) are not flattened by it.
+- **A flat posterior marginal is the signature of an UNIDENTIFIED parameter, and its mean is
+  the grid's midpoint rather than zero.** The observer's size exponent came back exactly
+  flat — 0.2 on each of five grid points — because all 748 records were taken at one size,
+  so its mean of 0.7 is the centre of the grid and not a measurement. Two docstrings claimed
+  it was "pinned at 0 by its prior" and one consumer silently scaled discriminability by
+  (104/size)^0.7, reporting 0.86 at 104 px against 0.41 at 10 px from zero data. Ship the
+  marginals alongside any fitted payload, and name which consumers multiply by a parameter
+  the data has not identified. Every number an instrument prints looks like a measurement.
+- **A function that accepts a parameter and ignores it will be trusted anyway.**
+  `de_threshold` took a size and dropped it while two of the three consumers of that axis
+  honoured it — in the direction that UNDERSTATES a floor. Corrected, the same threshold is
+  3.23 dE at 104 px, 11.97 at 16 px and 16.63 at 10 px, so the omission was not a rounding
+  matter. If an argument is not used yet, do not accept it.
 - **A posterior mean without its interval hides grid truncation.** Of the observer model's
   five fitted parameters, two sit on the edge of their own grid — 94% of the lapse
   posterior is on the grid's smallest value, and the guess rate's marginal is *exactly* its
