@@ -16,6 +16,7 @@ import numpy as np
 from .model import (
     GH_W,
     GH_X,
+    bilinear_against,
     candidates,
     coords,
     fitted,
@@ -180,7 +181,7 @@ def _most_informative_challenger(fit, thetas, polarity, mean, variance, cross, p
         np.array([coords(theta, polarity) for theta in thetas]),
         np.array([coords(thetas[champion], polarity)]),
         fit.get("ls"),
-    )[:, 0] - np.einsum("ij,jk,k->i", cross, precision, cross[champion])
+    )[:, 0] - bilinear_against(cross, precision, cross[champion])
     utility_gap = mean - mean[champion]
     gap_variance = np.maximum(variance + variance[champion] - 2 * covariance, 1e-9)
     win_probability = 1.0 / (1.0 + np.exp(-utility_gap / np.sqrt(1 + np.pi * gap_variance / 8)))
