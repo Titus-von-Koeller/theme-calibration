@@ -550,11 +550,25 @@ def _(LOG, VISION_LOG, mo, np, obs):
     _n_log = len(LOG)
 
     def _q(values, probs, qs=(0.1, 0.5, 0.9)):
-        """Weighted quantiles of one posterior marginal."""
+        """Weighted quantiles of one posterior marginal, by inverse CDF.
+
+        The step definition and NOT linear interpolation of the CDF, for a reason that
+        showed up as a 24% disagreement between two ways of computing the same interval.
+        This posterior lives on a coarse grid -- gL has nine values, the lapse three -- so
+        an interpolated quantile invents a value the model cannot represent, and worse, it
+        is not consistent under a change of variable: interpolating the quantiles of
+        exp(gL * dJ) gave 0.54 where transforming the quantiles of gL gave 0.61. The
+        inverse CDF returns an actual grid value, so it commutes with any monotone
+        transform and two routes to the same number agree exactly.
+
+        The price is honest coarseness: an interval is quoted to grid resolution, which is
+        what the data can actually distinguish.
+        """
         _v = np.asarray(values, dtype=float)
         _o = np.argsort(_v)
         _c = np.cumsum(np.asarray(probs, dtype=float)[_o])
-        return np.interp(qs, _c / _c[-1], _v[_o])
+        _c = _c / _c[-1]
+        return np.array([_v[_o][min(int(np.searchsorted(_c, _t, side="left")), len(_v) - 1)] for _t in qs])
 
     def _edge_note(values, probs, mass=0.1):
         """Warn when the posterior is pressed against an end of its own grid.
@@ -657,10 +671,15 @@ def _(dense_button, dense_posterior, get_responses, mo, np, obs):
         _post, _cols = dense_posterior(_log)
 
         def _wq(values, weights, qs):
+            """Inverse-CDF quantiles, for the reason spelled out in the fast readout above:
+            every quantity here is a function of a coarse grid, so interpolating the CDF
+            invents values the model cannot hold and stops commuting with the transform.
+            The step definition makes these numbers and the marginal tiles agree exactly."""
             _v = np.asarray(values, dtype=float)
             _o = np.argsort(_v)
             _c = np.cumsum(np.asarray(weights, dtype=float)[_o])
-            return np.interp(qs, _c / _c[-1], _v[_o])
+            _c = _c / _c[-1]
+            return np.array([_v[_o][min(int(np.searchsorted(_c, _t, side="left")), len(_v) - 1)] for _t in qs])
 
         # The threshold along one direction, per grid cell, read off a swept dE ladder
         # through theme.observer's own p_correct_cells rather than re-deriving its Weibull
@@ -984,11 +1003,12 @@ def _(mo):
       means. Blue-yellow and lightness are tight (day blue-yellow 3.3 to 4.5); day red-green
       runs 3.9 to 8.4, a factor of 2.2, so any decision that turns on the red-green figure
       is turning on a number this data has barely constrained.
-    - **The psychometric slope is shallow and pressed against its grid.** Fitted at about
-      1.2, with the lower decile sitting on the grid's own floor of 0.8 -- so the true slope
-      may be shallower still, and the grid, not the data, is setting that bound. Same for the
-      lapse, whose whole posterior sits on the grid's smallest value: "slip rate 0.6%" is
-      properly read as "at or below 0.5%, which is the least this grid can say".
+    - **The psychometric slope is shallow and pressed against its grid.** Posterior mean
+      1.18, median 1.2, and a fifth of the mass sitting on the grid's own floor of 0.8 -- so
+      the true slope may be shallower still, and the grid, not the data, is setting that
+      bound. Same for the lapse: 94% of its posterior is on the smallest value the grid
+      offers, so "slip rate 0.6%" is properly read as "at or below 0.5%, which is the least
+      this grid can say".
     - **Colour deficiency: excluded at the magnitude the literature describes, not excluded
       at a mild one.** See the interval report above for the numbers and the power. The
       earlier reading of this log said flatly that the data says no; that overstated a
@@ -1049,6 +1069,14 @@ def _(mo):
     7. **One observer.** Nothing here generalises to anybody else, and it is not meant to.
        The population models are what a gallery uses; this is the instrument that replaces
        them for one pair of eyes.
+    8. **Every interval is quoted to grid resolution.** The posterior is exact but discrete:
+       nine values for the ground slope, five for the small-field exponent, three for the
+       lapse. An interval is therefore reported as actual grid values by inverse CDF rather
+       than smoothed between them, which is honest but coarse -- an 80% interval on the
+       ground slope can only be [0.0, 0.6] and not [-0.03, 0.46]. Smoothing it looked
+       sharper and was wrong twice over: it named values the model cannot hold, and it
+       stopped agreeing with itself under a change of variable, which is how the problem was
+       found. A finer grid is the fix; it costs time in proportion.
 
     ## Where these numbers go
 
