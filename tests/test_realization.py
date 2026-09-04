@@ -18,11 +18,14 @@ hexes is what makes these tests able to catch its siblings. Rounding to 8 bits m
 colour by up to half a step, which is enough to cross a bar.
 """
 
+import types
+
 import numpy as np
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from theme import space
+from theme import space, thresholds
 from theme.color import apca_lc, hex_to_rgb, rgb_to_ucs, wcag
 
 # A theta is nine numbers in the unit cube; that is the whole parameter space.
@@ -214,3 +217,49 @@ def _ucs_of(theme, names):
 
 def _gap(coords, first, second):
     return float(np.linalg.norm(coords[first] - coords[second]))
+
+
+class TestSeparationFloorRegime:
+    """The floor between meaning-carrying roles is a measurement standing on one leg.
+
+    Thresholds were measured on 104-px patches; code is read at 14. Discrimination worsens
+    as a patch shrinks, and the observer model has a parameter for it -- but every trial to
+    date was shown at 104 px, so that parameter's posterior is flat and the mean the fit
+    reports is the midpoint of its grid rather than a measurement.
+
+    The correction is therefore applied as a CONSTANT: twice the reference threshold, which
+    at 14 px is (104/14)^0.35 and so encodes an exponent of about 0.35. Applying the
+    constant AND the model's exponent counts the same effect twice, which drives the
+    feasible set to zero. These tests pin both halves of that: the constant while the size
+    axis is unmeasured, the fitted exponent once it is not, and never both.
+    """
+
+    def test_the_constant_is_in_force_while_no_trial_varied_size(self):
+        assert not thresholds.size_is_identified(), (
+            "a trial at a second patch size has been logged, so this suite's premise has "
+            "changed and the floor should now be fitted rather than constant"
+        )
+        floor, why = thresholds.separation_floor("day", 14.0)
+        assert floor == pytest.approx(2.0 * thresholds.DE_MIN["day"])
+        assert "constant" in why, "the regime must say out loud that it is not measured"
+
+    def test_the_floor_switches_to_the_fitted_exponent_once_size_is_measured(self, monkeypatch):
+        """And the constant is dropped, not multiplied by it."""
+        monkeypatch.setattr(thresholds, "size_is_identified", lambda fit=None: True)
+        monkeypatch.setattr(thresholds, "VISION_FIT", types.SimpleNamespace(gamma_mean=0.35), raising=False)
+        floor, why = thresholds.separation_floor("day", 14.0)
+        expected = thresholds.DE_MIN["day"] * (104.0 / 14.0) ** 0.35
+        assert floor == pytest.approx(expected, rel=1e-9)
+        assert "retired" in why, "the switch must say the constant is no longer applied"
+        # The whole point: an exponent of 0.35 reproduces the constant it replaces, so the
+        # transition is continuous rather than a cliff in the feasible set.
+        assert floor == pytest.approx(2.0 * thresholds.DE_MIN["day"], rel=0.02)
+
+    def test_applying_both_corrections_would_empty_the_space(self):
+        """Recorded because it is the reason the constant stays: at the grid's midpoint
+        exponent, on top of the doubling, a 200-theme sample yields nothing feasible."""
+        doubled_and_scaled = 2.0 * thresholds.DE_MIN["day"] * (104.0 / 14.0) ** 0.7
+        assert doubled_and_scaled > 25.0, (
+            f"{doubled_and_scaled:.1f} dE between every accent pair is not a floor, it is a "
+            "refusal to build any theme at all"
+        )

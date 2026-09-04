@@ -33,7 +33,18 @@ from .color import (
     wcag,
 )
 from .harmony import lab, ou_luo_pair
-from .thresholds import DE_MIN, THRESH_DETAIL, VISION_FIT, VISION_LOG, VISION_N  # noqa: F401
+from .thresholds import (  # noqa: F401
+    DE_MIN,
+    THRESH_DETAIL,
+    VISION_FIT,
+    VISION_LOG,
+    VISION_N,
+    separation_floor,
+)
+
+#: The smallest size a theme is read at, and therefore the size its floors must hold at.
+#: Editors sit at 14 and notebook cells at 16, so 14 is the binding case.
+READING_SIZE_PX = 14.0
 
 # Theme space and its realization. Nine axes, each in [0, 1]; polarity (light page /
 # dark page) is a block factor, not an axis — trials alternate in blocks and the model
@@ -326,15 +337,22 @@ def _contrast_floors_hold(lc, contrast):
     return bool((contrast >= WCAG_FLOOR - FLOOR_SLACK).all() and (np.abs(lc) >= LC_FLOORS).all())
 
 
-def _separations_hold(gap, threshold):
+def _separations_hold(gap, threshold, meaning_floor):
     """Does one theme keep every pair of its colours as far apart as that pair is owed?
 
     The margin is not uniform and should not be. Comment and ink are MEANT to sit inside a
     full discrimination step: both are neutral text and a comment is a deliberate step
     quieter than body ink, so demanding more there would fight the figure-versus-ground
     rule the palette is built on. The italic carries the rest.
+
+    `meaning_floor` arrives already scaled for the size code is read at, from
+    `thresholds.separation_floor`, rather than being computed here as a multiple of the
+    reference threshold. That indirection is the point: the multiple used to be a literal 2
+    standing in for an unmeasured size exponent, and keeping it here alongside a fitted
+    exponent would count the same effect twice. One place decides, and it says which
+    regime it is in.
     """
-    if any(gap(first, second) < 2 * threshold for first, second in combinations(MEANING_ROLES, 2)):
+    if any(gap(first, second) < meaning_floor for first, second in combinations(MEANING_ROLES, 2)):
         return False
     if gap(COMMENT, INK) < threshold:
         return False
@@ -361,7 +379,7 @@ def _assemble(measured, i, polarity):
     def gap(first, second):
         return float(np.linalg.norm(separations[first] - separations[second]))
 
-    if not _separations_hold(gap, DE_MIN[polarity]):
+    if not _separations_hold(gap, DE_MIN[polarity], separation_floor(polarity, READING_SIZE_PX)[0]):
         return None
     if not _fills_readable(measured.ink_on_fills[i], measured.string_on_fills[i]):
         return None
