@@ -1,0 +1,748 @@
+{"ts": "2026-09-02T11:08:34+00:00", "palette": "batlow", "base": "#d29343", "odd_color": "#fdac9e", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T11:16:41+00:00", "palette": "tab10", "base": "#9467bd", "odd_color": "#d62728", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T11:31:28+00:00", "palette": "batlow", "base": "#011959", "odd_color": "#fdac9e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:22:58+00:00", "palette": "tab10", "base": "#2ca02c", "odd_color": "#d62728", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:01+00:00", "palette": "batlow", "base": "#828231", "odd_color": "#144d62", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:02+00:00", "palette": "Set1", "base": "#984ea3", "odd_color": "#a65628", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:06+00:00", "palette": "viridis", "base": "#35b779", "odd_color": "#440154", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:23:07+00:00", "palette": "viridis", "base": "#31688e", "odd_color": "#21918c", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:08+00:00", "palette": "POLARITY", "base": "#eaa886", "odd_color": "#d95926", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:09+00:00", "palette": "viridis", "base": "#443983", "odd_color": "#fde725", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:10+00:00", "palette": "tab10", "base": "#ff7f0e", "odd_color": "#e377c2", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:12+00:00", "palette": "okabe-ito", "base": "#E69F00", "odd_color": "#CC79A7", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:13+00:00", "palette": "okabe-ito", "base": "#E69F00", "odd_color": "#CC79A7", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:14+00:00", "palette": "okabe-ito", "base": "#D55E00", "odd_color": "#F0E442", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:15+00:00", "palette": "tab10", "base": "#2ca02c", "odd_color": "#9467bd", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:16+00:00", "palette": "POLARITY", "base": "#e8e8e6", "odd_color": "#173f6e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:24+00:00", "palette": "horizon-night", "base": "#e95378", "odd_color": "#d55170", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:26+00:00", "palette": "Set1", "base": "#984ea3", "odd_color": "#ffff33", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:27+00:00", "palette": "tab10", "base": "#ff7f0e", "odd_color": "#d62728", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:23:28+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#d62728", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:23:29+00:00", "palette": "okabe-ito", "base": "#E69F00", "odd_color": "#D55E00", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:30+00:00", "palette": "horizon-night", "base": "#24a2ad", "odd_color": "#d55170", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:31+00:00", "palette": "POLARITY", "base": "#e8e8e6", "odd_color": "#2a78d6", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:33+00:00", "palette": "Set1", "base": "#4daf4a", "odd_color": "#377eb8", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:34+00:00", "palette": "cividis", "base": "#00224e", "odd_color": "#575d6d", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:35+00:00", "palette": "viridis", "base": "#21918c", "odd_color": "#440154", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:41+00:00", "palette": "Set1", "base": "#377eb8", "odd_color": "#ffff33", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:42+00:00", "palette": "horizon-day", "base": "#989190", "odd_color": "#da103f", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:43+00:00", "palette": "horizon-day", "base": "#8a31b9", "odd_color": "#f6661e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:44+00:00", "palette": "horizon-day", "base": "#1d8991", "odd_color": "#da103f", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:45+00:00", "palette": "tab10", "base": "#d62728", "odd_color": "#2ca02c", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:46+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#2ca02c", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:47+00:00", "palette": "POLARITY", "base": "#8f3413", "odd_color": "#173f6e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:49+00:00", "palette": "batlow", "base": "#faccfa", "odd_color": "#144d62", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:49+00:00", "palette": "cividis", "base": "#575d6d", "odd_color": "#d2c060", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:50+00:00", "palette": "tab10", "base": "#8c564b", "odd_color": "#ff7f0e", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:23:51+00:00", "palette": "okabe-ito", "base": "#56B4E9", "odd_color": "#0072B2", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:53+00:00", "palette": "POLARITY", "base": "#d95926", "odd_color": "#8f3413", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:55+00:00", "palette": "cividis", "base": "#fee838", "odd_color": "#575d6d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:57+00:00", "palette": "cividis", "base": "#00224e", "odd_color": "#7d7c78", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:23:58+00:00", "palette": "okabe-ito", "base": "#009E73", "odd_color": "#0072B2", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:23:59+00:00", "palette": "Set1", "base": "#e41a1c", "odd_color": "#ff7f00", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:00+00:00", "palette": "viridis", "base": "#35b779", "odd_color": "#90d743", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:01+00:00", "palette": "cividis", "base": "#7d7c78", "odd_color": "#575d6d", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:03+00:00", "palette": "RAMP", "base": "#dbe7f7", "odd_color": "#2a78d6", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:04+00:00", "palette": "cividis", "base": "#2a3f6d", "odd_color": "#00224e", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:08+00:00", "palette": "tab10", "base": "#8c564b", "odd_color": "#d62728", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:09+00:00", "palette": "Set1", "base": "#a65628", "odd_color": "#4daf4a", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:10+00:00", "palette": "okabe-ito", "base": "#D55E00", "odd_color": "#000000", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:11+00:00", "palette": "batlow", "base": "#3c6d56", "odd_color": "#fdac9e", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:12+00:00", "palette": "batlow", "base": "#d29343", "odd_color": "#011959", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:13+00:00", "palette": "RAMP", "base": "#17457c", "odd_color": "#a8c6ec", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:14+00:00", "palette": "Set1", "base": "#377eb8", "odd_color": "#f781bf", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:15+00:00", "palette": "okabe-ito", "base": "#009E73", "odd_color": "#56B4E9", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:17+00:00", "palette": "batlow", "base": "#fdac9e", "odd_color": "#828231", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:19+00:00", "palette": "okabe-ito", "base": "#CC79A7", "odd_color": "#000000", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:20+00:00", "palette": "tab10", "base": "#1f77b4", "odd_color": "#9467bd", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:22+00:00", "palette": "cividis", "base": "#a59c74", "odd_color": "#575d6d", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:23+00:00", "palette": "Set1", "base": "#4daf4a", "odd_color": "#ff7f00", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:24+00:00", "palette": "horizon-night", "base": "#4c4d53", "odd_color": "#24a2ad", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:25+00:00", "palette": "Set1", "base": "#4daf4a", "odd_color": "#f781bf", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:26+00:00", "palette": "okabe-ito", "base": "#000000", "odd_color": "#E69F00", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:27+00:00", "palette": "cividis", "base": "#d2c060", "odd_color": "#a59c74", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:28+00:00", "palette": "Set1", "base": "#f781bf", "odd_color": "#ffff33", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:29+00:00", "palette": "horizon-day", "base": "#989190", "odd_color": "#8a31b9", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:30+00:00", "palette": "batlow", "base": "#fdac9e", "odd_color": "#144d62", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:31+00:00", "palette": "tab10", "base": "#1f77b4", "odd_color": "#2ca02c", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:32+00:00", "palette": "Set1", "base": "#a65628", "odd_color": "#377eb8", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:34+00:00", "palette": "POLARITY", "base": "#93bae9", "odd_color": "#8f3413", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:35+00:00", "palette": "cividis", "base": "#a59c74", "odd_color": "#7d7c78", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:36+00:00", "palette": "horizon-night", "base": "#24a2ad", "odd_color": "#e4a88a", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:37+00:00", "palette": "Set1", "base": "#377eb8", "odd_color": "#ff7f00", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:38+00:00", "palette": "batlow", "base": "#3c6d56", "odd_color": "#011959", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:39+00:00", "palette": "batlow", "base": "#faccfa", "odd_color": "#3c6d56", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:40+00:00", "palette": "okabe-ito", "base": "#D55E00", "odd_color": "#CC79A7", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:41+00:00", "palette": "Set1", "base": "#e41a1c", "odd_color": "#f781bf", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:42+00:00", "palette": "Set1", "base": "#ffff33", "odd_color": "#ff7f00", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:43+00:00", "palette": "POLARITY", "base": "#2a78d6", "odd_color": "#173f6e", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:45+00:00", "palette": "RAMP", "base": "#2a78d6", "odd_color": "#17457c", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:46+00:00", "palette": "POLARITY", "base": "#8f3413", "odd_color": "#e8e8e6", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:47+00:00", "palette": "okabe-ito", "base": "#000000", "odd_color": "#E69F00", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:49+00:00", "palette": "cividis", "base": "#d2c060", "odd_color": "#fee838", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:50+00:00", "palette": "batlow", "base": "#828231", "odd_color": "#3c6d56", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:52+00:00", "palette": "tab10", "base": "#d62728", "odd_color": "#e377c2", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:53+00:00", "palette": "cividis", "base": "#2a3f6d", "odd_color": "#7d7c78", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:54+00:00", "palette": "viridis", "base": "#21918c", "odd_color": "#90d743", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:24:55+00:00", "palette": "viridis", "base": "#440154", "odd_color": "#90d743", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:24:56+00:00", "palette": "okabe-ito", "base": "#D55E00", "odd_color": "#009E73", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:57+00:00", "palette": "batlow", "base": "#011959", "odd_color": "#828231", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:24:58+00:00", "palette": "viridis", "base": "#443983", "odd_color": "#21918c", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:24:59+00:00", "palette": "tab10", "base": "#ff7f0e", "odd_color": "#1f77b4", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:25:00+00:00", "palette": "horizon-night", "base": "#4c4d53", "odd_color": "#a96ec9", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:25:01+00:00", "palette": "okabe-ito", "base": "#0072B2", "odd_color": "#000000", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:25:02+00:00", "palette": "okabe-ito", "base": "#CC79A7", "odd_color": "#009E73", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:25:04+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#9467bd", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:25:05+00:00", "palette": "horizon-night", "base": "#e4a88a", "odd_color": "#4c4d53", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:25:08+00:00", "palette": "RAMP", "base": "#2a78d6", "odd_color": "#a8c6ec", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:25:09+00:00", "palette": "Set1", "base": "#f781bf", "odd_color": "#a65628", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:25:10+00:00", "palette": "horizon-day", "base": "#f6661e", "odd_color": "#1d8991", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:25:11+00:00", "palette": "tab10", "base": "#d62728", "odd_color": "#1f77b4", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:25:53+00:00", "palette": "Set1", "base": "#377eb8", "odd_color": "#e41a1c", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:25:54+00:00", "palette": "viridis", "base": "#35b779", "odd_color": "#fde725", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:25:55+00:00", "palette": "RAMP", "base": "#17457c", "odd_color": "#6b9ede", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:25:56+00:00", "palette": "viridis", "base": "#440154", "odd_color": "#fde725", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:25:57+00:00", "palette": "tab10", "base": "#8c564b", "odd_color": "#1f77b4", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:25:58+00:00", "palette": "tab10", "base": "#2ca02c", "odd_color": "#ff7f0e", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:25:59+00:00", "palette": "batlow", "base": "#fdac9e", "odd_color": "#faccfa", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:01+00:00", "palette": "Set1", "base": "#e41a1c", "odd_color": "#a65628", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:02+00:00", "palette": "viridis", "base": "#31688e", "odd_color": "#35b779", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:03+00:00", "palette": "cividis", "base": "#7d7c78", "odd_color": "#fee838", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:04+00:00", "palette": "cividis", "base": "#00224e", "odd_color": "#2a3f6d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:05+00:00", "palette": "batlow", "base": "#144d62", "odd_color": "#faccfa", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:06+00:00", "palette": "viridis", "base": "#443983", "odd_color": "#90d743", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:07+00:00", "palette": "horizon-day", "base": "#da103f", "odd_color": "#e84a72", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:09+00:00", "palette": "RAMP", "base": "#6b9ede", "odd_color": "#dbe7f7", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:10+00:00", "palette": "horizon-night", "base": "#e95378", "odd_color": "#24a2ad", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:12+00:00", "palette": "horizon-day", "base": "#8a31b9", "odd_color": "#1d8991", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:13+00:00", "palette": "horizon-night", "base": "#a96ec9", "odd_color": "#e95378", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:14+00:00", "palette": "tab10", "base": "#d62728", "odd_color": "#ff7f0e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:15+00:00", "palette": "batlow", "base": "#3c6d56", "odd_color": "#144d62", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:16+00:00", "palette": "Set1", "base": "#984ea3", "odd_color": "#4daf4a", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:18+00:00", "palette": "viridis", "base": "#443983", "odd_color": "#440154", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:19+00:00", "palette": "viridis", "base": "#31688e", "odd_color": "#90d743", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:20+00:00", "palette": "RAMP", "base": "#17457c", "odd_color": "#dbe7f7", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:21+00:00", "palette": "Set1", "base": "#984ea3", "odd_color": "#ff7f00", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:23+00:00", "palette": "Set1", "base": "#e41a1c", "odd_color": "#4daf4a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:24+00:00", "palette": "POLARITY", "base": "#d95926", "odd_color": "#93bae9", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:25+00:00", "palette": "POLARITY", "base": "#e8e8e6", "odd_color": "#eaa886", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:26+00:00", "palette": "POLARITY", "base": "#173f6e", "odd_color": "#d95926", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:27+00:00", "palette": "batlow", "base": "#011959", "odd_color": "#144d62", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:28+00:00", "palette": "horizon-day", "base": "#989190", "odd_color": "#e84a72", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:29+00:00", "palette": "batlow", "base": "#144d62", "odd_color": "#d29343", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:30+00:00", "palette": "cividis", "base": "#2a3f6d", "odd_color": "#d2c060", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:31+00:00", "palette": "batlow", "base": "#828231", "odd_color": "#fdac9e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:33+00:00", "palette": "viridis", "base": "#90d743", "odd_color": "#fde725", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:33+00:00", "palette": "Set1", "base": "#e41a1c", "odd_color": "#984ea3", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:35+00:00", "palette": "batlow", "base": "#d29343", "odd_color": "#828231", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:36+00:00", "palette": "okabe-ito", "base": "#E69F00", "odd_color": "#009E73", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:37+00:00", "palette": "okabe-ito", "base": "#56B4E9", "odd_color": "#D55E00", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:38+00:00", "palette": "batlow", "base": "#144d62", "odd_color": "#828231", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:39+00:00", "palette": "Set1", "base": "#ff7f00", "odd_color": "#a65628", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:40+00:00", "palette": "viridis", "base": "#443983", "odd_color": "#35b779", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:41+00:00", "palette": "tab10", "base": "#2ca02c", "odd_color": "#8c564b", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:42+00:00", "palette": "Set1", "base": "#a65628", "odd_color": "#f781bf", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:44+00:00", "palette": "horizon-day", "base": "#da103f", "odd_color": "#f6661e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:45+00:00", "palette": "Set1", "base": "#984ea3", "odd_color": "#f781bf", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:46+00:00", "palette": "viridis", "base": "#440154", "odd_color": "#31688e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:47+00:00", "palette": "Set1", "base": "#ffff33", "odd_color": "#4daf4a", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:48+00:00", "palette": "batlow", "base": "#faccfa", "odd_color": "#011959", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:49+00:00", "palette": "RAMP", "base": "#6b9ede", "odd_color": "#a8c6ec", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:50+00:00", "palette": "POLARITY", "base": "#93bae9", "odd_color": "#eaa886", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:51+00:00", "palette": "Set1", "base": "#f781bf", "odd_color": "#ff7f00", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:52+00:00", "palette": "POLARITY", "base": "#eaa886", "odd_color": "#173f6e", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:53+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#ff7f0e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:26:54+00:00", "palette": "tab10", "base": "#e377c2", "odd_color": "#8c564b", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:26:57+00:00", "palette": "Set1", "base": "#a65628", "odd_color": "#ff7f00", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:26:58+00:00", "palette": "tab10", "base": "#8c564b", "odd_color": "#ff7f0e", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:26:59+00:00", "palette": "okabe-ito", "base": "#F0E442", "odd_color": "#CC79A7", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:27:00+00:00", "palette": "cividis", "base": "#2a3f6d", "odd_color": "#575d6d", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:27:01+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#e377c2", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:27:02+00:00", "palette": "cividis", "base": "#a59c74", "odd_color": "#fee838", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:27:04+00:00", "palette": "okabe-ito", "base": "#D55E00", "odd_color": "#0072B2", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:27:04+00:00", "palette": "okabe-ito", "base": "#0072B2", "odd_color": "#CC79A7", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:27:05+00:00", "palette": "POLARITY", "base": "#2a78d6", "odd_color": "#d95926", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:27:07+00:00", "palette": "horizon-night", "base": "#24a2ad", "odd_color": "#a96ec9", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:27:08+00:00", "palette": "okabe-ito", "base": "#0072B2", "odd_color": "#E69F00", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:27:09+00:00", "palette": "POLARITY", "base": "#93bae9", "odd_color": "#173f6e", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:27:10+00:00", "palette": "tab10", "base": "#e377c2", "odd_color": "#2ca02c", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:27:11+00:00", "palette": "okabe-ito", "base": "#F0E442", "odd_color": "#56B4E9", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:27:12+00:00", "palette": "POLARITY", "base": "#8f3413", "odd_color": "#173f6e", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:27:13+00:00", "palette": "tab10", "base": "#8c564b", "odd_color": "#9467bd", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:27:14+00:00", "palette": "cividis", "base": "#d2c060", "odd_color": "#7d7c78", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:27:15+00:00", "palette": "horizon-night", "base": "#a96ec9", "odd_color": "#d55170", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:27:16+00:00", "palette": "horizon-night", "base": "#e4a88a", "odd_color": "#e95378", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:27:18+00:00", "palette": "okabe-ito", "base": "#000000", "odd_color": "#009E73", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:27:20+00:00", "palette": "Set1", "base": "#984ea3", "odd_color": "#377eb8", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:28:32+00:00", "palette": "okabe-ito", "base": "#F0E442", "odd_color": "#0072B2", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:33+00:00", "palette": "RAMP", "base": "#17457c", "odd_color": "#dbe7f7", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:34+00:00", "palette": "cividis", "base": "#fee838", "odd_color": "#2a3f6d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:35+00:00", "palette": "okabe-ito", "base": "#56B4E9", "odd_color": "#E69F00", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:35+00:00", "palette": "POLARITY", "base": "#2a78d6", "odd_color": "#8f3413", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:36+00:00", "palette": "POLARITY", "base": "#eaa886", "odd_color": "#2a78d6", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:37+00:00", "palette": "viridis", "base": "#31688e", "odd_color": "#fde725", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:39+00:00", "palette": "batlow", "base": "#d29343", "odd_color": "#faccfa", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:39+00:00", "palette": "okabe-ito", "base": "#E69F00", "odd_color": "#F0E442", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:40+00:00", "palette": "horizon-day", "base": "#f6661e", "odd_color": "#989190", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:41+00:00", "palette": "cividis", "base": "#00224e", "odd_color": "#d2c060", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:43+00:00", "palette": "viridis", "base": "#443983", "odd_color": "#31688e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:28:44+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#8c564b", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:28:45+00:00", "palette": "okabe-ito", "base": "#CC79A7", "odd_color": "#56B4E9", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:46+00:00", "palette": "batlow", "base": "#d29343", "odd_color": "#3c6d56", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:47+00:00", "palette": "cividis", "base": "#00224e", "odd_color": "#fee838", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:28:48+00:00", "palette": "tab10", "base": "#e377c2", "odd_color": "#1f77b4", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:49+00:00", "palette": "cividis", "base": "#00224e", "odd_color": "#a59c74", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:28:50+00:00", "palette": "viridis", "base": "#21918c", "odd_color": "#fde725", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:28:51+00:00", "palette": "okabe-ito", "base": "#F0E442", "odd_color": "#009E73", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:53+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#1f77b4", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:28:54+00:00", "palette": "Set1", "base": "#ffff33", "odd_color": "#a65628", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:55+00:00", "palette": "horizon-day", "base": "#f6661e", "odd_color": "#e84a72", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:28:56+00:00", "palette": "horizon-day", "base": "#e84a72", "odd_color": "#8a31b9", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:29:01+00:00", "palette": "okabe-ito", "base": "#56B4E9", "odd_color": "#000000", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:29:02+00:00", "palette": "Set1", "base": "#ffff33", "odd_color": "#e41a1c", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:29:04+00:00", "palette": "tab10", "base": "#9467bd", "odd_color": "#ff7f0e", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:29:34+00:00", "palette": "RAMP", "base": "#a8c6ec", "odd_color": "#dbe7f7", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:29:37+00:00", "palette": "horizon-night", "base": "#d55170", "odd_color": "#4c4d53", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:29:38+00:00", "palette": "cividis", "base": "#2a3f6d", "odd_color": "#a59c74", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:29:39+00:00", "palette": "horizon-day", "base": "#8a31b9", "odd_color": "#da103f", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:39:01+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#df2f7b", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:39:18+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#26a100", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:39:31+00:00", "palette": "okabe-ito", "base": "#000000", "odd_color": "#56B4E9", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:39:32+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#7a62b5", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:39:34+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#5a5a7a", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:39:35+00:00", "palette": "probe", "base": "#a59c74", "odd_color": "#d68576", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:39:37+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#5a5a7a", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:39:39+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#b85024", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:39:40+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#15937e", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:39:41+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#7b5a57", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:39:43+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#76538f", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:39:44+00:00", "palette": "cividis", "base": "#00224e", "odd_color": "#575d6d", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:39:46+00:00", "palette": "viridis", "base": "#90d743", "odd_color": "#31688e", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:39:48+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#e9aa77", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:39:49+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#76538f", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:40:01+00:00", "palette": "probe", "base": "#F0E442", "odd_color": "#efe524", "ground": "day", "odd_position": 3, "choice": 1, "correct": false}
+{"ts": "2026-09-02T12:40:03+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d62437", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:40:07+00:00", "palette": "probe", "base": "#9467bd", "odd_color": "#9762cb", "ground": "day", "odd_position": 2, "choice": 1, "correct": false}
+{"ts": "2026-09-02T12:40:11+00:00", "palette": "probe", "base": "#434e6c", "odd_color": "#40515f", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:40:12+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#817592", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:40:19+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7e25", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:40:20+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#867e8d", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:40:25+00:00", "palette": "probe", "base": "#828231", "odd_color": "#838141", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:40:31+00:00", "palette": "probe", "base": "#443983", "odd_color": "#6c1a84", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:41:31+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69e29", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:44:11+00:00", "palette": "horizon-night", "base": "#d55170", "odd_color": "#e95378", "ground": "day", "odd_position": 2, "choice": 3, "correct": false}
+{"ts": "2026-09-02T12:44:17+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7e25", "ground": "night", "odd_position": 3, "choice": 1, "correct": false}
+{"ts": "2026-09-02T12:44:19+00:00", "palette": "RAMP", "base": "#7d7c78", "odd_color": "#00224e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:44:21+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#084f55", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:44:23+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#a29c4d", "ground": "day", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:44:24+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#4e4b60", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:44:35+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e41f00", "ground": "day", "odd_position": 2, "choice": 1, "correct": false}
+{"ts": "2026-09-02T12:44:38+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#e8566a", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:44:40+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#5c286e", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:44:41+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#084f55", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:44:43+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#b1b500", "ground": "day", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:44:44+00:00", "palette": "horizon-night", "base": "#a96ec9", "odd_color": "#e95378", "ground": "night", "odd_position": 3, "choice": 3, "correct": true}
+{"ts": "2026-09-02T12:44:46+00:00", "palette": "probe", "base": "#434e6c", "odd_color": "#40515f", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:44:49+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d62917", "ground": "night", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:44:52+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002642", "ground": "day", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:44:56+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#38659c", "ground": "night", "odd_position": 0, "choice": 0, "correct": true}
+{"ts": "2026-09-02T12:44:58+00:00", "palette": "tab10", "base": "#ff7f0e", "odd_color": "#e377c2", "ground": "day", "odd_position": 2, "choice": 2, "correct": true}
+{"ts": "2026-09-02T12:45:05+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#2e81aa", "ground": "night", "odd_position": 1, "choice": 1, "correct": true}
+{"ts": "2026-09-02T12:49:42+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7e2b", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:47+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#2e81aa", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:48+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#2ca02c", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:49+00:00", "palette": "viridis", "base": "#443983", "odd_color": "#31688e", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:51+00:00", "palette": "probe", "base": "#440154", "odd_color": "#420c48", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:54+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#2e81aa", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:55+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#1d4a6f", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:58+00:00", "palette": "tab10", "base": "#1f77b4", "odd_color": "#ff7f0e", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:49:59+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#2f9f3f", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:05+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#8e3600", "ground": "night", "odd_position": 2, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:13+00:00", "palette": "probe", "base": "#0072B2", "odd_color": "#1178b8", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:17+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e4172c", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:19+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#00ab37", "ground": "day", "odd_position": 2, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:20+00:00", "palette": "probe", "base": "#828231", "odd_color": "#b16c35", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:28+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#2d73c2", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:35+00:00", "palette": "probe", "base": "#440154", "odd_color": "#4a085a", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:46+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69e29", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:49+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#0089c1", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:52+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#2d73c2", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:53+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#28879f", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:57+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#2d73c2", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:50:59+00:00", "palette": "probe", "base": "#443983", "odd_color": "#6c1a84", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:00+00:00", "palette": "cividis", "base": "#575d6d", "odd_color": "#d2c060", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:02+00:00", "palette": "probe", "base": "#989190", "odd_color": "#9a8f9e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:03+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#4a4f46", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:13+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#29a111", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:15+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#00ab37", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:27+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69e29", "ground": "night", "odd_position": 1, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:32+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002a56", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:34+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#878b75", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:45+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#777672", "ground": "day", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:47+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#00949a", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:52+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#965395", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:55+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#525359", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:56+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#00c0f3", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:51:58+00:00", "palette": "probe", "base": "#011959", "odd_color": "#002161", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:02+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#17a479", "ground": "day", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:11+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#d95a0f", "ground": "night", "odd_position": 2, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:14+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7e2b", "ground": "day", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:15+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#50ae5a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:23+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7e2b", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:37+00:00", "palette": "probe", "base": "#989190", "odd_color": "#9a8f9e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:45+00:00", "palette": "probe", "base": "#443983", "odd_color": "#403e76", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:52:46+00:00", "palette": "horizon-day", "base": "#da103f", "odd_color": "#989190", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:00+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#2f4573", "ground": "day", "odd_position": 3, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:01+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#0082bd", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:17+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e41f00", "ground": "day", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:20+00:00", "palette": "probe", "base": "#443983", "odd_color": "#483390", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:25+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d62437", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:31+00:00", "palette": "probe", "base": "#F0E442", "odd_color": "#efe524", "ground": "night", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:32+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#396e48", "ground": "day", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:34+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#008f77", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:38+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#2d73c2", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:39+00:00", "palette": "batlow", "base": "#fdac9e", "odd_color": "#144d62", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:40+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e41f00", "ground": "day", "odd_position": 0, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:43+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#9a49b1", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:45+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#6d4d0d", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:47+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#9a49b1", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:52+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#4bb038", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:53+00:00", "palette": "probe", "base": "#d55170", "odd_color": "#d64e7e", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:53:56+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#965395", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:17+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69e29", "ground": "night", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:28+00:00", "palette": "probe", "base": "#2a78d6", "odd_color": "#3773e4", "ground": "day", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:31+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e4172c", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:33+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002642", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:34+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002a56", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:36+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#8669b9", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:37+00:00", "palette": "POLARITY", "base": "#d95926", "odd_color": "#2a78d6", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:42+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#d85b00", "ground": "day", "odd_position": 2, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:43+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#0c1d5a", "ground": "night", "odd_position": 1, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:45+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d52b00", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:54:46+00:00", "palette": "probe", "base": "#d55170", "odd_color": "#d45462", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:11+00:00", "palette": "probe", "base": "#440154", "odd_color": "#4a085a", "ground": "day", "odd_position": 2, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:12+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#0082bd", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:13+00:00", "palette": "probe", "base": "#8c564b", "odd_color": "#ae394d", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:15+00:00", "palette": "probe", "base": "#011959", "odd_color": "#0f1065", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:16+00:00", "palette": "probe", "base": "#989190", "odd_color": "#c97a91", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:23+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69e29", "ground": "night", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:34+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e41f00", "ground": "day", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:41+00:00", "palette": "probe", "base": "#F0E442", "odd_color": "#f1e358", "ground": "night", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:42+00:00", "palette": "probe", "base": "#e8e8e6", "odd_color": "#eee2ff", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:50+00:00", "palette": "probe", "base": "#011959", "odd_color": "#002161", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:53+00:00", "palette": "probe", "base": "#CC79A7", "odd_color": "#ca7c99", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:57+00:00", "palette": "probe", "base": "#a96ec9", "odd_color": "#ac69d7", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:55:59+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#009f64", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:00+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#2a6b80", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:06+00:00", "palette": "probe", "base": "#443983", "odd_color": "#403e76", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:07+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#a90017", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:17+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#515767", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:18+00:00", "palette": "probe", "base": "#a59c74", "odd_color": "#a69a83", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:19+00:00", "palette": "cividis", "base": "#fee838", "odd_color": "#a59c74", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:21+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#14a49f", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:33+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#042754", "ground": "day", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:56:34+00:00", "palette": "horizon-day", "base": "#989190", "odd_color": "#e84a72", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:08+00:00", "palette": "probe", "base": "#828231", "odd_color": "#808300", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:17+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#2f4573", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:18+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002642", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:22+00:00", "palette": "probe", "base": "#828231", "odd_color": "#81831d", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:25+00:00", "palette": "probe", "base": "#011959", "odd_color": "#001f4d", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:30+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#009c95", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:34+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#69abff", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:35+00:00", "palette": "Set1", "base": "#377eb8", "odd_color": "#a65628", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:37+00:00", "palette": "probe", "base": "#fdac9e", "odd_color": "#feaaad", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:58:58+00:00", "palette": "probe", "base": "#0072B2", "odd_color": "#007cbb", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:03+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#407ac6", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:04+00:00", "palette": "okabe-ito", "base": "#0072B2", "odd_color": "#CC79A7", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:10+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d62437", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:16+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#17a479", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:17+00:00", "palette": "Set1", "base": "#ff7f00", "odd_color": "#377eb8", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:18+00:00", "palette": "okabe-ito", "base": "#56B4E9", "odd_color": "#D55E00", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:20+00:00", "palette": "okabe-ito", "base": "#D55E00", "odd_color": "#009E73", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:43+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7309", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T12:59:52+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#042754", "ground": "day", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:13+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#d25320", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:15+00:00", "palette": "probe", "base": "#35b779", "odd_color": "#3bb688", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:20+00:00", "palette": "probe", "base": "#bcae6c", "odd_color": "#b6a866", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:22+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#69abff", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:30+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#00a97c", "ground": "night", "odd_position": 3, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:31+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#e8566a", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:44+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#0089c1", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:00:46+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002642", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:05+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#d25320", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:14+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7e2b", "ground": "day", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:16+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002a56", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:17+00:00", "palette": "cividis", "base": "#a59c74", "odd_color": "#d2c060", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:29+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#ec2522", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:31+00:00", "palette": "probe", "base": "#8c564b", "odd_color": "#8b573d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:36+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#007297", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:37+00:00", "palette": "probe", "base": "#da103f", "odd_color": "#da1631", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:38+00:00", "palette": "okabe-ito", "base": "#0072B2", "odd_color": "#56B4E9", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:40+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#69abff", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:42+00:00", "palette": "RAMP", "base": "#434e6c", "odd_color": "#00224e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:43+00:00", "palette": "probe", "base": "#a59c74", "odd_color": "#a69a83", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:53+00:00", "palette": "probe", "base": "#828231", "odd_color": "#7c7c2b", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:01:55+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#14a49f", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:00+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#515767", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:02+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#e8566a", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:15+00:00", "palette": "probe", "base": "#434e6c", "odd_color": "#3e4866", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:20+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#2d73c2", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:22+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#007297", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:23+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002642", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:29+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#f87901", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:32+00:00", "palette": "probe", "base": "#440154", "odd_color": "#420c48", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:37+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#92489d", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:41+00:00", "palette": "probe", "base": "#011959", "odd_color": "#001f4d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:42+00:00", "palette": "cividis", "base": "#fee838", "odd_color": "#d2c060", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:49+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69e29", "ground": "day", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:02:57+00:00", "palette": "probe", "base": "#828231", "odd_color": "#7c7c2b", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:03:02+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#965395", "ground": "day", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:03:04+00:00", "palette": "probe", "base": "#93bae9", "odd_color": "#00cee8", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:03:06+00:00", "palette": "probe", "base": "#fdac9e", "odd_color": "#feaaad", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:03:25+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#2f4573", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:03:31+00:00", "palette": "probe", "base": "#0072B2", "odd_color": "#0075a4", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:00+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#f05178", "ground": "night", "odd_position": 3, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:02+00:00", "palette": "tab10", "base": "#7f7f7f", "odd_color": "#8c564b", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:04+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#00c0f3", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:05+00:00", "palette": "cividis", "base": "#7d7c78", "odd_color": "#575d6d", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:10+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#009c95", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:16+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#69abff", "ground": "day", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:17+00:00", "palette": "probe", "base": "#011959", "odd_color": "#002161", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:18+00:00", "palette": "horizon-day", "base": "#1d8991", "odd_color": "#e84a72", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:27+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#eda510", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:28+00:00", "palette": "probe", "base": "#35b779", "odd_color": "#3bb688", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:35+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#525359", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:36+00:00", "palette": "horizon-day", "base": "#f6661e", "odd_color": "#e84a72", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:39+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#00bb54", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:40+00:00", "palette": "POLARITY", "base": "#8f3413", "odd_color": "#2a78d6", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:42+00:00", "palette": "probe", "base": "#0072B2", "odd_color": "#007cbb", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:43+00:00", "palette": "okabe-ito", "base": "#D55E00", "odd_color": "#0072B2", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:44+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002a56", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:48+00:00", "palette": "probe", "base": "#35b779", "odd_color": "#3bb688", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:04:59+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#dc640a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:04+00:00", "palette": "probe", "base": "#9467bd", "odd_color": "#9762cb", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:09+00:00", "palette": "probe", "base": "#440154", "odd_color": "#4a085a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:10+00:00", "palette": "horizon-night", "base": "#24a2ad", "odd_color": "#d55170", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:16+00:00", "palette": "probe", "base": "#ffff33", "odd_color": "#e2ff2f", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:19+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#e3a280", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:21+00:00", "palette": "probe", "base": "#011959", "odd_color": "#002161", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:33+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002a56", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:34+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#006f6c", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:44+00:00", "palette": "probe", "base": "#443983", "odd_color": "#3f337d", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:46+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#b57420", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:56+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#17a479", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:57+00:00", "palette": "probe", "base": "#989190", "odd_color": "#c97a91", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:05:59+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#00c0f3", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:06:04+00:00", "palette": "probe", "base": "#da103f", "odd_color": "#ec004a", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:06:05+00:00", "palette": "probe", "base": "#e8e8e6", "odd_color": "#e1e1df", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:06:08+00:00", "palette": "probe", "base": "#d55170", "odd_color": "#d45462", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:07:28+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#d25320", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:07:30+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#a90017", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:30+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#483373", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:32+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#6873bf", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:35+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#271654", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:37+00:00", "palette": "probe", "base": "#989190", "odd_color": "#799a96", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:42+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#c56b0c", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:50+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#97717f", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:54+00:00", "palette": "probe", "base": "#443983", "odd_color": "#5b2a89", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:17:57+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ed8c1a", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:18:08+00:00", "palette": "probe", "base": "#011959", "odd_color": "#25075f", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:18:15+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ed8c10", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:19:42+00:00", "palette": "probe", "base": "#440154", "odd_color": "#371159", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:19:44+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#f63079", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:19:47+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#5b6cbb", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:19:53+00:00", "palette": "probe", "base": "#440154", "odd_color": "#371159", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:19:57+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#6873bf", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:19:58+00:00", "palette": "POLARITY", "base": "#e8e8e6", "odd_color": "#173f6e", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:01+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#d0aa12", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:02+00:00", "palette": "horizon-day", "base": "#da103f", "odd_color": "#e84a72", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:05+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#699737", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:08+00:00", "palette": "probe", "base": "#a96ec9", "odd_color": "#9378cf", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:11+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ed8c10", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:13+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#483373", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:16+00:00", "palette": "probe", "base": "#443983", "odd_color": "#5b2a89", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:18+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#326573", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:19+00:00", "palette": "Set1", "base": "#e41a1c", "odd_color": "#a65628", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:20:25+00:00", "palette": "probe", "base": "#F0E442", "odd_color": "#e0e940", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:21:25+00:00", "palette": "POLARITY", "base": "#e8e8e6", "odd_color": "#eaa886", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:20+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#449a73", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:21+00:00", "palette": "Set1", "base": "#f781bf", "odd_color": "#ffff33", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:25+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#f19906", "ground": "night", "odd_position": 1, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:31+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e41e00", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:37+00:00", "palette": "probe", "base": "#443983", "odd_color": "#503383", "ground": "night", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:41+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#7fa653", "ground": "night", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:42+00:00", "palette": "probe", "base": "#989190", "odd_color": "#799a96", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:44+00:00", "palette": "probe", "base": "#828231", "odd_color": "#628b37", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:47+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#97717f", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:49+00:00", "palette": "batlow", "base": "#011959", "odd_color": "#3c6d56", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:51+00:00", "palette": "probe", "base": "#93bae9", "odd_color": "#b7aef1", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:54+00:00", "palette": "probe", "base": "#a65628", "odd_color": "#b64831", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:56+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#d3b28c", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:57+00:00", "palette": "POLARITY", "base": "#2a78d6", "odd_color": "#93bae9", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:22:59+00:00", "palette": "Set1", "base": "#ff7f00", "odd_color": "#e41a1c", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:23:01+00:00", "palette": "probe", "base": "#d55170", "odd_color": "#e43c77", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:23:04+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#61645d", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:07+00:00", "palette": "probe", "base": "#ffff33", "odd_color": "#f3f220", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:08+00:00", "palette": "viridis", "base": "#21918c", "odd_color": "#35b779", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:14+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ed8c1a", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:19+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#7fa653", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:23+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#61645d", "ground": "day", "odd_position": 0, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:24+00:00", "palette": "horizon-night", "base": "#4c4d53", "odd_color": "#e4a88a", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:26+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#4389c4", "ground": "day", "odd_position": 1, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:27+00:00", "palette": "RAMP", "base": "#bcae6c", "odd_color": "#00224e", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:31+00:00", "palette": "probe", "base": "#440154", "odd_color": "#39004a", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:35+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#9c3f1d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:38+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#334978", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:43+00:00", "palette": "probe", "base": "#443983", "odd_color": "#4d438e", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:45+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#6873bf", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:26:48+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#5f7f98", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:06+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#27a100", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:11+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002546", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:22+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#97519a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:25+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#97519a", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:29+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#d95832", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:31+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#eba790", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:41+00:00", "palette": "probe", "base": "#011959", "odd_color": "#001d51", "ground": "night", "odd_position": 0, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:27:44+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#2c6a85", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:28:19+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#51b6df", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:28:29+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7f1d", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:28:39+00:00", "palette": "probe", "base": "#443983", "odd_color": "#47358c", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:28:54+00:00", "palette": "probe", "base": "#9467bd", "odd_color": "#926ab4", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:28:58+00:00", "palette": "probe", "base": "#989190", "odd_color": "#979286", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:00+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#1a4b6b", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:05+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#2e82c0", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:16+00:00", "palette": "probe", "base": "#989190", "odd_color": "#a39c9b", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:26+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#cc4d1b", "ground": "day", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:33+00:00", "palette": "probe", "base": "#d95926", "odd_color": "#d95a00", "ground": "day", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:36+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#64aeff", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:38+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#3e62a7", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:29:59+00:00", "palette": "probe", "base": "#2a78d6", "odd_color": "#416ff0", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:02+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#204456", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:04+00:00", "palette": "probe", "base": "#434e6c", "odd_color": "#4a4884", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:06+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#204456", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:09+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#52ad67", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:11+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#24487a", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:14+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#90322e", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:18+00:00", "palette": "probe", "base": "#a96ec9", "odd_color": "#ae65e3", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:20+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#00a693", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:43+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e79e3b", "ground": "day", "odd_position": 2, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:46+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#1a4b6b", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:51+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#e74c69", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:30:57+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e41e00", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:08+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7e23", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:11+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d62532", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:16+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#1379ab", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:19+00:00", "palette": "probe", "base": "#35b779", "odd_color": "#39b683", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:22+00:00", "palette": "probe", "base": "#989190", "odd_color": "#979286", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:26+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#eba790", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:33+00:00", "palette": "probe", "base": "#4daf4a", "odd_color": "#4bb03e", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:34+00:00", "palette": "horizon-day", "base": "#8a31b9", "odd_color": "#989190", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:39+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#199283", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:50+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002546", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:53+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#3180af", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:31:58+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#8f3500", "ground": "night", "odd_position": 0, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:32:04+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d62532", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:32:07+00:00", "palette": "probe", "base": "#0072B2", "odd_color": "#2a6bcc", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:32:24+00:00", "palette": "probe", "base": "#90d743", "odd_color": "#8ed800", "ground": "day", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:32:26+00:00", "palette": "probe", "base": "#989190", "odd_color": "#959476", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:32:27+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#00a693", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:19+00:00", "palette": "probe", "base": "#ffff33", "odd_color": "#ffff5b", "ground": "day", "odd_position": 0, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:21+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#eb4c91", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:24+00:00", "palette": "probe", "base": "#e377c2", "odd_color": "#e07da8", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:26+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d72142", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:28+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#204456", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:30+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#5c5885", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:32+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#50486a", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:34+00:00", "palette": "probe", "base": "#440154", "odd_color": "#40123e", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:37+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#9c43bc", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:39+00:00", "palette": "probe", "base": "#8c564b", "odd_color": "#8b5832", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:33:51+00:00", "palette": "probe", "base": "#828231", "odd_color": "#818300", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:34:11+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#27a100", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:34:26+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69f20", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:34:45+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69f20", "ground": "night", "odd_position": 1, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:34:49+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#2c6a85", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:34:52+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#009f69", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:34:58+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#3180af", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:10+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#97519a", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:20+00:00", "palette": "probe", "base": "#443983", "odd_color": "#47358c", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:27+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#51b6df", "ground": "night", "odd_position": 1, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:29+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#25879a", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:30+00:00", "palette": "tab10", "base": "#2ca02c", "odd_color": "#7f7f7f", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:34+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#97519a", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:50+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#97519a", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:52+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#595b76", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:35:55+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#2ca0b7", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:02+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#97519a", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:10+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69f20", "ground": "night", "odd_position": 3, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:11+00:00", "palette": "POLARITY", "base": "#8f3413", "odd_color": "#eaa886", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:15+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#4777d2", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:17+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#90322e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:27+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7d3b", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:29+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#204456", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:31+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#008c77", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:33+00:00", "palette": "probe", "base": "#011959", "odd_color": "#18036f", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:40+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#64aeff", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:43+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#3670ce", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:51+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#d65c2e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:52+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#151764", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:54+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#151764", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:36:57+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#376f3d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:02+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d72142", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:02+00:00", "palette": "cividis", "base": "#d2c060", "odd_color": "#a59c74", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:08+00:00", "palette": "probe", "base": "#0072B2", "odd_color": "#2a6bcc", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:14+00:00", "palette": "probe", "base": "#da103f", "odd_color": "#da0a48", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:17+00:00", "palette": "probe", "base": "#35b779", "odd_color": "#39b683", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:27+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7f1d", "ground": "night", "odd_position": 0, "choice": 1, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:30+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#7c7d6f", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:35+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7f1d", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:39+00:00", "palette": "probe", "base": "#a96ec9", "odd_color": "#ab6bd3", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:41+00:00", "palette": "probe", "base": "#8a31b9", "odd_color": "#793ebf", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:44+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#2ca0b7", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:48+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ed8c1a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T13:37:50+00:00", "palette": "cividis", "base": "#575d6d", "odd_color": "#a59c74", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:56:43+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#68982e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:56:47+00:00", "palette": "probe", "base": "#da103f", "odd_color": "#da1631", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:10+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7e25", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:12+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#855aa3", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:21+00:00", "palette": "probe", "base": "#011959", "odd_color": "#220d59", "ground": "night", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:22+00:00", "palette": "tab10", "base": "#2ca02c", "odd_color": "#7f7f7f", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:26+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#e88f02", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:31+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#fb3879", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:36+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#72952f", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:52+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#2a164e", "ground": "day", "odd_position": 1, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:54+00:00", "palette": "probe", "base": "#989190", "odd_color": "#6e9d8f", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:57:57+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#4c336d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:03+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#474262", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:08+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#e84a09", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:11+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#175752", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:14+00:00", "palette": "probe", "base": "#434e6c", "odd_color": "#61426c", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:20+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#e88f00", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:24+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#c34525", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:27+00:00", "palette": "probe", "base": "#828231", "odd_color": "#578d2f", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:29+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#9b6f79", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:37+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#616bb4", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:40+00:00", "palette": "probe", "base": "#93bae9", "odd_color": "#8dbed1", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:58:44+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#46366d", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:02+00:00", "palette": "probe", "base": "#0072B2", "odd_color": "#1c6ec0", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:08+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#67982e", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:10+00:00", "palette": "probe", "base": "#989190", "odd_color": "#969382", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:13+00:00", "palette": "probe", "base": "#989190", "odd_color": "#7a9a8f", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:15+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#0e8b83", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:21+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#5f898d", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:24+00:00", "palette": "probe", "base": "#984ea3", "odd_color": "#855aa3", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:28+00:00", "palette": "probe", "base": "#9467bd", "odd_color": "#9762cb", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:34+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#f53473", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:43+00:00", "palette": "probe", "base": "#828231", "odd_color": "#81831d", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T17:59:47+00:00", "palette": "probe", "base": "#fdac9e", "odd_color": "#e7b79d", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:08+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e69e28", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:16+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#576eb4", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:18+00:00", "palette": "probe", "base": "#440154", "odd_color": "#420c48", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:26+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#f53473", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:28+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#fd3379", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:47+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e79e37", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:51+00:00", "palette": "probe", "base": "#440154", "odd_color": "#2f1a54", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:53+00:00", "palette": "probe", "base": "#011959", "odd_color": "#16076d", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:00:56+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#98a6ea", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:00+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#49b8d1", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:03+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#7a95ae", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:12+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7e37", "ground": "day", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:18+00:00", "palette": "probe", "base": "#d29343", "odd_color": "#d19422", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:23+00:00", "palette": "probe", "base": "#9467bd", "odd_color": "#995fd4", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:26+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#3471cb", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:31+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#3471cb", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:34+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d7223f", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:38+00:00", "palette": "probe", "base": "#011959", "odd_color": "#16076d", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:40+00:00", "palette": "probe", "base": "#fdac9e", "odd_color": "#fbaf86", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-02T18:01:42+00:00", "palette": "probe", "base": "#7d7c78", "odd_color": "#7a7f62", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:27+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7e2b", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:29+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#e9aa73", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:32+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#f9940b", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:35+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#406b67", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:44+00:00", "palette": "probe", "base": "#ffff33", "odd_color": "#fffe54", "ground": "night", "odd_position": 1, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:52+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#2c73c2", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:56+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#4eb7da", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:54:58+00:00", "palette": "probe", "base": "#1d8991", "odd_color": "#0e8b83", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:01+00:00", "palette": "probe", "base": "#31688e", "odd_color": "#2a6b81", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:04+00:00", "palette": "probe", "base": "#da103f", "odd_color": "#da1631", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:07+00:00", "palette": "probe", "base": "#a59c74", "odd_color": "#a69a82", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:10+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#0f1b5d", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:12+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#406b67", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:14+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#e85667", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:16+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#e74e61", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:18+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#e74e61", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:25+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#c34525", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:27+00:00", "palette": "probe", "base": "#fdac9e", "odd_color": "#fbaf86", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:30+00:00", "palette": "probe", "base": "#e8e8e6", "odd_color": "#b3f7e5", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:55:32+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#eca5a1", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:01+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#98a6ea", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:03+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#5f5591", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:08+00:00", "palette": "probe", "base": "#ffff33", "odd_color": "#fffe61", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:11+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#f900b7", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:14+00:00", "palette": "probe", "base": "#828231", "odd_color": "#a37434", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:15+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#ff0033", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:17+00:00", "palette": "probe", "base": "#144d62", "odd_color": "#50849a", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:21+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#3670ce", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:23+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#a1003d", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:25+00:00", "palette": "probe", "base": "#35b779", "odd_color": "#61a8e4", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:27+00:00", "palette": "probe", "base": "#443983", "odd_color": "#7770be", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:31+00:00", "palette": "probe", "base": "#2ca02c", "odd_color": "#78942f", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:34+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#4a4f43", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:41+00:00", "palette": "probe", "base": "#d29343", "odd_color": "#d1942b", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:50+00:00", "palette": "probe", "base": "#E69F00", "odd_color": "#e79e3b", "ground": "night", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:52+00:00", "palette": "probe", "base": "#8c564b", "odd_color": "#d5006e", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:54+00:00", "palette": "probe", "base": "#e8e8e6", "odd_color": "#b9b9b7", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:57+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#87008d", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:57:59+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#00a9ea", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:01+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#007580", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:03+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#93265d", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:05+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#7f0050", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:07+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#303644", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:09+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e60063", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:11+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#002d13", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:13+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#008a71", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:15+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#d7575e", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:17+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#ff004e", "ground": "night", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:20+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#ff00bd", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:22+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#ac00ff", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:23+00:00", "palette": "horizon-day", "base": "#1d8991", "odd_color": "#e84a72", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:25+00:00", "palette": "probe", "base": "#eaa886", "odd_color": "#ab6e4f", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:27+00:00", "palette": "probe", "base": "#4c4d53", "odd_color": "#1c1d22", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:28+00:00", "palette": "POLARITY", "base": "#eaa886", "odd_color": "#173f6e", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:35+00:00", "palette": "probe", "base": "#ffff33", "odd_color": "#fffe61", "ground": "day", "odd_position": 1, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:38+00:00", "palette": "probe", "base": "#24a2ad", "odd_color": "#03a596", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:40+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d7223f", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:48+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#3471cb", "ground": "day", "odd_position": 2, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:51+00:00", "palette": "probe", "base": "#e84a72", "odd_color": "#e74f5c", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:53+00:00", "palette": "probe", "base": "#575d6d", "odd_color": "#536058", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:56+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#131961", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:58:58+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#386f40", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:59:01+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#0a9475", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:59:04+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#90322b", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:59:22+00:00", "palette": "probe", "base": "#ff7f0e", "odd_color": "#ff7e2b", "ground": "night", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:59:28+00:00", "palette": "probe", "base": "#2a3f6d", "odd_color": "#303b7a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:59:30+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#0c1d5a", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:59:39+00:00", "palette": "probe", "base": "#90d743", "odd_color": "#91d657", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T05:59:57+00:00", "palette": "probe", "base": "#F0E442", "odd_color": "#f1e358", "ground": "night", "odd_position": 2, "choice": 3, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:01+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#8f3322", "ground": "night", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:06+00:00", "palette": "probe", "base": "#ff7f00", "odd_color": "#ff7e25", "ground": "night", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:14+00:00", "palette": "probe", "base": "#56B4E9", "odd_color": "#4eb7da", "ground": "night", "odd_position": 0, "choice": 2, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:16+00:00", "palette": "probe", "base": "#009E73", "odd_color": "#009f65", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:21+00:00", "palette": "probe", "base": "#e41a1c", "odd_color": "#e4172c", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:23+00:00", "palette": "probe", "base": "#e95378", "odd_color": "#e8566a", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:26+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#2e81aa", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:34+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#d55d1e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:36+00:00", "palette": "probe", "base": "#21918c", "odd_color": "#15937e", "ground": "night", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:39+00:00", "palette": "horizon-night", "base": "#d55170", "odd_color": "#e95378", "ground": "night", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:45+00:00", "palette": "probe", "base": "#D55E00", "odd_color": "#d55d1e", "ground": "night", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:48+00:00", "palette": "probe", "base": "#377eb8", "odd_color": "#4578cf", "ground": "day", "odd_position": 3, "choice": 0, "correct": false, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:50+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#396f45", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:52+00:00", "palette": "probe", "base": "#3c6d56", "odd_color": "#396f45", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:55+00:00", "palette": "probe", "base": "#8f3413", "odd_color": "#8f3326", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:00:57+00:00", "palette": "probe", "base": "#440154", "odd_color": "#410e45", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:01:00+00:00", "palette": "probe", "base": "#d62728", "odd_color": "#d6243a", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:01:04+00:00", "palette": "probe", "base": "#9467bd", "odd_color": "#9861cf", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:01:06+00:00", "palette": "probe", "base": "#011959", "odd_color": "#16076d", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:01:08+00:00", "palette": "probe", "base": "#00224e", "odd_color": "#131961", "ground": "day", "odd_position": 1, "choice": 1, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:01:12+00:00", "palette": "probe", "base": "#a59c74", "odd_color": "#a39e5c", "ground": "day", "odd_position": 2, "choice": 2, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:01:15+00:00", "palette": "probe", "base": "#1f77b4", "odd_color": "#3471cb", "ground": "day", "odd_position": 0, "choice": 0, "correct": true, "size_px": 104, "gap_px": 12}
+{"ts": "2026-09-03T06:01:19+00:00", "palette": "probe", "base": "#bcae6c", "odd_color": "#bab052", "ground": "day", "odd_position": 3, "choice": 3, "correct": true, "size_px": 104, "gap_px": 12}

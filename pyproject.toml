@@ -1,0 +1,42 @@
+# Build metadata only.
+#
+# Runtime dependencies live in pixi.toml, where the lock file governs them. Declaring
+# them in both places would create two competing sources of truth. This file exists
+# because an editable install needs a build backend to generate the .pth file that puts
+# the package on sys.path.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "theme-calibration"
+version = "0.1.0"
+description = "Measuring which editor theme Titus actually prefers, and which he actually reads fastest"
+readme = "README.md"
+# Pinned to the interpreter this runs on, so ruff's pyupgrade rules hold the code to
+# 3.14 idiom. PEP 649 makes annotations lazy in 3.14, so `from __future__ import
+# annotations` is obsolete here and ruff will flag it.
+requires-python = ">=3.14"
+
+[tool.hatch.build.targets.wheel]
+packages = ["theme"]
+
+[tool.ruff]
+# 119 is the width the surrounding repos use, so formatting habits carry across.
+line-length = 119
+target-version = "py314"
+
+[tool.ruff.lint]
+# W505 is the reason the two widths differ: it holds standalone comments and docstrings
+# to max-doc-length while code gets the full 119, because prose past about 90 columns is
+# measurably harder to read and the comments here are long enough for that to matter --
+# they carry the measurements that justify the constants.
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "W"]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 95
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

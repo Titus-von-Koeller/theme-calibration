@@ -1,0 +1,28 @@
+{
+  "day": {
+    "comment": "#5a5653",
+    "find_fill": "#00d1e8",
+    "function": "#00512e",
+    "ground": "#f9ebdb",
+    "ink": "#484643",
+    "keyword": "#245000",
+    "n_duels": 63,
+    "p_best": 0.1772,
+    "punct": "#5b5855",
+    "string": "#920000",
+    "verdict": "plateau"
+  },
+  "night": {
+    "comment": "#c2bcb8",
+    "find_fill": "#00642f",
+    "function": "#7ed1ff",
+    "ground": "#322f2c",
+    "ink": "#cbc7c3",
+    "keyword": "#ffafe4",
+    "n_duels": 64,
+    "p_best": 0.146,
+    "punct": "#b1aca9",
+    "string": "#e4c47e",
+    "verdict": "plateau"
+  }
+}

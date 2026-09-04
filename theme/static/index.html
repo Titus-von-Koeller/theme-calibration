@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>theme trials</title>
+<link rel="stylesheet" href="/static/app.css">
+<body>
+  <!-- Built once, here, in markup. Nothing below is ever created, destroyed or reparented
+       at runtime: a trial changes text and innerHTML, never structure. That is the whole
+       point of moving off the notebook, so it is worth saying in the file that holds it. -->
+  <div id="page">
+    <header id="bar">
+      <span id="chip"></span>
+      <span id="meta"><span id="keys"></span><span id="progress"></span>
+        <button id="pause" type="button">pause</button></span>
+    </header>
+    <main id="stage">
+      <p id="prompt"></p>
+      <div id="shade">
+        <div id="cards"></div>
+        <div id="cover">
+          <p id="cover-text"></p>
+          <button id="go" type="button">begin</button>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="/static/app.js"></script>
+</body>

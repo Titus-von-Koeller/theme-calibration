@@ -1,0 +1,125 @@
+"""The response log: reading it, building one record, appending it.
+
+Append-only, one JSON object per line, so concurrent sessions interleave and never
+overwrite. Every row carries the whole stimulus -- both thetas, both themes, the surround,
+the surface, the pixel size, which side was shown and both timestamps -- because a
+measurement whose conditions were not written down cannot be re-analysed later, and this
+log has already been re-read under three successive models.
+
+Building a record takes the trial and the page as arguments rather than fetching them, so
+it is a pure function of its inputs and can be tested without a server. Deciding WHICH
+trial a click belongs to is the caller's job, and the caller must derive it from this log
+rather than from whatever the page was holding -- otherwise a stale page writes its answer
+onto somebody else's row.
+"""
+
+import json
+from datetime import UTC, datetime
+
+from . import paths
+from .trialspec import rng_for
+
+LOG_PATH = paths.RESPONSE_LOG
+
+# The neutral surround a duel is judged against, per polarity. A duel keeps this rather
+# than taking either candidate's ground, which would advantage that candidate.
+DUEL_SURROUND = {"day": "#d8d2cf", "night": "#14161c"}
+
+
+def read_responses() -> list[dict]:
+    """Every response recorded so far, oldest first; blank lines skipped."""
+    if not LOG_PATH.exists():
+        return []
+    return [json.loads(line) for line in LOG_PATH.read_text().splitlines() if line.strip()]
+
+
+def append_response(entry: dict) -> None:
+    with LOG_PATH.open("a") as handle:
+        handle.write(json.dumps(entry) + "\n")
+
+
+def _stimulus_fields(trial: dict, page: dict, reported: dict) -> dict:
+    """What was on screen, and when. Shared by all three arms."""
+    return {
+        "ts": datetime.now(UTC).isoformat(timespec="seconds"),
+        "mode": trial["mode"],
+        "kind": trial["kind"],
+        "polarity": trial["polarity"],
+        "snippet": page["id"],
+        "snippet_hash": page.get("hash"),
+        "snippet_kind": page.get("kind"),
+        "snippet_fresh": bool(page.get("fresh", True)),
+        "target_kind": page.get("target_kind"),
+        "surface": trial.get("surface", "editor"),
+        "code_px": trial["code_px"],
+        "theta_a": trial["theta_a"],
+        "theme_a": trial["theme_a"],
+        "page_bg": (DUEL_SURROUND[trial["polarity"]] if trial["mode"] == "duel" else trial["theme_a"]["ground"]),
+        "input_method": reported.get("input_method", "mouse"),
+        # rt_ms runs from the LAST reveal -- the first render, or a resume after a pause.
+        # A trial that was ever paused is flagged so its time is read as a near-tie
+        # downstream rather than as a very slow decision.
+        "rt_ms": round(reported["t_click"] - reported["t_render"], 1),
+        "t_render": round(reported["t_render"], 1),
+        "t_click": round(reported["t_click"], 1),
+        "paused": reported.get("pauses", 0) > 0,
+    }
+
+
+def _duel_fields(trial: dict, page: dict, reported: dict, rng) -> dict:
+    clicked_side = reported["choice"]  # 0 = the left card
+    return {
+        "theta_b": trial["theta_b"],
+        "theme_b": trial["theme_b"],
+        "swap": trial["swap"],
+        "find_current": rng.choice(page["ident_ids"]) if page["ident_ids"] else None,
+        # 0 = theme_a won. The page reports the SIDE it clicked; the swap flag turns that
+        # back into which theme it was, so utility stays defined over themes while the side
+        # stays available for fitting the position bias.
+        "choice": (1 - clicked_side) if trial["swap"] else clicked_side,
+    }
+
+
+def _comprehension_fields(page: dict, reported: dict, rng) -> dict:
+    target_span = rng.choice(page["fn_ids"])
+    target_name = page["spans"][target_span]["text"]
+    # Any occurrence of the name counts. He was asked to find the function, not one
+    # particular character range, so another call site of the same name answers the
+    # question that was actually asked.
+    accepted = [
+        i for i, span in enumerate(page["spans"]) if span["role"] == "function" and span["text"] == target_name
+    ]
+    return {
+        "target": target_span,
+        "target_text": target_name,
+        "clicked": reported["choice"],
+        "correct": reported["choice"] in accepted,
+    }
+
+
+def _find_fields(trial: dict, page: dict, reported: dict, rng) -> dict:
+    current_match = rng.choice(page["ident_ids"])
+    return {
+        "target": current_match,
+        "clicked": reported["choice"],
+        "correct": reported["choice"] == current_match,
+        "salience": trial["theme_a"]["salience"],
+        "find_sal_theta": trial["theta_a"][8],
+    }
+
+
+def build_entry(trial_number: int, trial: dict, page: dict, reported: dict) -> dict:
+    """The record for one answered trial, ready to append.
+
+    `reported` is what the surface knows and nothing else can: which token was clicked,
+    when the page rendered, when it was clicked, whether it was ever paused. Everything
+    else is recomputed here from the trial itself.
+    """
+    rng = rng_for(trial_number)
+    entry = {"n": trial_number, **_stimulus_fields(trial, page, reported)}
+    per_arm = {
+        "duel": lambda: _duel_fields(trial, page, reported, rng),
+        "comprehension": lambda: _comprehension_fields(page, reported, rng),
+        "search": lambda: _find_fields(trial, page, reported, rng),
+    }[trial["mode"]]
+    return {**entry, **per_arm()}
