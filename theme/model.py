@@ -801,7 +801,18 @@ def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
     _levels = sorted({_r[key] for _r in _ds}, key=str)
     if len(_ds) < min_n or len(_levels) < 2:
         return len(_ds), 0.0, 1.0, f"not enough {polarity} duels with a {key} to compare"
-    _key = ("f", key, polarity, hash(tuple((_r["choice"], str(_r[key]), _r["theta_a"][0]) for _r in _ds)))
+    # nperm and seed belong in the key. Without them a coarse call -- a quick 20-permutation
+    # sanity check, say -- poisons the cache for the careful 200-permutation reading that
+    # follows, and the caller gets a p-value computed against a null it never asked for.
+    # A cache key must name every input that changes the answer.
+    _key = (
+        "f",
+        key,
+        polarity,
+        nperm,
+        seed,
+        hash(tuple((_r["choice"], str(_r[key]), _r["theta_a"][0]) for _r in _ds)),
+    )
     if _key in SURF_MEMO:
         return SURF_MEMO[_key]
     _S = np.array([_levels.index(_r[key]) for _r in _ds])

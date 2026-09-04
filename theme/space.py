@@ -175,7 +175,7 @@ def _find_fills(thetas, ground_lightness, night):
     return ucs_to_rgb(np.column_stack([lightness, chroma * np.cos(hue), chroma * np.sin(hue)]))
 
 
-def _assemble(role_rgb, ground_rgb, fill_rgb, ratios_met, separations, polarity):
+def _assemble(role_rgb, ground_rgb, fill_rgb, separations, polarity):
     """One theme, or None if it breaks a floor.
 
     Floors are checked on what will actually RENDER -- composited fills included -- and are
@@ -183,14 +183,22 @@ def _assemble(role_rgb, ground_rgb, fill_rgb, ratios_met, separations, polarity)
     only question ever asked is which is better.
     """
     threshold = DE_MIN[polarity]
-    lc = apca_lc(role_rgb, ratios_met)
-    contrast = wcag(role_rgb, ratios_met)
-    if (contrast < 4.5 - 1e-6).any() or (np.abs(lc[:4]) < 60).any() or (np.abs(lc[4:]) < 45).any():
-        return None
-
     ground_hex = rgb_to_hex(ground_rgb)[0]
     role_hex = rgb_to_hex(role_rgb)
     roles = dict(zip(WALKED_ROLES, role_hex, strict=True))
+
+    # Checked on the QUANTIZED colours -- the 8-bit values the page will actually write --
+    # not on the unrounded ones the bisection produced. Rounding to hex moves a colour by
+    # up to half a step, which is enough to cross a floor: a property test found a theme
+    # whose function and string tokens passed at Lc 60.27 and 60.06 and rendered at 59.89
+    # and 59.83. Both were shown. The floors are a promise about pixels, so they have to be
+    # measured on pixels.
+    rendered = hex_to_rgb(role_hex)
+    rendered_ground = np.repeat(hex_to_rgb([ground_hex]), len(role_hex), axis=0)
+    lc = apca_lc(rendered, rendered_ground)
+    contrast = wcag(rendered, rendered_ground)
+    if (contrast < 4.5 - 1e-6).any() or (np.abs(lc[:4]) < 60).any() or (np.abs(lc[4:]) < 45).any():
+        return None
     fill_hex = rgb_to_hex(fill_rgb)[0]
     current = composite(fill_hex, 0.85, ground_hex)
     other = composite(fill_hex, 0.45, ground_hex)
@@ -212,8 +220,8 @@ def _assemble(role_rgb, ground_rgb, fill_rgb, ratios_met, separations, polarity)
         return None
     # Text must survive sitting on either fill.
     fills = hex_to_rgb([current, other])
-    if (wcag(np.repeat(role_rgb[3:4], 2, 0), fills) < 4.0).any() or (
-        wcag(np.repeat(role_rgb[2:3], 2, 0), fills) < 3.5
+    if (wcag(np.repeat(rendered[3:4], 2, 0), fills) < 4.0).any() or (
+        wcag(np.repeat(rendered[2:3], 2, 0), fills) < 3.5
     ).any():
         return None
 
@@ -241,7 +249,7 @@ def _realize_batch(thetas, polarity):
     night = polarity == "night"
     ground_lightness, ground_hue, ground_rgb = _grounds(table, night)
     role_ab, ratios = _role_chromaticities(table, polarity, ground_hue)
-    role_rgb, ground_rows = _walk_to_both_bars(role_ab, ground_rgb, ratios, night)
+    role_rgb, _walked_grounds = _walk_to_both_bars(role_ab, ground_rgb, ratios, night)
     fill_rgb = _find_fills(table, ground_lightness, night)
 
     # One conversion for every colour of every theme: the eight whose pairwise CAM16-UCS
@@ -261,10 +269,42 @@ def _realize_batch(thetas, polarity):
         )
     separations = rgb_to_ucs(hex_to_rgb(separation_hexes)).reshape(len(table), 8, 3)
 
-    return [
-        _assemble(role_rgb[i], ground_rgb[i], fill_rgb[i], ground_rows[i], separations[i], polarity)
-        for i in range(len(table))
-    ]
+    return [_assemble(role_rgb[i], ground_rgb[i], fill_rgb[i], separations[i], polarity) for i in range(len(table))]
+
+
+#: How conspicuous a find highlight must be before a TIMED hunt may use it, in multiples
+#: of the measured discrimination threshold.
+#:
+#: These are two different perceptual questions and the instrument was conflating them.
+#: DE_MIN is a DISCRIMINATION threshold: can two patches be told apart, side by side, at
+#: 104 px. Finding one highlighted token in a page of code is VISUAL SEARCH, which needs
+#: conspicuity -- the target has to win against every distractor at a glance -- and that
+#: takes many multiples of a discrimination step. realize() only ever required the current
+#: highlight to sit 1.5x the threshold from the ground, so themes at ~2x came through, and
+#: the active sampler sought exactly those out because an unexplored corner is where a
+#: GP's variance is highest.
+#:
+#: 4x, from his own hunts. Over 33 usable trials, salience correlates with log find time at
+#: -0.43 (day) and -0.37 (night) -- more conspicuous really is faster -- and splitting at
+#: the median gives 3489 ms against 2066 ms by day, 2897 against 2225 by night. A faint
+#: highlight costs well over a second, which is not a measurement of the theme but of
+#: patience. 4x excludes roughly the slowest quarter of what has been shown.
+#:
+#: Applied per ARM, deliberately, and not inside realize(). A quiet highlight is a
+#: legitimate thing to PREFER, and theta 8 exists to find that trade-off, so duels must
+#: keep exploring it. What a faint highlight destroys is the timed hunt, so that is where
+#: the floor belongs.
+CONSPICUITY_FLOOR = 4.0
+
+
+def conspicuous_enough(theme, polarity):
+    """Is this theme's find highlight loud enough for a timed hunt to mean anything?
+
+    `salience` is the minimum CAM16-UCS distance from the current highlight to the ground
+    and to every coloured role -- distance from everything it has to win against, which is
+    the right measure for search rather than for discrimination.
+    """
+    return theme is not None and theme["salience"] >= CONSPICUITY_FLOOR * DE_MIN[polarity]
 
 
 def realize_many(thetas, polarity):
