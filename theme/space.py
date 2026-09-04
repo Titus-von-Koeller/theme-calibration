@@ -91,109 +91,206 @@ def theta_key(theta, polarity):
 # that function in the cell — a later definition stays unmangled in the function body
 # and NameErrors at call time under `marimo run`, invisibly to script execution.
 # Helpers therefore precede their exported callers.
-def realize_uncached(theta, polarity):
-    _t = np.asarray(theta, dtype=float)
-    _night = polarity == "night"
-    # Ground: lightness within the polarity's family, warmth as a signed warm/cool axis.
-    _gj = 8.0 + 14.0 * _t[0] if _night else 86.0 + 9.0 * _t[0]
-    _w = 2.0 * _t[1] - 1.0
-    _gh = math.radians(74.0 if _w >= 0 else 256.0)
-    _gm = abs(_w) * 6.0
-    _g_ucs = np.array([_gj, _gm * math.cos(_gh), _gm * math.sin(_gh)])
-    _g_rgb = ucs_to_rgb(_g_ucs[None])[0]
-    _ground = rgb_to_hex(_g_rgb)[0]
+# The roles solve_j walks to the contrast bar, in the order their rows appear.
+WALKED_ROLES = ("keyword", "function", "string", "ink", "comment", "punct")
+#: APCA floors per walked role. Body tokens carry meaning; comments are context.
+LC_FLOORS = np.array([60.0, 60.0, 60.0, 60.0, 45.0, 45.0])
 
-    # Accents: rotate and spread Horizon's hues, scale their chroma, then walk each
-    # color's lightness to the body-contrast bar (capped: 12:1 was chosen over the
-    # theme's native 18:1 because near-maximum contrast vibrates).
-    _h0, _m0 = ANCHOR_HM[polarity]
-    _mu = math.degrees(math.atan2(np.sin(np.radians(_h0)).mean(), np.cos(np.radians(_h0)).mean())) % 360
-    _rot = (_t[2] - 0.5) * 120.0
-    _spread = 0.4 + 1.2 * _t[5]
-    _dh = (_h0 - _mu + 180.0) % 360.0 - 180.0
-    _hues = (_mu + _spread * _dh + _rot) % 360.0
-    _chroma = (0.6 + 0.8 * _t[3]) * _m0
-    _r_body = 4.5 + 4.5 * _t[4]
-    _ab = np.column_stack([_chroma * np.cos(np.radians(_hues)), _chroma * np.sin(np.radians(_hues))])
-    # Neutral family (ink, comment, punctuation): the ground's own hue at a whisper of
-    # chroma, so page and text agree in temperature.
-    _nd = np.array([math.cos(_gh), math.sin(_gh)])
-    _r_comment = max(4.5, _r_body * (0.55 + 0.35 * _t[6]))
-    _r_punct = max(4.5, _r_body * 0.75)
-    _neut_ab = np.array([_nd * 1.5, _nd * 2.0, _nd * 1.5])  # ink, comment, punct
-    _all_ab = np.vstack([_ab, _neut_ab])
-    _ratios = np.minimum([_r_body] * 3 + [max(_r_body, 5.5), _r_comment, _r_punct], 12.0)
-    # WCAG sets the first target; APCA is the stricter master on dark grounds (4.5:1
-    # there is only Lc ~54), so rows short of their Lc floor walk further from the page
-    # until both bars hold. The 1.03 margin keeps bisection from converging a hair under.
-    _target = _ratios * 1.03
-    _lc_floor = np.array([60.0, 60.0, 60.0, 60.0, 45.0, 45.0])
-    _g6 = np.repeat(_g_rgb[None], 6, 0)
+
+def _grounds(thetas, night):
+    """The page colour for each theta: lightness within the polarity's family, warmth as a
+    signed warm/cool axis."""
+    lightness = 8.0 + 14.0 * thetas[:, 0] if night else 86.0 + 9.0 * thetas[:, 0]
+    warmth = 2.0 * thetas[:, 1] - 1.0
+    hue = np.where(warmth >= 0, math.radians(74.0), math.radians(256.0))
+    chroma = np.abs(warmth) * 6.0
+    ucs = np.column_stack([lightness, chroma * np.cos(hue), chroma * np.sin(hue)])
+    return lightness, hue, ucs_to_rgb(ucs)
+
+
+def _role_chromaticities(thetas, polarity, ground_hue):
+    """The a', b' each walked role starts from, and the contrast ratio it must reach.
+
+    Accents rotate and spread Horizon's own hues and scale their chroma; the neutral family
+    (ink, comment, punctuation) takes the GROUND's hue at a whisper of chroma, so page and
+    text agree in temperature. Lightness is not set here -- that is what solve_j walks.
+    """
+    anchor_hues, anchor_chroma = ANCHOR_HM[polarity]
+    mean_hue = (
+        math.degrees(math.atan2(np.sin(np.radians(anchor_hues)).mean(), np.cos(np.radians(anchor_hues)).mean())) % 360
+    )
+    rotation = (thetas[:, 2] - 0.5) * 120.0
+    spread = 0.4 + 1.2 * thetas[:, 5]
+    offsets = (anchor_hues - mean_hue + 180.0) % 360.0 - 180.0
+    hues = (mean_hue + spread[:, None] * offsets[None, :] + rotation[:, None]) % 360.0
+    chroma = (0.6 + 0.8 * thetas[:, 3])[:, None] * anchor_chroma[None, :]
+    accent_ab = np.stack([chroma * np.cos(np.radians(hues)), chroma * np.sin(np.radians(hues))], axis=-1)
+
+    neutral_direction = np.stack([np.cos(ground_hue), np.sin(ground_hue)], axis=-1)
+    neutral_ab = neutral_direction[:, None, :] * np.array([1.5, 2.0, 1.5])[None, :, None]
+
+    # 12:1 caps the body bar: the theme's native 18:1 is near-maximum contrast, where light
+    # bleeds into the glyph edges and fine strokes appear to vibrate.
+    body = 4.5 + 4.5 * thetas[:, 4]
+    comment = np.maximum(4.5, body * (0.55 + 0.35 * thetas[:, 6]))
+    punctuation = np.maximum(4.5, body * 0.75)
+    ratios = np.minimum(np.column_stack([body, body, body, np.maximum(body, 5.5), comment, punctuation]), 12.0)
+    return np.concatenate([accent_ab, neutral_ab], axis=1), ratios
+
+
+def _walk_to_both_bars(role_ab, ground_rgb, ratios, night):
+    """Walk every role's lightness until WCAG and APCA both hold.
+
+    WCAG sets the first target; APCA is the stricter master on dark grounds (4.5:1 there is
+    only Lc ~54), so rows short of their Lc floor walk further from the page until both
+    bars hold. The 1.03 margin keeps bisection from converging a hair under.
+
+    Batched across themes, which is the whole reason this is a separate function. The cost
+    of colour-science is per CALL, not per colour -- measured, a call converting one colour
+    costs 312 us and a call converting sixty-four costs 325 us -- so walking six roles for
+    one theme at a time spent 3.8 s of a 4 s trial on Python-level validation inside the
+    library. Iterating over all themes at once makes that one call per bisection step.
+    """
+    rows = role_ab.reshape(-1, 2)
+    grounds = np.repeat(ground_rgb, role_ab.shape[1], axis=0)
+    target = ratios.reshape(-1) * 1.03
+    floors = np.tile(LC_FLOORS, len(role_ab))
     for _ in range(4):
-        _js, _rgbs = solve_j(_all_ab, _g_rgb, _target, lighter=_night)
-        _lc = apca_lc(_rgbs, _g6)
-        _short = np.abs(_lc) < _lc_floor
-        if not _short.any():
+        _lightness, rgb = solve_j(rows, grounds, target, lighter=night)
+        short = np.abs(apca_lc(rgb, grounds)) < floors
+        if not short.any():
             break
-        _target = np.where(_short, np.minimum(_target * 1.18, 14.0), _target)
-    _hexes = rgb_to_hex(_rgbs)
-    _roles = dict(zip(["keyword", "function", "string", "ink", "comment", "punct"], _hexes, strict=True))
+        target = np.where(short, np.minimum(target * 1.18, 14.0), target)
+    return rgb.reshape(*role_ab.shape[:2], 3), grounds.reshape(*role_ab.shape[:2], 3)
 
-    # Find highlight: a fill near the page's lightness whose loudness is the salience
-    # axis. Emitted with alpha (how VSCode layers it); every constraint and every
-    # rendered pixel uses the composited result.
-    _s = _t[8]
-    _fh = math.radians(360.0 * _t[7])
-    _fm = 8.0 + 26.0 * _s
-    _fj = _gj + (4.0 + 14.0 * _s) * (1 if _night else -1)
-    _fill = rgb_to_hex(ucs_to_rgb(np.array([[_fj, _fm * math.cos(_fh), _fm * math.sin(_fh)]])))[0]
-    _cur = composite(_fill, 0.85, _ground)
-    _oth = composite(_fill, 0.45, _ground)
 
-    # Hard floors, checked on what will actually render. One CAM16 conversion for all
-    # eight colors, then plain numpy distances: colour-science's cost is per call, not
-    # per color, and this block once spent 14 calls per theme (measured: 1.0 s of a
-    # 1.7 s duel generation).
-    _de = DE_MIN[polarity]
-    _lc = apca_lc(_rgbs, _g6)
-    _rr = wcag(_rgbs, _g6)
-    if (_rr < 4.5 - 1e-6).any() or (np.abs(_lc[:4]) < 60).any() or (np.abs(_lc[4:]) < 45).any():
+def _find_fills(thetas, ground_lightness, night):
+    """The find highlight: a fill near the page's lightness whose loudness is the salience
+    axis. Emitted with alpha, because that is how VSCode layers it; every constraint and
+    every rendered pixel uses the composited result."""
+    salience = thetas[:, 8]
+    hue = 2.0 * math.pi * thetas[:, 7]
+    chroma = 8.0 + 26.0 * salience
+    lightness = ground_lightness + (4.0 + 14.0 * salience) * (1 if night else -1)
+    return ucs_to_rgb(np.column_stack([lightness, chroma * np.cos(hue), chroma * np.sin(hue)]))
+
+
+def _assemble(role_rgb, ground_rgb, fill_rgb, ratios_met, separations, polarity):
+    """One theme, or None if it breaks a floor.
+
+    Floors are checked on what will actually RENDER -- composited fills included -- and are
+    hard constraints, never objectives: every candidate shown is already legible, and the
+    only question ever asked is which is better.
+    """
+    threshold = DE_MIN[polarity]
+    lc = apca_lc(role_rgb, ratios_met)
+    contrast = wcag(role_rgb, ratios_met)
+    if (contrast < 4.5 - 1e-6).any() or (np.abs(lc[:4]) < 60).any() or (np.abs(lc[4:]) < 45).any():
         return None
-    _names = ["keyword", "function", "string", "ink", "comment"]
-    _u = rgb_to_ucs(hex_to_rgb([_roles[r] for r in _names] + [_ground, _cur, _oth]))
-    _K, _F, _S, _I, _C, _G, _CUR, _OTH = range(8)
 
-    def _d(a, b):
-        return float(np.linalg.norm(_u[a] - _u[b]))
+    ground_hex = rgb_to_hex(ground_rgb)[0]
+    role_hex = rgb_to_hex(role_rgb)
+    roles = dict(zip(WALKED_ROLES, role_hex, strict=True))
+    fill_hex = rgb_to_hex(fill_rgb)[0]
+    current = composite(fill_hex, 0.85, ground_hex)
+    other = composite(fill_hex, 0.45, ground_hex)
 
-    for _i in (_K, _F, _S):
-        if _d(_i, _I) < 2 * _de:
+    keyword, function, string, ink, comment, ground, cur, oth = range(8)
+
+    def gap(a, b):
+        return float(np.linalg.norm(separations[a] - separations[b]))
+
+    for accent in (keyword, function, string):
+        if gap(accent, ink) < 2 * threshold:
             return None
-        for _j2 in (_K, _F, _S):
-            if _j2 > _i and _d(_i, _j2) < 2 * _de:
+        for other_accent in (keyword, function, string):
+            if other_accent > accent and gap(accent, other_accent) < 2 * threshold:
                 return None
-    if _d(_C, _I) < _de:
+    if gap(comment, ink) < threshold:
         return None
-    if _d(_CUR, _G) < 1.5 * _de or _d(_CUR, _OTH) < _de:
+    if gap(cur, ground) < 1.5 * threshold or gap(cur, oth) < threshold:
         return None
     # Text must survive sitting on either fill.
-    _fills = hex_to_rgb([_cur, _oth])
-    if (wcag(np.repeat(_rgbs[3:4], 2, 0), _fills) < 4.0).any() or (
-        wcag(np.repeat(_rgbs[2:3], 2, 0), _fills) < 3.5
+    fills = hex_to_rgb([current, other])
+    if (wcag(np.repeat(role_rgb[3:4], 2, 0), fills) < 4.0).any() or (
+        wcag(np.repeat(role_rgb[2:3], 2, 0), fills) < 3.5
     ).any():
         return None
-    _sal = min(_d(_CUR, _i) for _i in (_G, _K, _F, _S, _I))
+
     return {
-        "ground": _ground,
-        **_roles,
-        "number": _roles["string"],
-        "variable": _roles["ink"],
-        "find_fill": _fill,
-        "find_current": _cur,
-        "find_other": _oth,
-        "salience": round(_sal, 2),
-        "body_ratio": round(float(_rr[:4].min()), 2),
+        "ground": ground_hex,
+        **roles,
+        "number": roles["string"],
+        "variable": roles["ink"],
+        "find_fill": fill_hex,
+        "find_current": current,
+        "find_other": other,
+        "salience": round(min(gap(cur, i) for i in (ground, keyword, function, string, ink)), 2),
+        "body_ratio": round(float(contrast[:4].min()), 2),
     }
+
+
+def _realize_batch(thetas, polarity):
+    """The colour work for a batch of thetas: a list in the same order, None where refused.
+
+    Batched because colour-science's cost is per CALL rather than per colour -- measured, a
+    call converting one colour costs 312 us and a call converting sixty-four costs 325 us.
+    Uncached; go through realize_many.
+    """
+    table = np.asarray(thetas, dtype=float).reshape(-1, 9)
+    night = polarity == "night"
+    ground_lightness, ground_hue, ground_rgb = _grounds(table, night)
+    role_ab, ratios = _role_chromaticities(table, polarity, ground_hue)
+    role_rgb, ground_rows = _walk_to_both_bars(role_ab, ground_rgb, ratios, night)
+    fill_rgb = _find_fills(table, ground_lightness, night)
+
+    # One conversion for every colour of every theme: the eight whose pairwise CAM16-UCS
+    # distances the separation floors are stated in.
+    ground_hexes = rgb_to_hex(ground_rgb)
+    fill_hexes = rgb_to_hex(fill_rgb)
+    separation_hexes = []
+    for i, ground_hex in enumerate(ground_hexes):
+        role_hex = rgb_to_hex(role_rgb[i])
+        separation_hexes.extend(
+            [
+                *role_hex[:5],
+                ground_hex,
+                composite(fill_hexes[i], 0.85, ground_hex),
+                composite(fill_hexes[i], 0.45, ground_hex),
+            ]
+        )
+    separations = rgb_to_ucs(hex_to_rgb(separation_hexes)).reshape(len(table), 8, 3)
+
+    return [
+        _assemble(role_rgb[i], ground_rgb[i], fill_rgb[i], ground_rows[i], separations[i], polarity)
+        for i in range(len(table))
+    ]
+
+
+def realize_many(thetas, polarity):
+    """Realize a batch of thetas; a list in the same order, None where refused.
+
+    Cache first, then one batched call for whatever is left. Both halves matter and the
+    measurement says why. Batching alone, ignoring the cache, made the search THREE TIMES
+    SLOWER: a trial re-proposes most of its candidates from one sitting to the next, so the
+    cache was already answering the majority of them, and recomputing a batch is slower
+    than not computing at all. Caching alone leaves a cold sitting paying 312 us of
+    library-validation overhead per theme, which was 3.8 s of a 4 s trial.
+    """
+    table = np.asarray(thetas, dtype=float).reshape(-1, 9)
+    keys = [theta_key(row, polarity) for row in table]
+    missing = [i for i, key in enumerate(keys) if key not in REALIZE_CACHE]
+    if missing:
+        for i, theme in zip(missing, _realize_batch(table[missing], polarity), strict=True):
+            REALIZE_CACHE[keys[i]] = theme
+    return [REALIZE_CACHE[key] for key in keys]
+
+
+def realize_uncached(theta, polarity):
+    """One theme, ignoring the cache. Defined through the batch path so there is exactly
+    one implementation of the colour rules -- two copies of a constraint set drift, and a
+    drifted floor is a stimulus nobody chose."""
+    return _realize_batch(np.asarray(theta, dtype=float)[None, :], polarity)[0]
 
 
 def realize(theta, polarity):

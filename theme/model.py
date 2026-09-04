@@ -15,7 +15,7 @@ import math
 import numpy as np
 from scipy.stats import qmc
 
-from .space import POOL, prior_mean, realize
+from .space import POOL, prior_mean, realize_many
 
 # The preference model: a Gaussian process over theme space with a Bradley-Terry
 # likelihood on duels, fit by Laplace approximation — Chu & Ghahramani's preferential
@@ -377,63 +377,95 @@ def sobol_block(n_log2, offset_blocks):
     return _eng.random(_n)
 
 
+class _CandidateSet:
+    """Candidates in proposal order, deduplicated, each already known to be legible.
+
+    Proposals arrive in batches because realizing a theme costs one colour-library call per
+    batch rather than per theme (measured: a call converting one colour costs 312 us, and a
+    call converting sixty-four costs 325 us). Realizing four hundred candidates one at a
+    time spent 3.8 s of a 4 s trial inside that library's argument validation.
+
+    Order is preserved and duplicates are dropped on first sight, because the index where
+    the standing stratum ends is what the explore/exploit split is declared against.
+    """
+
+    def __init__(self, polarity):
+        self.polarity = polarity
+        self.entries = []
+        self._seen = set()
+
+    def offer(self, thetas, themes=None):
+        """Add each theta that is new and legible. `themes` skips realization for the pool,
+        whose members are realized once at startup and never change."""
+        thetas = [np.clip(np.asarray(t, dtype=float), 0.0, 1.0) for t in thetas]
+        fresh = [t for t in thetas if tuple(np.round(t, 4)) not in self._seen]
+        if themes is None:
+            themes = realize_many(np.array(fresh), self.polarity) if fresh else []
+            offered = zip(fresh, themes, strict=True)
+        else:
+            offered = zip(thetas, themes, strict=True)
+        for theta, theme in offered:
+            key = tuple(np.round(theta, 4))
+            if theme is None or key in self._seen:
+                continue
+            self._seen.add(key)
+            self.entries.append((theta, theme))
+
+    @property
+    def thetas(self):
+        return [theta for theta, _theme in self.entries]
+
+
 def candidates(fit, polarity, nprng, n_trial=0, n_elite=10, n_mut=20, n_cross=48, imm_log2=6):
     """(candidates, index where the standing global stratum ends) for this trial."""
-    _out, _seen = [], set()
-
-    def _add(_t, _theme=None):
-        _t = np.clip(np.asarray(_t, dtype=float), 0.0, 1.0)
-        _key = tuple(np.round(_t, 4))
-        if _key in _seen:
-            return
-        _th = _theme if _theme is not None else realize(_t, polarity)
-        if _th is None:
-            return
-        _seen.add(_key)
-        _out.append((_t, _th))
-
-    for _t, _theme in POOL[polarity]:
-        _add(_t, _theme)
-    for _imm in sobol_block(imm_log2, n_trial):
-        _add(_imm)
-    _n_standing = len(_out)
+    pool = _CandidateSet(polarity)
+    pool.offer([t for t, _ in POOL[polarity]], [theme for _, theme in POOL[polarity]])
+    pool.offer(list(sobol_block(imm_log2, n_trial)))
+    n_standing = len(pool.entries)
     if fit is None:
-        return _out, _n_standing
-    _want = 1.0 if polarity == "night" else 0.0
-    _arch = [_x[:9] for _x in fit["X"] if abs(_x[9] - _want) < 0.5]
-    _seed_set = _arch + [_c[0] for _c in _out]
-    _mu = posterior_over(fit, _seed_set, polarity)[0]
-    _ls = fit.get("ls")
-    _top = np.argsort(-_mu)[: 6 * n_elite]
-    # Elites for spread as well as for mean: the best few, then the most different
-    # among the rest of the leaders, so refinement is not confined to one basin.
-    # Deliberately NOT Thompson-sampled elites: tried, and measured clearly worse
-    # (reach 3/12 runs, t = -2.6). Refining around a high-variance region spends the
-    # mutation budget on noise and displaces elites that are actually good; explore
-    # belongs in the standing stratum, refine belongs where the mean is high.
-    _keep = [int(_i) for _i in _top[: n_elite // 2]]
-    _w = 1.0 / (LS0[:9] if _ls is None else _ls[:9])
-    _P = np.array([np.asarray(_seed_set[int(_i)]) * _w for _i in _top])
-    _top_list = list(_top)
-    while len(_keep) < n_elite and len(_keep) < len(_top):
-        _chosen = [_top_list.index(_i) for _i in _keep if _i in _top_list]
-        if not _chosen:
-            _chosen = [0]
-        _d = np.min(np.linalg.norm(_P[:, None, :] - _P[None, _chosen, :], axis=-1), axis=1)
-        _d[_chosen] = -1.0
-        _keep.append(int(_top[int(np.argmax(_d))]))
-    _elites = [np.asarray(_seed_set[_i]) for _i in _keep]
-    _sig = 0.25 * (LS0[:9] if _ls is None else _ls[:9])
-    for _e in _elites:
-        _add(_e)
-        for _child in np.clip(_e[None, :] + nprng.normal(0, _sig, (n_mut, 9)), 0, 1):
-            _add(_child)
-    if len(_elites) >= 2:
+        return pool.entries, n_standing
+
+    want = 1.0 if polarity == "night" else 0.0
+    archive = [x[:9] for x in fit["X"] if abs(x[9] - want) < 0.5]
+    seed_set = archive + pool.thetas
+    mu = posterior_over(fit, seed_set, polarity)[0]
+    ls = fit.get("ls")
+    top = np.argsort(-mu)[: 6 * n_elite]
+    # Elites for spread as well as for mean: the best few, then the most different among
+    # the rest of the leaders, so refinement is not confined to one basin. Deliberately NOT
+    # Thompson-sampled elites: tried, and measured clearly worse (reach 3/12 runs,
+    # t = -2.6). Refining around a high-variance region spends the mutation budget on noise
+    # and displaces elites that are actually good; explore belongs in the standing stratum,
+    # refine belongs where the mean is already high.
+    keep = [int(i) for i in top[: n_elite // 2]]
+    weights = 1.0 / (LS0[:9] if ls is None else ls[:9])
+    scaled = np.array([np.asarray(seed_set[int(i)]) * weights for i in top])
+    top_list = list(top)
+    while len(keep) < n_elite and len(keep) < len(top):
+        chosen = [top_list.index(i) for i in keep if i in top_list] or [0]
+        spread = np.min(np.linalg.norm(scaled[:, None, :] - scaled[None, chosen, :], axis=-1), axis=1)
+        spread[chosen] = -1.0
+        keep.append(int(top[int(np.argmax(spread))]))
+    elites = [np.asarray(seed_set[i]) for i in keep]
+
+    # Mutation sigma scales with the ARD length-scale per axis: fine steps where utility
+    # actually turns, coarse where the model has learned that nothing rides.
+    sigma = 0.25 * (LS0[:9] if ls is None else ls[:9])
+    bred = []
+    for elite in elites:
+        bred.append(elite)
+        bred.extend(np.clip(elite[None, :] + nprng.normal(0, sigma, (n_mut, 9)), 0, 1))
+    if len(elites) >= 2:
+        # Uniform per-axis recombination. Worth having because the axes are semi-separable
+        # -- ground, accent set, comment recession, find-highlight -- so a good ground and a
+        # good accent set recombine into a plausible page, which is the building-block case
+        # where crossover earns its keep rather than adding noise.
         for _ in range(n_cross):
-            _i, _j = nprng.choice(len(_elites), 2, replace=False)
-            _mask = nprng.random(9) < 0.5
-            _add(np.where(_mask, _elites[_i], _elites[_j]))
-    return _out, _n_standing
+            first, second = nprng.choice(len(elites), 2, replace=False)
+            mask = nprng.random(9) < 0.5
+            bred.append(np.where(mask, elites[first], elites[second]))
+    pool.offer(bred)
+    return pool.entries, n_standing
 
 
 # ---- the legibility surface: what the timed arms are FOR ---------------------------
