@@ -62,7 +62,11 @@ never rebuilt. A trial changes text and `innerHTML`, never structure.
       trialspec.py    turning a trial into a prompt and cards
       responses.py    the append-only response log
       server.py       two JSON endpoints and one static page
-    data/           the measured logs, and the published champion
+    data/           the measurements, and the published champion
+                      *-responses.jsonl    append-only text, one JSON object per line;
+                                           tracked, because this is the record
+                      observer-logp-*.npy  a derived likelihood grid, regenerated on
+                                           demand and deliberately not tracked
     notebooks/      analysis, the vision calibration, the gallery
     tests/          recovery tests: plant a truth, check it comes back
 

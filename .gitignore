@@ -4,3 +4,10 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 __marimo__/
+
+# Derived caches, not measurements. The observer's log-likelihood grid is recomputed from
+# calibration-responses.jsonl whenever it is absent (see notebooks/vision.py), so tracking
+# it would put a 28 MB binary in history that nothing can diff and every clone must fetch.
+# The measurements themselves ARE tracked: small, append-only, one JSON object per line,
+# and a real diff when they change.
+data/observer-logp-*.npy
