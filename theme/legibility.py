@@ -23,6 +23,7 @@ import math
 import numpy as np
 
 from .kernel import SIGNAL_VARIANCE, coords, kmat
+from .preference import quadratic_form
 
 # A trial faster than this is a slip and one slower is a distraction, neither of them a
 # reading time.
@@ -145,7 +146,7 @@ def rt_at(surface, thetas, polarity):
     scale = surface["sf2"] / SIGNAL_VARIANCE
     cross_cov = scale * kmat(query_inputs, surface["X"], surface.get("ls"))
     mean = surface["mu0"] + cross_cov @ (surface["Ki"] @ surface["resid"])
-    variance = np.maximum(surface["sf2"] - np.einsum("ij,jk,ik->i", cross_cov, surface["Ki"], cross_cov), 1e-9)
+    variance = np.maximum(surface["sf2"] - quadratic_form(cross_cov, surface["Ki"]), 1e-9)
     return mean, variance
 
 
