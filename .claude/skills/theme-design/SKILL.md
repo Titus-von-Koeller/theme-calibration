@@ -311,6 +311,25 @@ interact, and choose the best combination — every step from measurement.
   square two). Randomising the slot with a shuffled permutation per group fixes the
   exposure; the guess bias enters the likelihood as overdispersion and costs a shallower
   slope and a larger lapse than the eyes deserve.
+- **Salience is effectively one-dimensional, which matters before anyone tunes the
+  conspicuity floor.** It is defined as the minimum CAM16-UCS distance from the current
+  highlight to the ground and to every coloured role — but across all 884 feasible pool
+  themes the GROUND is always the nearest competitor, because the contrast floors push text
+  far from the page while the fill is built to sit near it. So the floor gates on
+  fill-versus-ground distance alone; the four role terms are a correct safety net that has
+  never once been the binding minimum.
+- **The lightness bisection assumes monotonicity that contrast does not have.** WCAG
+  contrast against a fixed ground is V-shaped in lightness, not monotone, so the bracket
+  finds the intended root only because every polarity's ground sits at an end of the
+  lightness range. On a mid-lightness ground it would find the wrong root about half the
+  time. Latent rather than active — but any change that admits mid-lightness grounds has to
+  fix the bracket first.
+- **The bisection cannot report failure, and the floors do not cover for it.** An
+  unreachable target ratio, or a lightness/chroma pair outside sRGB that the inverse
+  transform silently clips, converges on a bound and returns a colour that misses its
+  target. The assembly step checks the absolute floors (4.5:1, Lc 60/45) but NOT each row's
+  own requested ratio, so a theme with a saturated body-contrast axis can ship with a
+  `body_ratio` below what its own parameters asked for.
 - **A discrimination floor is not a conspicuity floor.** These are different perceptual
   questions and conflating them cost real trials. A dE threshold answers "can two patches
   be told apart, side by side, at 104 px". Finding one highlighted token in a page of code
