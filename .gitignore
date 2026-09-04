@@ -1,3 +1,12 @@
+# This project owns its pixi manifest, so undo the global ignores set in
+# ~/dotfiles/home/shell.nix (programs.git.ignores). Those exist to stop pixi files from
+# ad-hoc directories being committed by accident; a project whose dependencies and lock
+# file ARE the reproducibility story has to track both, and pixi's own guidance says so.
+# Without this the repo cannot be cloned and run, and a worktree has no manifest at all --
+# which is how it was noticed.
+!pixi.toml
+!pixi.lock
+
 __pycache__/
 *.py[cod]
 .pixi/

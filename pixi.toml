@@ -1,0 +1,62 @@
+[workspace]
+name = "theme-calibration"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+# Matches the interpreter the rest of Titus's work runs on, so habits and idiom carry
+# across. Nothing here is ABI-coupled to torch, which is why this project can live
+# entirely on conda-forge where loop-to-cluster has to mix in PyPI wheels.
+python = "3.14.*"
+ruff = ">=0.6"
+pytest = ">=8.0"
+# Property-based testing. The valuable tests here are not "this input gives that output"
+# but invariants that must hold for EVERY theme the search can propose -- every candidate
+# shown clears its contrast floors, or realize() refuses to build it. Hypothesis searches
+# for the counterexample instead of trusting a hand-picked sample, and shrinks it to
+# something readable when it finds one.
+hypothesis = ">=6.100"
+# The FastAPI TestClient needs it, and it exercises the whole click path -- request in,
+# record on disk, next trial out -- without a browser. Fast enough to run on every change,
+# which is the only way a flow test actually gets run.
+httpx = ">=0.27"
+# Drives a real browser over the Chrome DevTools Protocol. The FastAPI TestClient proves
+# the server records and hands back the right next trial; only a browser proves the PAGE
+# does -- that a click lands on a token, that the stage never empties between trials, that
+# a run gate reveals. That is the failure this whole project was restructured to fix, so
+# the check for it belongs in the repo rather than in a scratch script.
+websocket-client = ">=1.8"
+
+# The numerics. The preference model is a Gaussian process with a Bradley-Terry
+# likelihood fit by Laplace approximation; scipy is here for its scrambled Sobol
+# sequence, which is what keeps the candidate immigrants low-discrepancy rather than
+# clumped.
+numpy = ">=2.5"
+scipy = ">=1.14"
+
+# CAM16-UCS forward/inverse (imports as `colour`). A tested implementation over a
+# hand-rolled one: CAM16 is ~40 constants where one silent transcription error poisons
+# every measurement built on it.
+colour-science = ">=0.4.7,<0.5"
+
+# The trial surface. A timed psychophysics task has to own its DOM -- it was a marimo
+# widget once, and marimo's per-answer teardown of the widget is exactly what made the
+# screen blank between trials.
+fastapi = ">=0.115"
+uvicorn = ">=0.30"
+
+# Analysis only: the notebook that reads the log and reports what the model believes.
+# It is deliberately NOT in the path a click takes.
+marimo = ">=0.24, <0.25"
+pandas = ">=2.2"
+altair = ">=6.2, <7"
+
+[pypi-dependencies]
+# The package itself, editable, so `import theme` resolves from any working directory.
+theme-calibration = { path = ".", editable = true }
+
+[tasks]
+serve = { cmd = "uvicorn theme.server:app --host 127.0.0.1 --port 2919", description = "Run the trial instrument" }
+analyse = { cmd = "marimo run notebooks/analysis.py --headless --no-token --host 127.0.0.1 -p 2920", description = "Serve the analysis notebook" }
+test = { cmd = "pytest -q", description = "Run the recovery tests" }
+check = { cmd = "ruff format --check . && ruff check .", description = "Lint and format check" }
