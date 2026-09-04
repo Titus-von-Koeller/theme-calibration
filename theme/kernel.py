@@ -113,12 +113,27 @@ def spread_positions(scaled_points, initial, n_wanted):
     elite selection did and depends on.
     """
     picked = list(initial)
-    while len(picked) < min(n_wanted, len(scaled_points)):
-        against = picked or [0]
-        # Distance to the nearest already-taken point, then take the point that maximizes
-        # it. Taken positions are masked rather than skipped, so a duplicate coordinate
-        # cannot be taken twice.
-        spread = np.min(np.linalg.norm(scaled_points[:, None, :] - scaled_points[None, against, :], axis=-1), axis=1)
+    limit = min(n_wanted, len(scaled_points))
+    if len(picked) >= limit:
+        return picked
+    # Distance to the nearest already-taken point, carried forward rather than recomputed
+    # against the whole taken set each step: taking one more point can only lower a
+    # nearest-neighbour distance, so a running minimum is the same number for O(k n) work
+    # instead of O(k^2 n).
+    against = picked or [0]
+    nearest = np.min(np.linalg.norm(scaled_points[:, None, :] - scaled_points[None, against, :], axis=-1), axis=1)
+    while True:
+        # Taken positions are masked rather than skipped, so a duplicate coordinate cannot
+        # be taken twice.
+        spread = nearest.copy()
         spread[against] = -1.0
         picked.append(int(np.argmax(spread)))
-    return picked
+        if len(picked) >= limit:
+            return picked
+        if len(picked) == 1:
+            # `initial` was empty, so the set measured against was position 0 without
+            # taking it; from the first real pick onward it is `picked` itself.
+            nearest = np.linalg.norm(scaled_points - scaled_points[picked[0]], axis=1)
+        else:
+            nearest = np.minimum(nearest, np.linalg.norm(scaled_points - scaled_points[picked[-1]], axis=1))
+        against = picked

@@ -314,7 +314,8 @@ def _held_out_loglik(axis_differences, levels_of_row, n_levels, n_tilt_axes, see
         train = np.setdiff1d(order, held_out)
         if len(train) < 10:
             continue
-        features = _tilt_features(axis_differences[train], levels_of_row[train], n_levels, n_tilt_axes)
+        train_levels = levels_of_row[train] if n_tilt_axes else None
+        features = _tilt_features(axis_differences[train], train_levels, n_levels, n_tilt_axes)
         coefficients = np.zeros(features.shape[1])
         for _ in range(60):
             p_first_wins = 1.0 / (1.0 + np.exp(-(features @ coefficients)))
@@ -323,9 +324,9 @@ def _held_out_loglik(axis_differences, levels_of_row, n_levels, n_tilt_axes, see
                 len(coefficients)
             )
             coefficients = coefficients + np.linalg.solve(hessian, gradient)
-        log_odds = _tilt_features(axis_differences[held_out], levels_of_row[held_out], n_levels, n_tilt_axes) @ (
-            coefficients
-        )
+        held_out_levels = levels_of_row[held_out] if n_tilt_axes else None
+        features = _tilt_features(axis_differences[held_out], held_out_levels, n_levels, n_tilt_axes)
+        log_odds = features @ coefficients
         # log(sigmoid(z)), by the stable identity. Written as log1p(exp(-z)) it
         # overflows to inf for z below about -709 and takes the whole permutation null
         # to -inf with it; logaddexp is exact over that range and identical where the
@@ -335,11 +336,22 @@ def _held_out_loglik(axis_differences, levels_of_row, n_levels, n_tilt_axes, see
     return total / max(n_scored, 1)
 
 
-def _tilt_gain(axis_differences, levels_of_row, n_levels, n_seeds):
+def _tilt_free_loglik(axis_differences, n_seeds):
+    """The held-out log-likelihood of one shared utility, averaged over fold splits.
+
+    It takes no levels argument because it cannot use one: with no tilt the design matrix
+    is the axis differences alone. That is why the permutation null does not need to
+    recompute it -- shuffling the labels cannot move a number that never saw them.
+    """
+    return np.mean([_held_out_loglik(axis_differences, None, 0, 0, s) for s in range(n_seeds)])
+
+
+def _tilt_gain(axis_differences, levels_of_row, n_levels, n_seeds, tilt_free=None):
     """How much held-out log-likelihood the per-level tilt buys, averaged over fold splits."""
     with_tilt = np.mean([_held_out_loglik(axis_differences, levels_of_row, n_levels, 1, s) for s in range(n_seeds)])
-    without = np.mean([_held_out_loglik(axis_differences, levels_of_row, n_levels, 0, s) for s in range(n_seeds)])
-    return float(with_tilt - without)
+    if tilt_free is None:
+        tilt_free = _tilt_free_loglik(axis_differences, n_seeds)
+    return float(with_tilt - tilt_free)
 
 
 def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
@@ -378,9 +390,15 @@ def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
     axis_differences = _winner_minus_loser(rows)
 
     observed = _tilt_gain(axis_differences, levels_of_row, len(levels), 6)
+    # The null's tilt-free term is the same number for every permutation, so it is
+    # computed once. Half the permutation test was recomputing it.
+    null_tilt_free = _tilt_free_loglik(axis_differences, 2)
     rng = np.random.default_rng(seed)
     null = np.array(
-        [_tilt_gain(axis_differences, rng.permutation(levels_of_row), len(levels), 2) for _ in range(nperm)]
+        [
+            _tilt_gain(axis_differences, rng.permutation(levels_of_row), len(levels), 2, null_tilt_free)
+            for _ in range(nperm)
+        ]
     )
     p_value = float((null >= observed).mean())
     if p_value < 0.02:

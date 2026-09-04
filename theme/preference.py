@@ -182,9 +182,11 @@ def fit_laplace(gp_inputs, duels, duel_slopes, prior_means, winner_sides=None, l
     sides = np.zeros(len(duels)) if winner_sides is None else np.asarray(winner_sides, dtype=float)
     duel_slopes = np.asarray(duel_slopes, dtype=float)
     side_bias = 0.0
+    # Built once, not once per alternation round: it is a function of the duels and the
+    # point count, and neither changes inside this fit.
+    differences = duel_difference_matrix(duels, n_points)
+    scaled_differences = differences * duel_slopes[:, None]
     for _ in range(3):
-        differences = duel_difference_matrix(duels, n_points)
-        scaled_differences = differences * duel_slopes[:, None]
         for _ in range(60):
             gradient, likelihood_precision = _bt_derivatives(
                 differences, scaled_differences, duel_slopes, utilities, sides, side_bias
