@@ -311,6 +311,23 @@ interact, and choose the best combination — every step from measurement.
   square two). Randomising the slot with a shuffled permutation per group fixes the
   exposure; the guess bias enters the likelihood as overdispersion and costs a shallower
   slope and a larger lapse than the eyes deserve.
+- **Maximising information about a DUEL'S OUTCOME is not the same as maximising information
+  about WHICH THEME IS BEST, and the difference is what strands a plateau.** The expected
+  information gain of a comparison is largest for any uncertain pairing anywhere in the
+  space. Once several themes share the probability of being best, though, all the remaining
+  uncertainty about the argmax lives in comparisons BETWEEN them. Measured: with the outcome
+  objective alone, zero of the next sixteen day duels put two shelf members together and the
+  median utility gap between arms was 0.59 -- the instrument was separating themes it could
+  already tell apart, and the shelf would never have resolved however many were answered.
+  Reserving a declared share for the shelf pair whose predicted duel is closest to a coin
+  flip (the maximum-entropy comparison, and so the most informative about their ordering)
+  halved that gap to 0.28. Not all duels: a run confined to five candidates cannot notice a
+  sixth, and a single clear leader needs confirming against the field rather than itself.
+- **Before concluding a preference is too weak to resolve, measure whether it PREDICTS.**
+  Held-out accuracy on real choices was 74.6% by day and 70.3% by night, both clear of
+  chance. That distinguishes the two explanations for a stubborn plateau: a preference that
+  does not exist at that resolution, against a question the instrument is failing to ask.
+  It was the second, and only the accuracy number told them apart.
 - **Salience is effectively one-dimensional, which matters before anyone tunes the
   conspicuity floor.** It is defined as the minimum CAM16-UCS distance from the current
   highlight to the ground and to every coloured role — but across all 884 feasible pool

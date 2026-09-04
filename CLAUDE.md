@@ -79,6 +79,22 @@ Open questions, most valuable first. Figures are from 192 responses, 127 duels.
     absolute floors but not each row's own requested ratio.
 12. **Repo hygiene.** No CI, no pre-commit config, no LICENSE.
 
+**External validity: measured but never checked against the thing being optimised.**
+These are not in any test and were not previously written down.
+
+16. **The judging surface is a browser; the theme runs in VSCode.** Trials render HTML in
+    Chrome, with Chrome's font rasterisation, subpixel antialiasing and gamma handling. The
+    winning palette is then applied in an editor that rasterises differently. A colour pair
+    that clears a floor in the instrument may not clear it on screen where it is used, and
+    nothing compares the two. This is the largest remaining gap between the measured
+    optimum and the experienced one; a pixel-sampled comparison of the same palette in both
+    renderers would close it.
+17. **Every stimulus is code.** The theme also colours prose (the chat panel at 17px serif),
+    terminal output and notebook markdown. Surface is a factor, but the CONTENT is always a
+    code page, so preference for what the theme does to prose is unmeasured.
+18. **Font is fixed at Iosevka.** Stroke weight interacts strongly with perceived contrast,
+    so every floor is conditional on that face and the theme-by-font interaction is unknown.
+
 **Needs a decision from Titus.**
 
 13. **The 28 MB likelihood grid** is untracked going forward but still sits in the first
