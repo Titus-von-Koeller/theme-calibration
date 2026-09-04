@@ -21,6 +21,7 @@ imports, so the search, the floors and the log format are the ones already calib
     pixi run serve
 """
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
@@ -34,7 +35,26 @@ from .schedule import run_info, trial_for
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
-app = FastAPI(title="theme trials")
+
+@asynccontextmanager
+async def warm_the_model(_app: FastAPI):
+    """Fit the model before the first click rather than during it.
+
+    A fresh process pays about 3.3 s for the first trial: the reaction-time exponent is
+    chosen by five-fold cross-validation over four candidate values, which is twenty
+    Laplace fits, and it is memoised only once it has run. Paying that at boot costs
+    nobody anything -- the server starts while Titus is still opening the tab -- whereas
+    paying it on his first answer puts three seconds inside a measurement.
+    """
+    try:
+        answered = responses.DEFAULT_LOG.read()
+        payload(len(answered), answered)
+    except Exception as exc:  # a warm-up must never stop the app from serving
+        print(f"warm-up skipped: {exc}")
+    yield
+
+
+app = FastAPI(title="theme trials", lifespan=warm_the_model)
 
 
 # What the chip in the corner calls each arm: short, so the eye takes it in one hit.
