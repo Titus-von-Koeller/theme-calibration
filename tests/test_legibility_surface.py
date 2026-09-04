@@ -1,6 +1,6 @@
 """The legibility surface: what the clock measures, and what it must not absorb.
 
-The duels ask which theme he PREFERS. The timed trials ask which theme he READS faster,
+The duels ask which theme is PREFERRED. The timed trials ask which theme is READ faster,
 which makes the reaction-time GP a second instrument over the same nine axes -- and one
 with its own characteristic failure: a constant belonging to the TASK or to the TYPE SIZE
 landing on the theme surface instead, where it reads as a preference for whichever themes
@@ -231,3 +231,17 @@ def test_uncertainty_hunting_beats_uniform_sweeps(search_model):
     uniform = float(np.mean([hunt_run(search_model, "uniform", seed=s) for s in (1, 2, 3, 4, 5)]))
     active = float(np.mean([hunt_run(search_model, "active", seed=s) for s in (1, 2, 3, 4, 5)]))
     assert active > uniform, f"corr(pred, truth) active {active:.3f} vs uniform {uniform:.3f} at 40 hunts"
+
+
+def test_the_predicted_times_come_back_in_the_unit_they_were_fitted_in(search_model, probe, timed_fit):
+    """`rt_penalty`'s second return is milliseconds, because the log records `rt_ms`.
+
+    Its docstring said seconds. A unit named wrongly in a docstring passes every test
+    there is and then divides a readout by a thousand, so the unit gets an assertion:
+    every prediction must land inside the window `rt_fit` accepts trials from.
+    """
+    _excluded, predicted = search_model.rt_penalty(timed_fit["rf"], probe, "day")
+    assert float(np.min(predicted)) > 250.0 and float(np.max(predicted)) < 30000.0, (
+        f"predicted times span {np.min(predicted):.0f}..{np.max(predicted):.0f}, "
+        "which is not the millisecond window rt_fit reads"
+    )

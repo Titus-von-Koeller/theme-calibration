@@ -273,6 +273,9 @@ def clone_and_spread_candidates():
     The clones sit within 0.004 of one another on every axis -- far below anything an eye
     could see -- so they are one theme as far as any verdict is concerned. Imported by
     test_diagnostics, whose progress readout needs the same fixed candidate set.
+
+    Clones come FIRST in the candidate list, because the grouping tests read the group of
+    candidate i for i below len(clones).
     """
     base = np.random.default_rng(11).random(9)
     clones = [np.clip(base + np.random.default_rng(50 + i).normal(0, 0.004, 9), 0, 1) for i in range(20)]
@@ -293,10 +296,16 @@ def test_near_identical_themes_count_once(grouped_best_set):
 
     On the real log that failure read as a plateau while the leader held 1.6% -- a number
     that says nothing about whether one theme leads.
+
+    Read off `group_of`, which is the assignment the grouping actually made. An earlier
+    version of this assertion took the nearest of `groups` -- a list of candidate INDICES
+    -- to each clone VECTOR, so it compared an integer against nine coordinates. Every
+    clone got the same meaningless answer, the count came out at 1, and the test passed
+    without touching the grouping at all.
     """
     best, clones = grouped_best_set
-    n_clone_groups = len({int(np.argmin([np.linalg.norm(np.asarray(g) - c) for g in best["groups"]])) for c in clones})
-    assert n_clone_groups <= 2, f"20 clones fell into {n_clone_groups} group(s)"
+    clone_groups = {int(best["group_of"][i]) for i in range(len(clones))}
+    assert len(clone_groups) <= 2, f"{len(clones)} clones fell into {len(clone_groups)} group(s)"
 
 
 def test_p_best_counts_contenders_rather_than_coordinates(grouped_best_set):

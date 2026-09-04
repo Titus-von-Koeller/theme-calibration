@@ -179,7 +179,6 @@ def fit_laplace(gp_inputs, duels, duel_slopes, prior_means, winner_sides=None, l
     prior_cov = kmat(gp_inputs, gp_inputs, length_scales) + 1e-6 * np.eye(n_points)
     prior_precision = np.linalg.inv(prior_cov)
     utilities = prior_means.copy()
-    likelihood_precision = np.zeros((n_points, n_points))  # replaced each Newton step
     sides = np.zeros(len(duels)) if winner_sides is None else np.asarray(winner_sides, dtype=float)
     duel_slopes = np.asarray(duel_slopes, dtype=float)
     side_bias = 0.0

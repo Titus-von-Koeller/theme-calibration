@@ -118,10 +118,14 @@ def rt_fit(responses, polarity, length_scales=None, noise_share=0.45):
     try:
         precision = np.linalg.inv(cov)
     except np.linalg.LinAlgError:
+        # Unreachable in principle: noise_variance is at least 1e-4, so the diagonal is
+        # strictly positive and the matrix is positive definite. Kept because the cost of
+        # being wrong about that is a raised exception in the middle of generating a trial,
+        # and the cost of being right is that the legibility constraint sits out one trial.
         return None
     return {
         "X": gp_inputs,
-        "y": baseline + residual,
+        "y": log_times,
         "resid": residual,
         "base": baseline,
         "mu0": prediction_baseline,

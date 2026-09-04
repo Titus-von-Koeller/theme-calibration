@@ -8,6 +8,8 @@ Every one of these prints a number that looks like a measurement, so each carrie
 calibration that says when to believe it.
 """
 
+import math
+
 import numpy as np
 
 from .kernel import scale_thetas, spread_positions
@@ -16,8 +18,9 @@ from .preference import duel_rows, fitted, posterior_joint
 BEST_MEMO = {}
 
 # The standard deviation of a uniform axis, which every axis spread is reported relative
-# to, so a settled axis and an untouched one are comparable numbers.
-UNIFORM_AXIS_SD = 0.2887
+# to, so a settled axis and an untouched one are comparable numbers. Spelled as the
+# expression rather than as 0.2887, which was the rounded figure the readout divided by.
+UNIFORM_AXIS_SD = 1.0 / math.sqrt(12.0)
 
 # A leader holding more than this much of the argmax mass is a winner; more than the
 # smaller figure is a real plateau; below it the log cannot yet tell.
@@ -134,6 +137,7 @@ def best_set(fit, polarity, thetas, samples=2048, mass=0.5, seed=0, radius=0.9):
         "groups": representatives,
         "group_p": group_p,
         "group_order": group_order,
+        "group_of": group_of,
         "credible": [representatives[group] for group in keep],
         "credible_p": [float(group_p[group]) for group in keep],
         "lead": lead,
@@ -322,7 +326,11 @@ def _held_out_loglik(axis_differences, levels_of_row, n_levels, n_tilt_axes, see
         log_odds = _tilt_features(axis_differences[held_out], levels_of_row[held_out], n_levels, n_tilt_axes) @ (
             coefficients
         )
-        total += float(np.sum(-np.log1p(np.exp(-log_odds))))
+        # log(sigmoid(z)), by the stable identity. Written as log1p(exp(-z)) it
+        # overflows to inf for z below about -709 and takes the whole permutation null
+        # to -inf with it; logaddexp is exact over that range and identical where the
+        # naive form was already accurate.
+        total += float(np.sum(-np.logaddexp(0.0, -log_odds)))
         n_scored += len(held_out)
     return total / max(n_scored, 1)
 
