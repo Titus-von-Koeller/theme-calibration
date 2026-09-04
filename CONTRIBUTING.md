@@ -79,6 +79,15 @@ visible:
 git add <explicit paths> && git commit -m "..."
 ```
 
+**Give each agent its own scratch directory.** A shared scratch path is the one thing a
+worktree does not isolate: two agents wrote a `characterize.py` to the same directory and
+one silently overwrote the other's, mid-run.
+
+**Long computations need unbuffered output to a file the agent owns.** A detached terminal
+pane died and took a forty-minute run with it, leaving nothing to diagnose from, because
+Python block-buffers to a pipe and so `tee` had written zero bytes. `python -u` to a plain
+file survives; a pane is for something a person is watching.
+
 **Leave the branch green.** `pixi run check && pixi run test` in the worktree before the
 final commit. A branch that does not pass is not ready to merge, and finding that out
 during integration wastes everyone's turn.
