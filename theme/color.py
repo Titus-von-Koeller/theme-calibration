@@ -112,8 +112,18 @@ def apca_lc(txt_rgb, bg_rgb):
 
 def composite(fg_hex, alpha, bg_hex):
     """fg at `alpha` over bg, as hex — contrast is only ever stated on composited color."""
-    foreground, background = hex_to_rgb(fg_hex)[0], hex_to_rgb(bg_hex)[0]
-    return rgb_to_hex(alpha * foreground + (1 - alpha) * background)[0]
+    return composite_many([fg_hex], alpha, [bg_hex])[0]
+
+
+def composite_many(fg_hexes, alpha, bg_hexes):
+    """`composite` over equal-length sequences of hexes, in one array round trip.
+
+    `alpha` is a scalar or one value per pair. A scalar is used as-is rather than
+    broadcast through an array, so the single-pair case pays nothing for the batching.
+    """
+    foreground, background = hex_to_rgb(fg_hexes), hex_to_rgb(bg_hexes)
+    weight = alpha if np.isscalar(alpha) else np.asarray(alpha, dtype=float).reshape(-1, 1)
+    return rgb_to_hex(weight * foreground + (1 - weight) * background)
 
 
 def solve_j(ab, ground_rgb, ratio, lighter, iters=16):
