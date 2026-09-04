@@ -1,9 +1,14 @@
 ---
 name: theme-design
-description: Judgment for the theme program — measuring Titus's color vision and choosing or evolving editor and graphing themes from measurements, not taste. Use when touching _palette.py, _viz.py, theme-gallery.py, calibrate-vision.py, editor theme overrides in dotfiles, or any color/contrast decision. Findings live with the instruments; program state lives in CLAUDE.md's queue; this file carries the method.
+description: Judgment for the theme program — measuring Titus's color vision and choosing or evolving editor and graphing themes from measurements, not taste. Use when touching _palette.py, _viz.py, notebooks/gallery.py, notebooks/vision.py, editor theme overrides in dotfiles, or any color/contrast decision. Findings live with the instruments; program state lives in CLAUDE.md's queue; this file carries the method.
 ---
 
 # Theme design, measured
+
+> **Layout note.** This reef moved with its program when the theme instrument was extracted
+> from the repo it grew up in. Paths below are relative to this repository: the instrument is
+> the `theme/` package served by `theme/server.py`, the calibration and gallery are notebooks,
+> the measurements are in `data/`, and the tests are in `tests/`.
 
 The program (Titus's framing): determine independently the best *editor* theme (best-in-class
 as the field, then self-evolved) and the best *graphing* theme, characterize how the two
@@ -11,15 +16,15 @@ interact, and choose the best combination — every step from measurement.
 
 ## The instruments, and where their knowledge lives
 
-- `notebooks/pytorch-basics/theme-gallery.py` — the exhibit color system and the field's
+- `notebooks/gallery.py` — the exhibit color system and the field's
   palettes under three instruments (as designed, Machado deuteranopia, grayscale), the editor
   theme measured on its own grounds, and the lineage of the rules (Bertin through Munzner).
-- `notebooks/pytorch-basics/_observer.py` — **the one observer model** (v2: CAM16-UCS
+- `theme/observer.py` — **the one observer model** (v2: CAM16-UCS
   geometry, fitted slope/lapse, free confusion-axis orientation, threshold smooth in
   ground lightness, small-field exponent), fit from the shared jsonl and cached beside it.
   Every instrument reads this fit — measurement sharpens preference constraints without a
   second copy anywhere. Change the model here, nowhere else.
-- `notebooks/pytorch-basics/calibrate-vision.py` — the discrimination instrument on that
+- `notebooks/vision.py` — the discrimination instrument on that
   model: EIG-generated odd-one-out trials over seven grounds (Horizon, Selenized, Modus,
   GitHub dark) and three patch sizes (104/16/10 px — the glyph-scale stage and the
   ground-threshold search run in the same loop). **Current findings and how to read them
@@ -29,12 +34,12 @@ interact, and choose the best combination — every step from measurement.
 - `~/.claude/skills/titus-preferences/SKILL.md` — his standing functionality and aesthetics
   preferences across all programs; theme choices must respect it, and new preferences he
   states go there.
-- `notebooks/pytorch-basics/calibrate-aesthetics.py` — the preference side of the
+- `theme/ (the package) + theme/server.py` — the preference side of the
   interlock: preferential Bayesian optimization over a CAM16-UCS theme space (duels,
   comprehension micro-tasks, find-highlight hunts), with the vision fit's thresholds as
   hard constraints refit live from the shared jsonl. Findings in its closing prose; data
-  in `aesthetics-responses.jsonl`.
-- `notebooks/pytorch-basics/calibration-responses.jsonl` — every response, append-only;
+  in `data/aesthetics-responses.jsonl`.
+- `data/calibration-responses.jsonl` — every response, append-only;
   size_px and gap_px ride along because they are stimulus parameters.
 
 ## Method rules, each earned by a measurement that contradicted a guess
@@ -185,7 +190,7 @@ interact, and choose the best combination — every step from measurement.
   truth is known and check it recovers them; keep the tests beside the instrument, load its
   code by AST rather than duplicating it, and record the changes that measured WORSE — a
   plausible-sounding change that degrades an instrument is the expensive kind of mistake.
-  loop-to-cluster: `notebooks/pytorch-basics/_model_tests.py`.
+  `tests/`.
 - **Spend timed trials where the surface is least certain, not uniformly.** The legibility
   GP is a regression, so its own posterior variance says where a click buys the most; a
   uniform sweep spends most of them re-measuring what is already known. Measured against a
@@ -195,13 +200,13 @@ interact, and choose the best combination — every step from measurement.
   only its own uncertainty never revisits a region it is confidently wrong about. The same
   logic picks comprehension probes among the pages he might PLAUSIBLY end up with — probing
   a page he would never choose measures legibility nobody will use, and probing the
-  champion again measures what is known. loop-to-cluster: `rt_fit`, `rt_at`; test T11.
+  champion again measures what is known. `rt_fit`, `rt_at`; test T11.
 - **Measure a test's false-positive rate before reading its p-value.** Letting extra
   parameters "earn their keep" on held-out data sounds self-policing and is not: at 48
   duels, two extra parameters cleared a fixed cross-validation threshold by chance in 3 to
   7 runs of 24 under a TRUE null. Read a gain against its own permutation null instead —
   same design, same responses, only the label under test shuffled — which needs no assumed
-  noise model and uses the real covariate structure. loop-to-cluster: `surface_effect`.
+  noise model and uses the real covariate structure. `surface_effect`.
 - **A null result is only a result if it comes with its power.** Before believing "no
   effect", plant effects of known size and see which ones the test could have found. At 48
   surface-labelled duels a tilt of 1 logit was detected 1 run in 12 and 2 logits about half
@@ -219,7 +224,7 @@ interact, and choose the best combination — every step from measurement.
   differed: keyword hues of violet, dark green, dark red and blue over grounds within 4 RGB
   units of one cream. The useful statement is which axes his clicks have decided and which
   the remaining duels are actually deciding — the posterior-weighted spread per axis,
-  against the 0.289 of a uniform one. loop-to-cluster: `axis_consensus`; test T14.
+  against the 0.289 of a uniform one. `axis_consensus`; test T14.
 - **A comparison grid needs the width its stimulus needs, not the prose measure.** The
   reading column is ~610px because that is a good measure for TEXT; four theme cards inside
   it are 306px each and a page needs ~520px, so every card was clipped 72px mid-token and
@@ -247,7 +252,7 @@ interact, and choose the best combination — every step from measurement.
 - **Publish the measured answer to a file; never make a human retype it.** The analysis
   printed twelve hex codes per polarity to paste into settings.jsonc, which made the last
   step of a measured pipeline the only unmeasured one — the failure mode is a dropped digit
-  nobody notices for a week. The instrument writes `measured-theme.json` (palette plus the
+  nobody notices for a week. The instrument writes `data/measured-theme.json` (palette plus the
   verdict and its confidence, so a consumer can see it is a plateau leader at 18% rather
   than the answer) and `apply-measured-theme` rewrites marked regions of settings.jsonc.
   Dry run by default: which theme he lives in is his call, not the model's. The applier
@@ -416,7 +421,7 @@ Beauty votes through these; the instruments still veto, and Titus's eyes outrank
 
 - 2026-09-02, 602 trials: the exhibit-scale (104px) stage is **converged** — 68% CIs on all
   six per-axis thresholds within ±5%, further clicking at this scale is low-yield. Numbers and
-  reading guidance live in calibrate-vision.py's closing prose. The next informative data is
+  reading guidance live in notebooks/vision.py's closing prose. The next informative data is
   glyph-scale (queued, decides the editor theme) and the ground search.
 - 2026-09-02, 440 trials: every candidate palette's worst pair is lapse-limited-visible at
   104px on both grounds — exhibit-scale palette choice is free of CVD constraints for Titus.
