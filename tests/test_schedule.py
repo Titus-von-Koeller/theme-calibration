@@ -8,7 +8,7 @@ stimulus that was actually shown.
 
 import pytest
 
-from theme import responses
+from theme import responses, schedule
 from theme.schedule import duel_surface, run_info, schedule_mode, trial_for
 from theme.stimulus import READING_PX, SURFACES
 
@@ -53,9 +53,9 @@ def test_a_run_batches_trials_of_one_kind(slot, expected):
 
 
 def test_polarity_alternates_by_block():
-    """Blocked rather than interleaved, so his adaptation state is part of the measurement
-    instead of noise in it -- a light page judged with dark-adapted eyes is a different
-    stimulus."""
+    """Blocked rather than interleaved, so the observer's adaptation state is part of the
+    measurement instead of noise in it -- a light page judged with dark-adapted eyes is a
+    different stimulus."""
     assert schedule_mode(0, 999)[0] != schedule_mode(BLOCK, 999)[0]
     assert schedule_mode(0, 999)[0] == schedule_mode(2 * BLOCK, 999)[0]
 
@@ -77,7 +77,7 @@ def test_the_first_duel_of_a_run_is_not_always_the_same_surface():
     assert len(first_of_run) == len(SURFACES), f"slot 0 only ever shows {sorted(first_of_run)}"
 
 
-def test_each_surface_is_shown_at_the_size_he_reads_it_at(answered):
+def test_each_surface_is_shown_at_the_size_it_is_read_at(answered):
     """Preference measured at 12-13px was being applied to reading at 14 and 16. Contrast
     sensitivity falls with glyph scale, so that is not a free assumption in a colour
     experiment."""
@@ -93,3 +93,31 @@ def test_run_info_agrees_with_the_arm_schedule():
         polarity, arm, position, run_length = run_info(n, 999)
         assert (polarity, arm) == schedule_mode(n, 999)
         assert 0 <= position < run_length
+
+
+def test_the_memo_never_serves_a_trial_built_from_a_different_log(answered):
+    """A memo may only ever return the same computation it would have performed.
+
+    Keyed by trial number alone it did not: on the real log, trial 40 asked for with the log
+    and asked for with an empty history returned the same object -- a comprehension probe on
+    the editor, when the second caller's own answer is a duel on the panel. Reachable in one
+    pytest process by test order, since the suite drives the app with a scratch log while
+    other tests read the real one, and reachable in the recorder as a row describing a theme
+    that was never on screen.
+
+    So this asserts both halves: the same history always gives the same trial, and a
+    different history gives a different one rather than whatever was cached first.
+    """
+    n = 40
+    if len(answered) < n:
+        pytest.skip(f"needs {n} recorded responses, log has {len(answered)}")
+
+    with_history = trial_for(n, answered)
+    schedule.TRIAL_MEMO.clear()
+    recomputed = trial_for(n, answered)
+    assert with_history == recomputed, "the same history must give the same trial"
+
+    with_none = trial_for(n, [])
+    assert (with_none["mode"], with_none["theta_a"]) != (with_history["mode"], with_history["theta_a"]), (
+        "an empty history must not be answered from the cached full-history trial"
+    )
