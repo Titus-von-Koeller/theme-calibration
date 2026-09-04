@@ -424,13 +424,13 @@ def _diff_block(theme, code_px, card_open, card_close):
     fields = {
         "added": _mixed(theme["ground"], theme["function"], _DIFF_MIX),
         "removed": _mixed(theme["ground"], theme["string"], _DIFF_MIX),
-        None: None,
     }
     rows = []
     for mark, text, field in _DIFF_LINES:
         style = f"display:block;padding:0 6px;color:{theme['punct']}"
-        if fields[field]:
-            style += f";background:{fields[field]}"
+        fill = fields.get(field)
+        if fill:
+            style += f";background:{fill}"
         rows.append(
             f'<span style="{style}"><span style="color:{theme["comment"]}">{mark}</span>{html.escape(text)}</span>'
         )
