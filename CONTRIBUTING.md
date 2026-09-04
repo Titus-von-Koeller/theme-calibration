@@ -92,10 +92,17 @@ file survives; a pane is for something a person is watching.
 final commit. A branch that does not pass is not ready to merge, and finding that out
 during integration wastes everyone's turn.
 
-**Integration is sequential and owned by one session.** Merge one branch, run the suite,
-merge the next. File-disjoint branches produce no textual conflicts; what integration is
-actually looking for is *semantic* conflict — a caller that moved, an assumption that no
-longer holds — and that only shows up when the whole suite runs against the combination.
+**Integration is sequential and owned by one session.** Verified: five branches,
+thirty-seven commits, zero textual conflicts and zero semantic ones. Merge in dependency
+order — whatever restructures a module before whatever imports it — and run the whole suite
+after every single merge, not at the end, so a break names the merge that caused it. Two
+things surfaced only at integration: an optimisation nobody owned because it was found from
+an adjacent partition, and a lint exemption that turned out to be unnecessary because the
+violations had been fixed properly on another branch. Expect a short list of both.
+
+File-disjoint branches produce no textual conflicts; what integration is actually looking
+for is *semantic* conflict — a caller that moved, an assumption that no longer holds — and
+that only shows up when the whole suite runs against the combination.
 
 **Report learnings rather than writing them to shared notes.** Anything general enough to
 outlive this repo belongs in the operator's standing notes, and four agents editing those
