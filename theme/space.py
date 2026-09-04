@@ -1,31 +1,39 @@
+"""The theme space, and how a point in it becomes a theme.
+
+Nine axes in, a full palette of hexes out -- or a refusal, when no palette at that point
+clears the floors. Two neighbours were split out of this module because they change for
+different reasons than the space does, and both are re-exported below because callers
+outside the colour layer (theme/model.py, theme/schedule.py, the analysis notebook) had
+been importing them from here:
+
+  thresholds.py   the observer-derived perceptual floors: DE_MIN and friends
+  harmony.py      Ou & Luo (2006) two-colour harmony, transcribed from the paper
+
+What stayed is what genuinely belongs to the space: the axes, the anchor colours, the
+realization, the feasible pool, and the prior standardized over that pool. raw_prior in
+particular reads theta by axis index and so cannot leave without taking the axis layout
+with it, which is why the harmony model moved and the prior did not.
+"""
+
 import math
+from itertools import combinations
+from typing import NamedTuple
 
 import numpy as np
 
-from . import paths
-from .color import apca_lc, composite, hex_to_rgb, rgb_to_hex, rgb_to_ucs, solve_j, ucs_to_rgb, wcag
-from .observer import fit as observer_fit
-
-VISION_LOG = paths.VISION_LOG
-
-# The observer is fit in ONE place — _observer.py, the home of the measurement<->
-# preference interlock. It refits lazily from the shared vision log (cached beside it),
-# so every new vision trial sharpens these constraints automatically and no instrument
-# carries its own copy of the model. v2 fits the psychometric slope, the lapse, a
-# chromatic confusion-axis rotation, and threshold as a smooth function of ground
-# lightness — all in CAM16-UCS, the same geometry this notebook searches.
-if VISION_LOG.exists():
-    VISION_FIT = observer_fit(VISION_LOG)
-    DE_MIN = {"day": VISION_FIT.de_min_day, "night": VISION_FIT.de_min_night}
-    THRESH_DETAIL = {"day": VISION_FIT.de_dir_day, "night": VISION_FIT.de_dir_night}
-    VISION_N = VISION_FIT.n
-else:
-    # No vision data on this machine: the v2.0 fit at 748 trials (2026-09-03),
-    # flagged in the analysis so the substitution is never silent.
-    DE_MIN = {"day": 3.2, "night": 2.5}
-    THRESH_DETAIL = {"day": {}, "night": {}}
-    VISION_N = 0
-
+from .color import (
+    apca_lc,
+    composite,
+    composite_many,
+    hex_to_rgb,
+    rgb_to_hex,
+    rgb_to_ucs,
+    solve_j,
+    ucs_to_rgb,
+    wcag,
+)
+from .harmony import lab, ou_luo_pair
+from .thresholds import DE_MIN, THRESH_DETAIL, VISION_FIT, VISION_LOG, VISION_N  # noqa: F401
 
 # Theme space and its realization. Nine axes, each in [0, 1]; polarity (light page /
 # dark page) is a block factor, not an axis — trials alternate in blocks and the model
@@ -47,8 +55,8 @@ AXES = [
 # anchors carry alpha in the theme file and are composited onto their page before any
 # appearance math (the rule that caught the 30%-alpha comments). Literals are ONE
 # family on purpose: Horizon's day string #F6661E and number #F77D26 sit ~3 dE apart
-# in CAM16-UCS — inside 2x your measured day threshold — so a string/number split
-# would search a distinction your eyes cannot cash.
+# in CAM16-UCS — inside 2x the measured day threshold — so a string/number split would
+# search a distinction the eye cannot resolve.
 ANCHORS = {
     "day": {
         "keyword": "#8A31B9",
@@ -67,10 +75,11 @@ ROLE_ORDER = ("keyword", "function", "string")
 
 
 def anchor_polar(polarity):
-    _ucs = rgb_to_ucs(hex_to_rgb([ANCHORS[polarity][r] for r in ROLE_ORDER]))
-    _m = np.linalg.norm(_ucs[:, 1:], axis=1)
-    _h = np.degrees(np.arctan2(_ucs[:, 2], _ucs[:, 1])) % 360
-    return _h, _m
+    """The anchor hues (degrees) and chromas of one polarity's accent roles."""
+    ucs = rgb_to_ucs(hex_to_rgb([ANCHORS[polarity][role] for role in ROLE_ORDER]))
+    chroma = np.linalg.norm(ucs[:, 1:], axis=1)
+    hue = np.degrees(np.arctan2(ucs[:, 2], ucs[:, 1])) % 360
+    return hue, chroma
 
 
 ANCHOR_HM = {p: anchor_polar(p) for p in ("day", "night")}
@@ -83,18 +92,26 @@ PRIOR_CACHE = {}
 
 
 def theta_key(theta, polarity):
-    return (tuple(round(float(_v), 6) for _v in theta), polarity)
+    """The cache key for one candidate. Thetas within 1e-6 on every axis are one point:
+    that is far finer than 8-bit quantization can express, so collapsing them cannot
+    change a rendered theme, and it lets a re-proposed candidate hit the cache."""
+    return (tuple(round(float(value), 6) for value in theta), polarity)
 
 
-# NOTE (marimo name mangling, measured 2026-09-03): a cell-local (underscore) name
-# referenced from inside an exported function resolves only if it is defined ABOVE
-# that function in the cell — a later definition stays unmangled in the function body
-# and NameErrors at call time under `marimo run`, invisibly to script execution.
-# Helpers therefore precede their exported callers.
+# NOTE (marimo name mangling): this code also exists as marimo cells in the analysis
+# notebook, and there a cell-local (underscore) name referenced from inside an exported
+# function resolves only if it is defined ABOVE that function in the cell — a later
+# definition stays unmangled in the function body and NameErrors at call time under
+# `marimo run`, invisibly to script execution. Nothing in this module is cell-local any
+# more, but helpers still precede their callers here so the two stay transposable.
 # The roles solve_j walks to the contrast bar, in the order their rows appear.
 WALKED_ROLES = ("keyword", "function", "string", "ink", "comment", "punct")
 #: APCA floors per walked role. Body tokens carry meaning; comments are context.
 LC_FLOORS = np.array([60.0, 60.0, 60.0, 60.0, 45.0, 45.0])
+
+#: How many times _walk_to_both_bars will raise a role's WCAG target and re-bisect to
+#: get it over its APCA floor before giving up and letting the floors refuse the theme.
+WALK_ATTEMPTS = 4
 
 
 def _grounds(thetas, night):
@@ -150,15 +167,23 @@ def _walk_to_both_bars(role_ab, ground_rgb, ratios, night):
     costs 312 us and a call converting sixty-four costs 325 us -- so walking six roles for
     one theme at a time spent 3.8 s of a 4 s trial on Python-level validation inside the
     library. Iterating over all themes at once makes that one call per bisection step.
+
+    Four attempts, and rows still short after the fourth are returned as they stand:
+    _assemble's Lc floor is what then refuses the theme, so a role that cannot reach its
+    bar surfaces as a refusal rather than as a quietly illegible colour. Measured over
+    batches of 1 to 512 at both polarities, a batch uses 1 to 4 attempts; the stopping
+    condition is shared across the batch, so a theme in company can be re-solved more
+    times than it would be alone. That is only harmless because the extra solves use an
+    unchanged target -- tested directly, since every batched caller here depends on it.
     """
     rows = role_ab.reshape(-1, 2)
     grounds = np.repeat(ground_rgb, role_ab.shape[1], axis=0)
     target = ratios.reshape(-1) * 1.03
     floors = np.tile(LC_FLOORS, len(role_ab))
-    for _ in range(4):
+    for attempt in range(WALK_ATTEMPTS):
         _lightness, rgb = solve_j(rows, grounds, target, lighter=night)
         short = np.abs(apca_lc(rgb, grounds)) < floors
-        if not short.any():
+        if not short.any() or attempt == WALK_ATTEMPTS - 1:
             break
         target = np.where(short, np.minimum(target * 1.18, 14.0), target)
     return rgb.reshape(*role_ab.shape[:2], 3), grounds.reshape(*role_ab.shape[:2], 3)
@@ -175,66 +200,185 @@ def _find_fills(thetas, ground_lightness, night):
     return ucs_to_rgb(np.column_stack([lightness, chroma * np.cos(hue), chroma * np.sin(hue)]))
 
 
-def _assemble(role_rgb, ground_rgb, fill_rgb, separations, polarity):
-    """One theme, or None if it breaks a floor.
+#: Where each colour sits in a theme's separation set, which is the order
+#: `_quantize_and_measure` builds that set in. The pairwise separation floors are stated
+#: between these. The first five are WALKED_ROLES[:5] in order, which is why the same
+#: index names a colour in both -- punctuation is walked but has no separation owed.
+KEYWORD, FUNCTION, STRING, INK, COMMENT, GROUND, FIND_CURRENT, FIND_OTHER = range(8)
 
-    Floors are checked on what will actually RENDER -- composited fills included -- and are
-    hard constraints, never objectives: every candidate shown is already legible, and the
-    only question ever asked is which is better.
+#: Every pair of these owes 2x the discrimination threshold: the three roles that carry
+#: meaning by hue, plus the body ink they have to stay clear of. Two of them confusable
+#: is a page where the syntax highlighting is decoration. Doubled because discrimination
+#: collapses toward glyph scale and the thresholds were measured on 104-px patches.
+MEANING_ROLES = (KEYWORD, FUNCTION, STRING, INK)
+
+#: How many of WALKED_ROLES are body text; the rest are comment and punctuation. This is
+#: the span body_ratio is reported over.
+BODY_ROLE_COUNT = 4
+
+#: The WCAG ratio every role owes the page.
+WCAG_FLOOR = 4.5
+
+#: Slack on the WCAG floor, absorbing the last bits of a float the invariant test
+#: recomputes independently from the same hexes. Deliberately NOT applied to the APCA or
+#: separation floors, which are checked exactly, so that every check here is at least as
+#: strict as the test asserting it rather than the other way round.
+FLOOR_SLACK = 1e-6
+
+#: What ink and a string owe a find fill they are sitting on. Under the 4.5:1 the page
+#: itself owes, deliberately: a highlight is a transient state the eye is already pointed
+#: at, and holding it to body-text contrast would forbid every fill loud enough to find.
+#: What must not happen is a highlight hiding the token it was drawn to reveal.
+FILL_FLOOR_INK, FILL_FLOOR_STRING = 4.0, 3.5
+
+#: The two alphas VSCode layers a search hit at: the current match, then every other one.
+FILL_ALPHA_CURRENT, FILL_ALPHA_OTHER = 0.85, 0.45
+
+
+class _Measured(NamedTuple):
+    """A batch of themes quantized to hex, with every floor already measured on it.
+
+    Per-theme fields are indexed by position in the batch. Nothing downstream of this
+    touches a continuous colour, which is the point.
     """
-    threshold = DE_MIN[polarity]
-    ground_hex = rgb_to_hex(ground_rgb)[0]
-    role_hex = rgb_to_hex(role_rgb)
-    roles = dict(zip(WALKED_ROLES, role_hex, strict=True))
 
-    # Checked on the QUANTIZED colours -- the 8-bit values the page will actually write --
-    # not on the unrounded ones the bisection produced. Rounding to hex moves a colour by
-    # up to half a step, which is enough to cross a floor: a property test found a theme
-    # whose function and string tokens passed at Lc 60.27 and 60.06 and rendered at 59.89
-    # and 59.83. Both were shown. The floors are a promise about pixels, so they have to be
-    # measured on pixels.
-    rendered = hex_to_rgb(role_hex)
-    rendered_ground = np.repeat(hex_to_rgb([ground_hex]), len(role_hex), axis=0)
-    lc = apca_lc(rendered, rendered_ground)
-    contrast = wcag(rendered, rendered_ground)
-    if (contrast < 4.5 - 1e-6).any() or (np.abs(lc[:4]) < 60).any() or (np.abs(lc[4:]) < 45).any():
+    role_hex: list  # per theme, one hex per WALKED_ROLES
+    ground_hex: list
+    fill_hex: list  # the uncomposited fill, which is what the theme file carries
+    current_hex: list  # the fill at FILL_ALPHA_CURRENT over the page
+    other_hex: list
+    lc: np.ndarray  # (themes, roles) signed APCA against the page
+    contrast: np.ndarray  # (themes, roles) WCAG against the page
+    ink_on_fills: np.ndarray  # (themes, 2) WCAG of ink over [current, other]
+    string_on_fills: np.ndarray
+    separations: np.ndarray  # (themes, 8, 3) CAM16-UCS of the separated colours
+
+
+def _quantize_and_measure(role_rgb, ground_rgb, fill_rgb):
+    """Quantize a whole batch to hex, then measure every floor on the quantized values.
+
+    Measured on the QUANTIZED colours -- the 8-bit values the page will actually write --
+    never on the unrounded ones the bisection produced. Rounding to hex moves a colour by
+    up to half a step, which is enough to cross a floor: a property test found a theme
+    whose function and string tokens passed at Lc 60.27 and 60.06 and rendered at 59.89
+    and 59.83. Both were shown. The floors are a promise about pixels, so they have to be
+    measured on pixels. The fills are composited before anything is measured on them for
+    the same reason: an alpha emitted into a theme file is contrast nobody has checked.
+
+    Every measurement here is one array call for the whole batch instead of one per theme,
+    which is what leaves the per-theme step below as pure packaging.
+    """
+    themes, roles = len(ground_rgb), len(WALKED_ROLES)
+    role_hex = rgb_to_hex(role_rgb.reshape(-1, 3))
+    ground_hex = rgb_to_hex(ground_rgb)
+    fill_hex = rgb_to_hex(fill_rgb)
+    current_hex = composite_many(fill_hex, FILL_ALPHA_CURRENT, ground_hex)
+    other_hex = composite_many(fill_hex, FILL_ALPHA_OTHER, ground_hex)
+
+    rendered_roles = hex_to_rgb(role_hex)
+    rendered_grounds = np.repeat(hex_to_rgb(ground_hex), roles, axis=0)
+    lc = apca_lc(rendered_roles, rendered_grounds).reshape(themes, roles)
+    contrast = wcag(rendered_roles, rendered_grounds).reshape(themes, roles)
+
+    # [current, other] per theme, interleaved, so a role repeated twice lines up with it.
+    rendered_fills = hex_to_rgb([h for pair in zip(current_hex, other_hex, strict=True) for h in pair])
+    on_fills = {
+        role: wcag(np.repeat(rendered_roles[role::roles], 2, axis=0), rendered_fills).reshape(themes, 2)
+        for role in (INK, STRING)
+    }
+
+    separations = rgb_to_ucs(
+        hex_to_rgb(
+            [
+                colour_hex
+                for i in range(themes)
+                for colour_hex in (
+                    *role_hex[i * roles : i * roles + COMMENT + 1],
+                    ground_hex[i],
+                    current_hex[i],
+                    other_hex[i],
+                )
+            ]
+        )
+    ).reshape(themes, 8, 3)
+
+    return _Measured(
+        role_hex=[role_hex[i * roles : (i + 1) * roles] for i in range(themes)],
+        ground_hex=ground_hex,
+        fill_hex=fill_hex,
+        current_hex=current_hex,
+        other_hex=other_hex,
+        lc=lc,
+        contrast=contrast,
+        ink_on_fills=on_fills[INK],
+        string_on_fills=on_fills[STRING],
+        separations=separations,
+    )
+
+
+def _contrast_floors_hold(lc, contrast):
+    """Does one theme's text clear both contrast bars against its own page?
+
+    Stated as "every role is at or above its floor" rather than "no role is below it".
+    Those read the same for real numbers and differently for a NaN, which is what an
+    out-of-range channel produces: this form refuses such a theme instead of passing it.
+    """
+    return bool((contrast >= WCAG_FLOOR - FLOOR_SLACK).all() and (np.abs(lc) >= LC_FLOORS).all())
+
+
+def _separations_hold(gap, threshold):
+    """Does one theme keep every pair of its colours as far apart as that pair is owed?
+
+    The margin is not uniform and should not be. Comment and ink are MEANT to sit inside a
+    full discrimination step: both are neutral text and a comment is a deliberate step
+    quieter than body ink, so demanding more there would fight the figure-versus-ground
+    rule the palette is built on. The italic carries the rest.
+    """
+    if any(gap(first, second) < 2 * threshold for first, second in combinations(MEANING_ROLES, 2)):
+        return False
+    if gap(COMMENT, INK) < threshold:
+        return False
+    # The highlight has to be findable against the page and separable from its siblings,
+    # which is the whole point of the salience axis.
+    return gap(FIND_CURRENT, GROUND) >= 1.5 * threshold and gap(FIND_CURRENT, FIND_OTHER) >= threshold
+
+
+def _fills_readable(ink_on_fills, string_on_fills):
+    """Does text survive sitting on either find fill? Same NaN-refusing form as above."""
+    return bool((ink_on_fills >= FILL_FLOOR_INK).all() and (string_on_fills >= FILL_FLOOR_STRING).all())
+
+
+def _assemble(measured, i, polarity):
+    """Theme `i` of a measured batch, or None if it breaks a floor.
+
+    Guard clauses and then packaging: the floors are hard constraints, never objectives,
+    so there is nothing to trade off here -- only three ways to say no, and one dict.
+    """
+    if not _contrast_floors_hold(measured.lc[i], measured.contrast[i]):
         return None
-    fill_hex = rgb_to_hex(fill_rgb)[0]
-    current = composite(fill_hex, 0.85, ground_hex)
-    other = composite(fill_hex, 0.45, ground_hex)
+    separations = measured.separations[i]
 
-    keyword, function, string, ink, comment, ground, cur, oth = range(8)
+    def gap(first, second):
+        return float(np.linalg.norm(separations[first] - separations[second]))
 
-    def gap(a, b):
-        return float(np.linalg.norm(separations[a] - separations[b]))
-
-    for accent in (keyword, function, string):
-        if gap(accent, ink) < 2 * threshold:
-            return None
-        for other_accent in (keyword, function, string):
-            if other_accent > accent and gap(accent, other_accent) < 2 * threshold:
-                return None
-    if gap(comment, ink) < threshold:
+    if not _separations_hold(gap, DE_MIN[polarity]):
         return None
-    if gap(cur, ground) < 1.5 * threshold or gap(cur, oth) < threshold:
-        return None
-    # Text must survive sitting on either fill.
-    fills = hex_to_rgb([current, other])
-    if (wcag(np.repeat(rendered[3:4], 2, 0), fills) < 4.0).any() or (
-        wcag(np.repeat(rendered[2:3], 2, 0), fills) < 3.5
-    ).any():
+    if not _fills_readable(measured.ink_on_fills[i], measured.string_on_fills[i]):
         return None
 
+    roles = dict(zip(WALKED_ROLES, measured.role_hex[i], strict=True))
     return {
-        "ground": ground_hex,
+        "ground": measured.ground_hex[i],
         **roles,
         "number": roles["string"],
         "variable": roles["ink"],
-        "find_fill": fill_hex,
-        "find_current": current,
-        "find_other": other,
-        "salience": round(min(gap(cur, i) for i in (ground, keyword, function, string, ink)), 2),
-        "body_ratio": round(float(contrast[:4].min()), 2),
+        "find_fill": measured.fill_hex[i],
+        "find_current": measured.current_hex[i],
+        "find_other": measured.other_hex[i],
+        # Distance from everything the highlight has to win against, which is the right
+        # measure for visual search rather than for discrimination.
+        "salience": round(min(gap(FIND_CURRENT, other) for other in (GROUND, *MEANING_ROLES)), 2),
+        "body_ratio": round(float(measured.contrast[i][:BODY_ROLE_COUNT].min()), 2),
     }
 
 
@@ -251,25 +395,8 @@ def _realize_batch(thetas, polarity):
     role_ab, ratios = _role_chromaticities(table, polarity, ground_hue)
     role_rgb, _walked_grounds = _walk_to_both_bars(role_ab, ground_rgb, ratios, night)
     fill_rgb = _find_fills(table, ground_lightness, night)
-
-    # One conversion for every colour of every theme: the eight whose pairwise CAM16-UCS
-    # distances the separation floors are stated in.
-    ground_hexes = rgb_to_hex(ground_rgb)
-    fill_hexes = rgb_to_hex(fill_rgb)
-    separation_hexes = []
-    for i, ground_hex in enumerate(ground_hexes):
-        role_hex = rgb_to_hex(role_rgb[i])
-        separation_hexes.extend(
-            [
-                *role_hex[:5],
-                ground_hex,
-                composite(fill_hexes[i], 0.85, ground_hex),
-                composite(fill_hexes[i], 0.45, ground_hex),
-            ]
-        )
-    separations = rgb_to_ucs(hex_to_rgb(separation_hexes)).reshape(len(table), 8, 3)
-
-    return [_assemble(role_rgb[i], ground_rgb[i], fill_rgb[i], separations[i], polarity) for i in range(len(table))]
+    measured = _quantize_and_measure(role_rgb, ground_rgb, fill_rgb)
+    return [_assemble(measured, i, polarity) for i in range(len(table))]
 
 
 #: How conspicuous a find highlight must be before a TIMED hunt may use it, in multiples
@@ -284,8 +411,8 @@ def _realize_batch(thetas, polarity):
 #: the active sampler sought exactly those out because an unexplored corner is where a
 #: GP's variance is highest.
 #:
-#: 4x, from his own hunts. Over 33 usable trials, salience correlates with log find time at
-#: -0.43 (day) and -0.37 (night) -- more conspicuous really is faster -- and splitting at
+#: 4x, from the logged hunts. Over 33 usable trials, salience correlates with log find time
+#: at -0.43 (day) and -0.37 (night) -- more conspicuous really is faster -- and splitting at
 #: the median gives 3489 ms against 2066 ms by day, 2897 against 2225 by night. A faint
 #: highlight costs well over a second, which is not a measurement of the theme but of
 #: patience. 4x excludes roughly the slowest quarter of what has been shown.
@@ -337,97 +464,76 @@ def realize(theta, polarity):
     """theta in [0,1]^9 -> a full, floor-satisfying theme (hexes + meta), or None when
     the hard constraints cannot be met. Floors are constraints, never objectives: WCAG
     4.5:1 and APCA |Lc| >= 60 for body tokens (comments >= 4.5:1, |Lc| >= 45), and
-    pairwise CAM16-UCS separation >= 2x your measured 104-px threshold between any two
+    pairwise CAM16-UCS separation >= 2x the measured 104-px threshold between any two
     colored roles and ink — doubled because discrimination collapses toward glyph
     scale; the comprehension probes measure the truth of that margin directly."""
-    _key = theta_key(theta, polarity)
-    if _key in REALIZE_CACHE:
-        return REALIZE_CACHE[_key]
-    _theme = realize_uncached(theta, polarity)
-    REALIZE_CACHE[_key] = _theme
-    return _theme
-
-
-# ------------------------------------------------------------------ the prior mean
-def lab(hexes):
-    _xyz = np.atleast_2d(hex_to_rgb(hexes))
-    import colour as _colour
-
-    return _colour.XYZ_to_Lab(
-        _colour.sRGB_to_XYZ(_xyz),
-        _colour.CCS_ILLUMINANTS["CIE 1931 2 Degree Standard Observer"]["D65"],
-    )
-
-
-def ou_luo_pair(lab1, lab2):
-    """Two-colour harmony CH = HC + HL + HH, Ou & Luo (2006), transcribed from the
-    published model. Prior-mean duty only: it tilts where the search starts, your
-    clicks decide where it ends."""
-    _L1, _a1, _b1 = lab1
-    _L2, _a2, _b2 = lab2
-    _C1, _C2 = math.hypot(_a1, _b1), math.hypot(_a2, _b2)
-    _h1, _h2 = math.degrees(math.atan2(_b1, _a1)) % 360, math.degrees(math.atan2(_b2, _a2)) % 360
-    _dhab = math.radians((_h1 - _h2 + 180) % 360 - 180)
-    _dH = 2 * math.sqrt(max(_C1 * _C2, 0.0)) * abs(math.sin(_dhab / 2))
-    _dC = math.hypot(_dH, (_C1 - _C2) / 1.46)
-    _hc = 0.04 + 0.53 * math.tanh(0.8 - 0.045 * _dC)
-    _hl = (0.28 + 0.54 * math.tanh(-3.88 + 0.029 * (_L1 + _L2))) + (0.14 + 0.15 * math.tanh(-2 + 0.2 * abs(_L1 - _L2)))
-
-    def _hsy(_L, _C, _h):
-        _ec = 0.5 + 0.5 * math.tanh(-2 + 0.5 * _C)
-        _hs = -0.08 - 0.14 * math.sin(math.radians(_h + 50)) - 0.07 * math.sin(math.radians(2 * _h + 90))
-        _y = (90 - _h) / 10
-        _ey = ((0.22 * _L - 12.8) / 10) * math.exp(min(_y - math.exp(_y), 50))
-        return _ec * (_hs + _ey)
-
-    return _hc + _hl + _hsy(_L1, _C1, _h1) + _hsy(_L2, _C2, _h2)
+    key = theta_key(theta, polarity)
+    if key in REALIZE_CACHE:
+        return REALIZE_CACHE[key]
+    theme = realize_uncached(theta, polarity)
+    REALIZE_CACHE[key] = theme
+    return theme
 
 
 def raw_prior(theta, polarity, theme):
-    _t = np.asarray(theta, dtype=float)
-    _hx = [theme[r] for r in ROLE_ORDER] + [theme["ground"]]
-    _labs = lab(_hx)
-    _pairs = [(0, 1), (0, 2), (1, 2), (0, 3), (1, 3), (2, 3)]
-    _harm = float(np.mean([ou_luo_pair(_labs[a], _labs[b]) for a, b in _pairs]))
+    theta = np.asarray(theta, dtype=float)
+    labs = lab([theme[role] for role in ROLE_ORDER] + [theme["ground"]])
+    pairs = [(0, 1), (0, 2), (1, 2), (0, 3), (1, 3), (2, 3)]
+    harmony = float(np.mean([ou_luo_pair(labs[a], labs[b]) for a, b in pairs]))
     # Berlyne: pleasure peaks at intermediate complexity — interior optima on the
     # complexity axes, never a monotone pull to either wall.
-    _berlyne = -1.2 * sum((float(_t[i]) - 0.55) ** 2 for i in (3, 4, 5))
-    # Ecological-valence stand-in until Titus names his loved colors: his stated warm
+    complexity = -1.2 * sum((float(theta[i]) - 0.55) ** 2 for i in (3, 4, 5))
+    # Ecological-valence stand-in until specific loved colors are named: the stated warm
     # preference, gently.
-    _warm = 0.5 * (float(_t[1]) - 0.5)
-    return _harm + _berlyne + _warm
+    warmth = 0.5 * (float(theta[1]) - 0.5)
+    return harmony + complexity + warmth
 
 
-# A fixed, deterministic candidate pool per polarity: the acquisition shops here (plus
-# per-trial local refinements around the champion), the prior is standardized here, and
-# infeasible corners are carved away by the floors rather than penalized.
-pool_rng = np.random.default_rng(0xA55)
-POOL_THETA = pool_rng.random((512, 9))
-POOL = {}
-PRIOR_STATS = {}
-for pool_polarity in ("day", "night"):
-    pool_items = []
-    for pool_idx in range(len(POOL_THETA)):
-        pool_th = POOL_THETA[pool_idx]
-        pool_realized = realize(pool_th, pool_polarity)
-        if pool_realized is not None:
-            pool_items.append((pool_th, pool_realized, raw_prior(pool_th, pool_polarity, pool_realized)))
-    pool_priors = np.array([it[2] for it in pool_items])
-    PRIOR_STATS[pool_polarity] = (float(pool_priors.mean()), float(pool_priors.std() + 1e-9))
-    POOL[pool_polarity] = [(it[0], it[1]) for it in pool_items]
+def _build_pool(pool_thetas):
+    """The feasible pool per polarity, and the prior's location and scale over it.
+
+    A fixed, deterministic candidate pool: the acquisition shops here (plus per-trial
+    local refinements around the champion), the prior is standardized here, and
+    infeasible corners are carved away by the floors rather than penalized.
+
+    ONE realize_many per polarity, not 512 realize() calls. This runs at import, and
+    colour-science costs the same for sixty-four colours as for one, so realizing the pool
+    a theme at a time paid the library's per-call argument validation 1024 times: importing
+    theme.space took 29 s, which is 29 s of a freshly started server accepting no
+    connections. Batched it is 1.9 s. realize_many populates REALIZE_CACHE on the way
+    through, so the per-theta realize() the analysis and prior_mean still use hit it warm
+    -- checked, not assumed: all 512 pool thetas are in the cache after import.
+
+    The ORDER of the surviving pool is load-bearing twice over, so it is preserved exactly:
+    the index where the standing stratum ends is declared against it, and PRIOR_STATS is
+    computed over the same survivors in the same sequence.
+    """
+    pool, stats = {}, {}
+    for polarity in ("day", "night"):
+        themes = realize_many(pool_thetas, polarity)
+        feasible = [(theta, theme) for theta, theme in zip(pool_thetas, themes, strict=True) if theme is not None]
+        priors = np.array([raw_prior(theta, polarity, theme) for theta, theme in feasible])
+        stats[polarity] = (float(priors.mean()), float(priors.std() + 1e-9))
+        pool[polarity] = feasible
+    return pool, stats
+
+
+POOL_THETA = np.random.default_rng(0xA55).random((512, 9))
+POOL, PRIOR_STATS = _build_pool(POOL_THETA)
 
 
 def prior_mean(theta, polarity, theme=None):
     """Standardized prior utility (mean 0, sd 0.8 over the feasible pool) so the GP's
     signal variance, not the prior's arbitrary units, sets the scale."""
-    _key = theta_key(theta, polarity)
-    if _key in PRIOR_CACHE:
-        return PRIOR_CACHE[_key]
-    theme = theme or realize(theta, polarity)
+    key = theta_key(theta, polarity)
+    if key in PRIOR_CACHE:
+        return PRIOR_CACHE[key]
     if theme is None:
-        _val = 0.0
+        theme = realize(theta, polarity)
+    if theme is None:
+        value = 0.0
     else:
-        _m, _s = PRIOR_STATS[polarity]
-        _val = 0.8 * (raw_prior(theta, polarity, theme) - _m) / _s
-    PRIOR_CACHE[_key] = _val
-    return _val
+        mean, sd = PRIOR_STATS[polarity]
+        value = 0.8 * (raw_prior(theta, polarity, theme) - mean) / sd
+    PRIOR_CACHE[key] = value
+    return value
