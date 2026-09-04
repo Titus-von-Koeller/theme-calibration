@@ -1,8 +1,8 @@
 """The readouts that say whether the answer is settled -- and whether to believe them.
 
 P(best) as a distribution over argmaxes and its credible set; which axes the clicks have
-settled; whether another sitting is worth clicking; and a permutation test for whether
-the preferred theme depends on some logged property of how it was shown.
+settled; whether another sitting is worth clicking; and a permutation test for whether the
+preferred theme depends on some logged property of how it was shown.
 
 Every one of these prints a number that looks like a measurement, so each carries the
 calibration that says when to believe it.
@@ -10,98 +10,124 @@ calibration that says when to believe it.
 
 import numpy as np
 
-from .kernel import LS0
-from .preference import fitted, posterior_joint
+from .kernel import scale_thetas, spread_positions
+from .preference import duel_rows, fitted, posterior_joint
 
 BEST_MEMO = {}
+
+# The standard deviation of a uniform axis, which every axis spread is reported relative
+# to, so a settled axis and an untouched one are comparable numbers.
+UNIFORM_AXIS_SD = 0.2887
+
+# A leader holding more than this much of the argmax mass is a winner; more than the
+# smaller figure is a real plateau; below it the log cannot yet tell.
+SINGLE_WINNER_MASS = 0.5
+PLATEAU_MASS = 0.12
+
+
+def _argmax_probabilities(mean, cov, samples, seed):
+    """P(each candidate is the argmax), from samples of the JOINT posterior.
+
+    Sample the joint, because candidates near each other share almost all their
+    uncertainty and marginals would scatter the probability of being best across a cluster
+    of effectively identical pages.
+    """
+    try:
+        factor = np.linalg.cholesky(cov)
+    except np.linalg.LinAlgError:
+        eigenvalues, eigenvectors = np.linalg.eigh(cov)
+        factor = eigenvectors * np.sqrt(np.maximum(eigenvalues, 1e-12))
+    normals = np.random.default_rng(seed).standard_normal((len(mean), samples))
+    draws = mean[:, None] + factor @ normals
+    return np.bincount(np.argmax(draws, axis=0), minlength=len(mean)) / float(samples)
+
+
+def _group_by_resolution(scaled_thetas, p_best, radius):
+    """Group candidates into perceptually distinct themes: greedy, best-first.
+
+    A candidate set of eight hundred contains many pages that differ by less than anyone
+    could see, and each sibling steals argmax mass from the others: measured on the real
+    log, the leader held 1.6% while the report claimed a plateau -- a number that says
+    nothing about whether one theme leads. Mass belongs to a perceptually distinct group,
+    not to a coordinate.
+
+    Returns (representative indices, group index per candidate, order of candidates).
+    """
+    order = np.argsort(-p_best)
+    representatives, group_of = [], np.full(len(scaled_thetas), -1)
+    for i in order:
+        if representatives:
+            distances = np.linalg.norm(scaled_thetas[representatives] - scaled_thetas[i], axis=1)
+            nearest = int(np.argmin(distances))
+            if distances[nearest] <= radius:
+                group_of[i] = nearest
+                continue
+        group_of[i] = len(representatives)
+        representatives.append(int(i))
+    return representatives, group_of, order
+
+
+def _credible_groups(group_p, group_order, mass):
+    """The smallest set of leading groups holding `mass` of the argmax probability."""
+    keep, accumulated = [], 0.0
+    for group in group_order:
+        keep.append(int(group))
+        accumulated += group_p[group]
+        if accumulated >= mass:
+            break
+    return keep
 
 
 def best_set(fit, polarity, thetas, samples=2048, mass=0.5, seed=0, radius=0.9):
     """Which theme is best, or which SET is -- as a distribution over argmaxes.
 
-    Three things have to be right for this to answer the question honestly.
-
-    Sample the JOINT posterior, because candidates near each other share almost all
-    their uncertainty and marginals would scatter the probability of being best across
-    a cluster of effectively identical pages.
-
-    Then GROUP before counting. A candidate set of eight hundred contains many pages
-    that differ by less than he could ever see, and each sibling steals argmax mass
-    from the others: measured on the real log, the leader held 1.6% while the report
-    claimed a plateau -- a number that says nothing about whether one theme leads. Mass
-    belongs to a perceptually distinct group, not to a coordinate.
-
-    And read the verdict off CUMULATIVE mass, not an absolute cutoff. The credible set
-    is the smallest group of groups holding `mass` of the argmax probability: one group
-    over half of it is a winner; a handful sharing it is a real plateau; and when even
-    the top group is thin, the honest answer is that the log cannot yet tell -- which
-    is a state this reports rather than dressing up as a plateau.
+    Three things have to be right for this to answer the question honestly: sample the
+    JOINT posterior, GROUP before counting, and read the verdict off CUMULATIVE mass rather
+    than an absolute cutoff. The credible set is the smallest group of groups holding
+    `mass` of the argmax probability: one group over half of it is a winner; a handful
+    sharing it is a real plateau; and when even the top group is thin, the honest answer is
+    that the log cannot yet tell -- which is a state this reports rather than dressing up
+    as a plateau.
     """
     # Memoized on the fit's identity, the polarity and the candidate set: the analysis
     # asks for the same verdict three times per polarity (the shelf, and the two
     # historical fits behind the progress readout), and each call is a Cholesky over
     # eight hundred candidates.
-    _ck = (id(fit), polarity, len(thetas), samples, mass, seed, radius, float(np.sum(thetas[0])))
-    if _ck in BEST_MEMO:
-        return BEST_MEMO[_ck]
-    _mu, _cov = posterior_joint(fit, thetas, polarity)
-    try:
-        _L = np.linalg.cholesky(_cov)
-    except np.linalg.LinAlgError:
-        _w, _V = np.linalg.eigh(_cov)
-        _L = _V * np.sqrt(np.maximum(_w, 1e-12))
-    _Z = np.random.default_rng(seed).standard_normal((len(thetas), samples))
-    _F = _mu[:, None] + _L @ _Z
-    _p = np.bincount(np.argmax(_F, axis=0), minlength=len(thetas)) / float(samples)
+    cache_key = (id(fit), polarity, len(thetas), samples, mass, seed, radius, float(np.sum(thetas[0])))
+    if cache_key in BEST_MEMO:
+        return BEST_MEMO[cache_key]
+    mean, cov = posterior_joint(fit, thetas, polarity)
+    p_best = _argmax_probabilities(mean, cov, samples, seed)
 
-    # Group into perceptually distinct themes: greedy, best-first, in length-scale
-    # scaled theta space, so a group is "themes his eyes and this model cannot
-    # separate" rather than an arbitrary grid cell.
-    _w_ax = 1.0 / (LS0[:9] if fit.get("ls") is None else fit["ls"][:9])
-    _P = np.array([np.asarray(_t) * _w_ax for _t in thetas])
-    _order = np.argsort(-_p)
-    _reps, _group_of = [], np.full(len(thetas), -1)
-    for _i in _order:
-        if _reps:
-            _d = np.linalg.norm(_P[_reps] - _P[_i], axis=1)
-            _j = int(np.argmin(_d))
-            if _d[_j] <= radius:
-                _group_of[_i] = _j
-                continue
-        _group_of[_i] = len(_reps)
-        _reps.append(int(_i))
-    _gp = np.zeros(len(_reps))
-    for _i in range(len(thetas)):
-        _gp[_group_of[_i]] += _p[_i]
-    _gorder = np.argsort(-_gp)
-    _keep, _acc = [], 0.0
-    for _g in _gorder:
-        _keep.append(int(_g))
-        _acc += _gp[_g]
-        if _acc >= mass:
-            break
-    _lead = float(_gp[_gorder[0]])
-    _verdict = "single" if _lead > 0.5 else ("plateau" if _lead > 0.12 else "undecided")
-    _res = {
-        "p_best": _p,
-        "order": _order,
-        "groups": _reps,
-        "group_p": _gp,
-        "group_order": _gorder,
-        "credible": [_reps[_g] for _g in _keep],
-        "credible_p": [float(_gp[_g]) for _g in _keep],
-        "lead": _lead,
-        "mu": _mu,
-        "verdict": _verdict,
+    scaled = scale_thetas(thetas, fit.get("ls"))
+    representatives, group_of, order = _group_by_resolution(scaled, p_best, radius)
+    group_p = np.zeros(len(representatives))
+    for i in range(len(thetas)):
+        group_p[group_of[i]] += p_best[i]
+    group_order = np.argsort(-group_p)
+    keep = _credible_groups(group_p, group_order, mass)
+    lead = float(group_p[group_order[0]])
+    verdict = "single" if lead > SINGLE_WINNER_MASS else ("plateau" if lead > PLATEAU_MASS else "undecided")
+    result = {
+        "p_best": p_best,
+        "order": order,
+        "groups": representatives,
+        "group_p": group_p,
+        "group_order": group_order,
+        "credible": [representatives[group] for group in keep],
+        "credible_p": [float(group_p[group]) for group in keep],
+        "lead": lead,
+        "mu": mean,
+        "verdict": verdict,
     }
     if len(BEST_MEMO) > 8:
         BEST_MEMO.pop(next(iter(BEST_MEMO)))
-    BEST_MEMO[_ck] = _res
-    return _res
+    BEST_MEMO[cache_key] = result
+    return result
 
 
-def axis_consensus(bs, thetas):
-    """Which axes his clicks have SETTLED, and which are still open.
+def axis_consensus(best, thetas):
+    """Which axes the clicks have SETTLED, and which are still open.
 
     The plateau readout says how many themes are still in contention; it does not say
     what they disagree about. Measured on the four leading day themes: their grounds sit
@@ -110,17 +136,34 @@ def axis_consensus(bs, thetas):
     glance is confusing; reading "the ground is decided, the accent hue is not" says
     what the remaining duels are for.
 
-    Per axis, the posterior-weighted spread of theta under P(best), against the 0.289 of
-    a uniform axis. Small means the mass has collected on one value; near 1 means the
-    clicks have not distinguished anything along it yet."""
-    _p = np.asarray(bs["p_best"], dtype=float)
-    _T = np.asarray(thetas, dtype=float)
-    if _p.sum() <= 0 or len(_T) == 0:
+    Per axis, the posterior-weighted spread of theta under P(best), against the 0.289 of a
+    uniform axis. Small means the mass has collected on one value; near 1 means the clicks
+    have not distinguished anything along it yet.
+    """
+    p_best = np.asarray(best["p_best"], dtype=float)
+    points = np.asarray(thetas, dtype=float)
+    if p_best.sum() <= 0 or len(points) == 0:
         return []
-    _p = _p / _p.sum()
-    _m = _p @ _T
-    _sd = np.sqrt(np.maximum(_p @ (_T - _m) ** 2, 0.0))
-    return [(_a, float(_sd[_a] / 0.2887), float(_m[_a])) for _a in range(_T.shape[1])]
+    p_best = p_best / p_best.sum()
+    mean = p_best @ points
+    sd = np.sqrt(np.maximum(p_best @ (points - mean) ** 2, 0.0))
+    return [(axis, float(sd[axis] / UNIFORM_AXIS_SD), float(mean[axis])) for axis in range(points.shape[1])]
+
+
+def _log_as_of(responses, n_duels_kept):
+    """The log with all but the first `n_duels_kept` answered duels dropped.
+
+    Non-duel rows are kept wholesale: nothing downstream of here reads them, and dropping
+    them by position would need a second definition of "as of when".
+    """
+    kept, history = 0, []
+    for row in responses:
+        if row.get("mode") == "duel" and row.get("choice") in (0, 1):
+            if kept >= n_duels_kept:
+                continue
+            kept += 1
+        history.append(row)
+    return history
 
 
 def progress_report(responses, polarity, thetas, back=25):
@@ -134,62 +177,141 @@ def progress_report(responses, polarity, thetas, back=25):
     not exactly, and it is there to answer "another hundred or another thousand" rather
     than to promise a finish line.
     """
-    _duels = [_r for _r in responses if _r.get("mode") == "duel" and _r.get("choice") in (0, 1)]
-    if len(_duels) < back + 12:
+    duels = duel_rows(responses)
+    if len(duels) < back + 12:
         return None
-    _now = fitted(responses)
-    _cut = len(_duels) - back
-    _seen, _hist = 0, []
-    for _r in responses:
-        if _r.get("mode") == "duel" and _r.get("choice") in (0, 1):
-            if _seen >= _cut:
-                continue
-            _seen += 1
-        _hist.append(_r)
-    _then = fitted(_hist)
-    if _then is None:
+    now = fitted(responses)
+    then = fitted(_log_as_of(responses, len(duels) - back))
+    if then is None:
         return None
-    _b_now = best_set(_now, polarity, thetas, seed=17)
-    _b_then = best_set(_then, polarity, thetas, seed=17)
-    _lead_gain = _b_now["lead"] - _b_then["lead"]
-    _need = None
-    if _lead_gain > 1e-3 and _b_now["lead"] < 0.5:
-        _need = int(np.ceil((0.5 - _b_now["lead"]) / (_lead_gain / back)))
+    best_now = best_set(now, polarity, thetas, seed=17)
+    best_then = best_set(then, polarity, thetas, seed=17)
+    lead_gain = best_now["lead"] - best_then["lead"]
+    duels_to_decide = None
+    if lead_gain > 1e-3 and best_now["lead"] < SINGLE_WINNER_MASS:
+        duels_to_decide = int(np.ceil((SINGLE_WINNER_MASS - best_now["lead"]) / (lead_gain / back)))
     return {
-        "duels": len(_duels),
-        "lead_now": _b_now["lead"],
-        "lead_then": _b_then["lead"],
-        "set_now": len(_b_now["credible"]),
-        "set_then": len(_b_then["credible"]),
+        "duels": len(duels),
+        "lead_now": best_now["lead"],
+        "lead_then": best_then["lead"],
+        "set_now": len(best_now["credible"]),
+        "set_then": len(best_then["credible"]),
         "back": back,
-        "duels_to_decide": _need,
+        "duels_to_decide": duels_to_decide,
     }
 
 
-def spread_out(thetas, idx, k, ls=None):
-    """k maximally different members of a set -- greedy max-min in scaled theta space.
+def spread_out(thetas, indices, n_wanted, length_scales=None):
+    """`n_wanted` maximally different members of a set -- greedy max-min in scaled theta space.
 
     A plateau is only useful if its members actually look different; picking the top-k
     by probability would return k variations of one page.
     """
-    if not idx:
+    if not indices:
         return []
-    _w = 1.0 / (LS0[:9] if ls is None else ls[:9])
-    _P = np.array([np.asarray(thetas[_i]) * _w for _i in idx])
-    _pick = [0]
-    while len(_pick) < min(k, len(idx)):
-        _d = np.min(np.linalg.norm(_P[:, None, :] - _P[None, _pick, :], axis=-1), axis=1)
-        _d[_pick] = -1.0
-        _pick.append(int(np.argmax(_d)))
-    return [idx[_i] for _i in _pick]
+    scaled = scale_thetas([thetas[i] for i in indices], length_scales)
+    return [indices[position] for position in spread_positions(scaled, [0], n_wanted)]
 
 
-# LOAD-BEARING placement: above the function that closes over it. marimo mangles a
-# cell-local underscore name only where it has already seen the assignment, so a memo
-# declared BELOW its user resolves fine under `marimo edit` and raises NameError under
-# `marimo run` the moment another cell calls in. Same trap as _CONTROL in the stimulus
-# cell. Underscore-prefixed names must be defined before the functions that use them.
+# LOAD-BEARING placement in the notebook this came from: above the function that closes
+# over it. marimo mangles a cell-local underscore name only where it has already seen the
+# assignment, so a memo declared BELOW its user resolves fine under `marimo edit` and
+# raises NameError under `marimo run` the moment another cell calls in. Same trap as
+# _CONTROL in the stimulus cell. Harmless here, where module scope is not cell scope, but
+# the notebook copy still depends on it.
 SURF_MEMO = {}
+
+
+def _factor_duels(responses, polarity, key):
+    """The duels this factor test can use, truncated to a whole bucket of eight.
+
+    Recomputed every EIGHTH duel, not every click. 200 permutations x 5-fold Newton fits
+    costs about 2.8 s per factor, and with two factors over two polarities that was 8.3 s
+    of the analysis on every single answer -- which is not just slow, it is long enough for
+    two widget re-renders to overlap and leave a full-screen orphan stage over the page
+    (measured 2026-09-04, and the reason a trial appeared to blank mid-sitting). Truncating
+    to a whole bucket keeps the memo key honest: within a bucket the INPUT is identical, so
+    the cached answer is the exact answer for the data named.
+    """
+    rows = [
+        row
+        for row in responses
+        if row.get("mode") == "duel"
+        and row.get(key) is not None
+        and row.get("polarity") == polarity
+        and not row.get("paused")
+        and row.get("choice") in (0, 1)
+    ]
+    return rows[: (len(rows) // 8) * 8]
+
+
+def _winner_minus_loser(rows):
+    """Per duel, the winning theme's axes minus the losing theme's.
+
+    choice 0 = theme_a won (duels_from's convention; `swap` governs only which SIDE a card
+    appeared on, not which theme it was).
+    """
+    return np.array(
+        [(np.array(row["theta_a"]) - np.array(row["theta_b"])) * (1.0 if row["choice"] == 0 else -1.0) for row in rows]
+    )
+
+
+def _tilt_features(axis_differences, levels_of_row, n_levels, n_tilt_axes):
+    """The design matrix: one shared utility, plus a sum-to-zero per-level tilt.
+
+    `n_tilt_axes` of 0 is one shared utility; above 0 it adds the tilt on that many leading
+    axes -- the cheapest form the interaction can take, and so the one with the best chance
+    of showing in the data there is.
+    """
+    if not n_tilt_axes:
+        return axis_differences
+    columns = [axis_differences]
+    for axis in range(n_tilt_axes):
+        for level in range(n_levels - 1):
+            column = np.where(
+                levels_of_row == level,
+                axis_differences[:, axis],
+                np.where(levels_of_row == n_levels - 1, -axis_differences[:, axis], 0.0),
+            )
+            columns.append(column[:, None])
+    return np.hstack(columns)
+
+
+def _held_out_loglik(axis_differences, levels_of_row, n_levels, n_tilt_axes, seed):
+    """Mean held-out Bradley-Terry log-likelihood under five-fold cross-validation.
+
+    Higher is better: a per-level tilt has to EARN its extra parameters on held-out
+    choices, because fit alone always improves.
+    """
+    order = np.random.default_rng(seed).permutation(len(axis_differences))
+    total, n_scored = 0.0, 0
+    for fold in range(5):
+        held_out = order[fold::5]
+        train = np.setdiff1d(order, held_out)
+        if len(train) < 10:
+            continue
+        features = _tilt_features(axis_differences[train], levels_of_row[train], n_levels, n_tilt_axes)
+        coefficients = np.zeros(features.shape[1])
+        for _ in range(60):
+            p_first_wins = 1.0 / (1.0 + np.exp(-(features @ coefficients)))
+            gradient = features.T @ (1.0 - p_first_wins) - coefficients
+            hessian = (features * (p_first_wins * (1 - p_first_wins))[:, None]).T @ features + np.eye(
+                len(coefficients)
+            )
+            coefficients = coefficients + np.linalg.solve(hessian, gradient)
+        log_odds = _tilt_features(axis_differences[held_out], levels_of_row[held_out], n_levels, n_tilt_axes) @ (
+            coefficients
+        )
+        total += float(np.sum(-np.log1p(np.exp(-log_odds))))
+        n_scored += len(held_out)
+    return total / max(n_scored, 1)
+
+
+def _tilt_gain(axis_differences, levels_of_row, n_levels, n_seeds):
+    """How much held-out log-likelihood the per-level tilt buys, averaged over fold splits."""
+    with_tilt = np.mean([_held_out_loglik(axis_differences, levels_of_row, n_levels, 1, s) for s in range(n_seeds)])
+    without = np.mean([_held_out_loglik(axis_differences, levels_of_row, n_levels, 0, s) for s in range(n_seeds)])
+    return float(with_tilt - without)
 
 
 def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
@@ -200,108 +322,44 @@ def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
     permutation test is a second place for it to be subtly wrong. `key` names the field
     in the log; its distinct values become the levels.
 
-    See surface_effect below for what the test does and why the null is permutation."""
-    _ds = [
-        _r
-        for _r in responses
-        if _r.get("mode") == "duel"
-        and _r.get(key) is not None
-        and _r.get("polarity") == polarity
-        and not _r.get("paused")
-        and _r.get("choice") in (0, 1)
-    ]
-    # Recomputed every EIGHTH duel, not every click. 200 permutations x 5-fold Newton
-    # fits costs about 2.8 s per factor, and with two factors over two polarities that
-    # was 8.3 s of the analysis on every single answer -- which is not just slow, it is
-    # long enough for two widget re-renders to overlap and leave a full-screen orphan
-    # stage over the page (measured 2026-09-04, and it is what "the screen just blanked"
-    # was). Truncating to a whole bucket keeps the memo key honest: within a bucket the
-    # INPUT is identical, so the cached answer is the exact answer for the data named.
-    _ds = _ds[: (len(_ds) // 8) * 8]
-    _levels = sorted({_r[key] for _r in _ds}, key=str)
-    if len(_ds) < min_n or len(_levels) < 2:
-        return len(_ds), 0.0, 1.0, f"not enough {polarity} duels with a {key} to compare"
+    See surface_effect below for what the test does and why the null is permutation.
+    """
+    rows = _factor_duels(responses, polarity, key)
+    levels = sorted({row[key] for row in rows}, key=str)
+    if len(rows) < min_n or len(levels) < 2:
+        return len(rows), 0.0, 1.0, f"not enough {polarity} duels with a {key} to compare"
     # nperm and seed belong in the key. Without them a coarse call -- a quick 20-permutation
     # sanity check, say -- poisons the cache for the careful 200-permutation reading that
     # follows, and the caller gets a p-value computed against a null it never asked for.
     # A cache key must name every input that changes the answer.
-    _key = (
+    cache_key = (
         "f",
         key,
         polarity,
         nperm,
         seed,
-        hash(tuple((_r["choice"], str(_r[key]), _r["theta_a"][0]) for _r in _ds)),
+        hash(tuple((row["choice"], str(row[key]), row["theta_a"][0]) for row in rows)),
     )
-    if _key in SURF_MEMO:
-        return SURF_MEMO[_key]
-    _S = np.array([_levels.index(_r[key]) for _r in _ds])
-    _K = len(_levels)
-    _X = np.array(
-        [
-            # choice 0 = theme_a won (duels_from's convention; `swap` governs only which
-            # SIDE a card appeared on, not which theme it was).
-            (np.array(_r["theta_a"]) - np.array(_r["theta_b"])) * (1.0 if _r["choice"] == 0 else -1.0)
-            for _r in _ds
-        ]
+    if cache_key in SURF_MEMO:
+        return SURF_MEMO[cache_key]
+    levels_of_row = np.array([levels.index(row[key]) for row in rows])
+    axis_differences = _winner_minus_loser(rows)
+
+    observed = _tilt_gain(axis_differences, levels_of_row, len(levels), 6)
+    rng = np.random.default_rng(seed)
+    null = np.array(
+        [_tilt_gain(axis_differences, rng.permutation(levels_of_row), len(levels), 2) for _ in range(nperm)]
     )
-
-    def _cvll(_X, _S, _nax, _seed):
-        """Held-out Bradley-Terry log-loss. _nax = 0 is one shared utility; _nax > 0 adds
-        a sum-to-zero per-level tilt on the _nax leading axes, the cheapest form the
-        interaction can take and so the one with the best chance of showing in the data
-        there is."""
-        _r = np.random.default_rng(_seed)
-        _idx = _r.permutation(len(_X))
-        _tot, _n = 0.0, 0
-        for _f in range(5):
-            _te = _idx[_f::5]
-            _tr = np.setdiff1d(_idx, _te)
-            if len(_tr) < 10:
-                continue
-
-            def _feat(_Xa, _Sa):
-                if not _nax:
-                    return _Xa
-                _cols = [_Xa]
-                for _j in range(_nax):
-                    for _sv in range(_K - 1):
-                        _cols.append(
-                            np.where(_Sa == _sv, _Xa[:, _j], np.where(_Sa == _K - 1, -_Xa[:, _j], 0.0))[:, None]
-                        )
-                return np.hstack(_cols)
-
-            _F = _feat(_X[_tr], _S[_tr])
-            _th = np.zeros(_F.shape[1])
-            for _ in range(60):
-                _p = 1.0 / (1.0 + np.exp(-(_F @ _th)))
-                _g = _F.T @ (1.0 - _p) - _th
-                _H = (_F * (_p * (1 - _p))[:, None]).T @ _F + np.eye(len(_th))
-                _th = _th + np.linalg.solve(_H, _g)
-            _z = _feat(_X[_te], _S[_te]) @ _th
-            _tot += float(np.sum(-np.log1p(np.exp(-_z))))
-            _n += len(_te)
-        return _tot / max(_n, 1)
-
-    def _gain(_S, _seeds):
-        return float(
-            np.mean([_cvll(_X, _S, 1, _s) for _s in range(_seeds)])
-            - np.mean([_cvll(_X, _S, 0, _s) for _s in range(_seeds)])
-        )
-
-    _obs = _gain(_S, 6)
-    _rng = np.random.default_rng(seed)
-    _null = np.array([_gain(_rng.permutation(_S), 2) for _ in range(nperm)])
-    _p = float((_null >= _obs).mean())
-    if _p < 0.02:
-        _v = f"{key} changes the optimum -- one theme is the wrong answer shape"
-    elif _p < 0.10:
-        _v = f"suggestive; keep {key} balanced and re-read"
+    p_value = float((null >= observed).mean())
+    if p_value < 0.02:
+        verdict = f"{key} changes the optimum -- one theme is the wrong answer shape"
+    elif p_value < 0.10:
+        verdict = f"suggestive; keep {key} balanced and re-read"
     else:
-        _v = f"no {key} effect this data can see"
-    _out = (len(_ds), _obs, _p, _v)
-    SURF_MEMO[_key] = _out
-    return _out
+        verdict = f"no {key} effect this data can see"
+    result = (len(rows), observed, p_value, verdict)
+    SURF_MEMO[cache_key] = result
+    return result
 
 
 def surface_effect(responses, polarity, nperm=200, seed=7):

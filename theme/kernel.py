@@ -5,40 +5,48 @@ preference GP in `preference` and the reaction-time regression in `legibility`. 
 that move preference are the ones likely to move reading speed, so they share both the
 kernel and the length-scales fitted from the duels.
 
-Extracted from calibrate-aesthetics.py's model cell on 2026-09-04 -- the behaviour, the
-constants and the reasoning comments are unchanged; only marimo's cell-local underscores
-are gone.
+The length-scales double as a METRIC: two themes are "the same theme" when they are close
+in length-scale-scaled coordinates, which is what `spread_positions` measures difference
+in, so a group is "themes the model cannot separate" rather than an arbitrary grid cell.
 """
 
 import numpy as np
 
-# The preference model: a Gaussian process over theme space with a Bradley-Terry
-# likelihood on duels, fit by Laplace approximation — Chu & Ghahramani's preferential
-# GP, QUEST+'s generate-the-most-informative-trial loop on top. Reaction time enters
-# the likelihood drift-diffusion-style: decision time falls as the utility gap grows,
-# so a fast click steepens that duel's slope and a slow one flattens it toward a tie.
-# Length-scales are ARD: one per axis, estimated from the data rather than fixed, so
-# axes his choices ignore get long scales and stop costing sample efficiency. Nine
-# dimensions at ~100 duels is the binding constraint on how fast this converges, and
-# ARD is the cheapest honest way to shrink the effective dimension.
-LS0 = np.array([0.35] * 9 + [0.9])
-SF2 = 4.0
+# Nine theme axes (named in space.AXES), plus polarity as a tenth, binary coordinate: a
+# light page and a dark page are a block factor rather than an axis, and carrying polarity
+# in the kernel lets learning transfer between them without conflating them.
+N_AXES = 9
+POLARITY_AXIS = N_AXES
+
+# Length-scales are ARD: one per axis, estimated from the data rather than fixed, so axes
+# the choices ignore get long scales and stop costing sample efficiency. Nine dimensions
+# at ~100 duels is the binding constraint on how fast this converges, and ARD is the
+# cheapest honest way to shrink the effective dimension. These are the isotropic defaults
+# a thin log falls back to; ard_scales below estimates the rest.
+DEFAULT_LENGTH_SCALES = np.array([0.35] * N_AXES + [0.9])
+
+# Prior variance of the latent utility, i.e. a prior sd of 2 logits.
+SIGNAL_VARIANCE = 4.0
 
 
-def kmat(A, B, ls=None):
-    _l = LS0 if ls is None else ls
-    _d2 = (((A[:, None, :] - B[None, :, :]) / _l) ** 2).sum(-1)
-    _r = np.sqrt(_d2 + 1e-12)
-    return SF2 * (1 + np.sqrt(5) * _r + 5 * _r**2 / 3) * np.exp(-np.sqrt(5) * _r)
+def kmat(left, right, length_scales=None):
+    """Matern-5/2 covariance between two sets of GP inputs, shape (len(left), len(right)).
+
+    Named for the frozen import in theme.schedule; it is the kernel matrix.
+    """
+    scales = DEFAULT_LENGTH_SCALES if length_scales is None else length_scales
+    squared_distance = (((left[:, None, :] - right[None, :, :]) / scales) ** 2).sum(-1)
+    distance = np.sqrt(squared_distance + 1e-12)
+    return SIGNAL_VARIANCE * (1 + np.sqrt(5) * distance + 5 * distance**2 / 3) * np.exp(-np.sqrt(5) * distance)
 
 
-def ard_scales(X, duels, lam):
+def ard_scales(gp_inputs, duels, duel_slopes):
     """Per-axis length-scales from a ridge-regularized linear Bradley-Terry fit.
 
     The principled route is maximizing the Laplace log-marginal-likelihood over ten
     log-length-scales, which costs a hundred-odd GP refits per trial and would make
     the instrument wait on itself. A linear BT model on the winner-minus-loser axis
-    differences is the same question asked cheaply -- which axes move his choices --
+    differences is the same question asked cheaply -- which axes move the choices --
     and its coefficient magnitudes plug straight in as relevances. Empirical-Bayes
     shortcut, deliberately: the fit runs in milliseconds and the GP keeps the
     nonlinearity.
@@ -49,25 +57,68 @@ def ard_scales(X, duels, lam):
     # 400). Blending toward the isotropic default with weight n/160 keeps a thin log
     # from distorting the kernel and converges on full ARD as duels accumulate.
     if len(duels) < 12:
-        return LS0.copy()
-    _w_ard = min(1.0, len(duels) / 160.0)
-    _D = np.array([(X[_w] - X[_l]) * _lm for (_w, _l), _lm in zip(duels, lam, strict=True)])
-    _w = np.zeros(_D.shape[1])
+        return DEFAULT_LENGTH_SCALES.copy()
+    ard_weight = min(1.0, len(duels) / 160.0)
+    scaled_differences = np.array(
+        [
+            (gp_inputs[winner] - gp_inputs[loser]) * slope
+            for (winner, loser), slope in zip(duels, duel_slopes, strict=True)
+        ]
+    )
+    coefficients = np.zeros(scaled_differences.shape[1])
     for _ in range(60):
-        _p = 1.0 / (1.0 + np.exp(-(_D @ _w)))
-        _g = _D.T @ (1.0 - _p) - 2.0 * _w
-        _H = -(_D.T * (_p * (1 - _p))) @ _D - 2.0 * np.eye(_D.shape[1])
-        _step = np.linalg.solve(_H, -_g)
-        _w = _w + _step
-        if np.abs(_step).max() < 1e-10:
+        p_winner_wins = 1.0 / (1.0 + np.exp(-(scaled_differences @ coefficients)))
+        gradient = scaled_differences.T @ (1.0 - p_winner_wins) - 2.0 * coefficients
+        curvature = p_winner_wins * (1 - p_winner_wins)
+        hessian = -(scaled_differences.T * curvature) @ scaled_differences - 2.0 * np.eye(scaled_differences.shape[1])
+        step = np.linalg.solve(hessian, -gradient)
+        coefficients = coefficients + step
+        if np.abs(step).max() < 1e-10:
             break
-    _rel = np.abs(_w) / max(float(np.abs(_w).max()), 1e-9)
-    _ls = 0.30 / np.sqrt(np.clip(_rel, 0.10, 1.0))
-    _ls = np.clip(_ls, 0.25, 1.4)
-    _ls = (1.0 - _w_ard) * LS0 + _w_ard * _ls
-    _ls[9] = 0.9
-    return _ls
+    relevance = np.abs(coefficients) / max(float(np.abs(coefficients).max()), 1e-9)
+    length_scales = np.clip(0.30 / np.sqrt(np.clip(relevance, 0.10, 1.0)), 0.25, 1.4)
+    length_scales = (1.0 - ard_weight) * DEFAULT_LENGTH_SCALES + ard_weight * length_scales
+    # Polarity is a block factor, not something relevance should shrink or stretch.
+    length_scales[POLARITY_AXIS] = DEFAULT_LENGTH_SCALES[POLARITY_AXIS]
+    return length_scales
 
 
 def coords(theta, polarity):
+    """A theme as a GP input: its nine axes, then the polarity coordinate."""
     return np.concatenate([np.asarray(theta, dtype=float), [1.0 if polarity == "night" else 0.0]])
+
+
+def theta_length_scales(length_scales=None):
+    """The nine theme-axis length-scales, without the polarity coordinate."""
+    scales = DEFAULT_LENGTH_SCALES if length_scales is None else length_scales
+    return scales[:N_AXES]
+
+
+def scale_thetas(thetas, length_scales=None):
+    """Thetas in length-scale-scaled coordinates, where distance means perceptual
+    difference."""
+    return np.asarray(thetas, dtype=float)[:, :N_AXES] * (1.0 / theta_length_scales(length_scales))
+
+
+def spread_positions(scaled_points, initial, n_wanted):
+    """Greedy max-min: extend `initial` to `n_wanted` positions, each as far as possible
+    from those already taken.
+
+    One implementation, because there were two -- the elite selection in `breeding` and
+    the plateau readout in `diagnostics` -- and two copies of a greedy selection is two
+    places for it to be subtly wrong. Positions index `scaled_points`; pass points that
+    are already scaled, so the metric is the caller's choice of length-scales.
+
+    An empty `initial` measures against position 0 without taking it, which is what the
+    elite selection did and depends on.
+    """
+    picked = list(initial)
+    while len(picked) < min(n_wanted, len(scaled_points)):
+        against = picked or [0]
+        # Distance to the nearest already-taken point, then take the point that maximizes
+        # it. Taken positions are masked rather than skipped, so a duplicate coordinate
+        # cannot be taken twice.
+        spread = np.min(np.linalg.norm(scaled_points[:, None, :] - scaled_points[None, against, :], axis=-1), axis=1)
+        spread[against] = -1.0
+        picked.append(int(np.argmax(spread)))
+    return picked

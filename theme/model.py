@@ -16,6 +16,11 @@ call time so the stub is seen. Keep those three bindings.
 
 It re-exports rather than aliases, so `theme.model.fitted is theme.preference.fitted`, and
 mutating `theme.model.FIT_MEMO` mutates the one memo there is.
+
+Two names read here as abbreviations rather than as what they hold -- `kmat` for the
+kernel matrix and `h2` for binary entropy, plus `GH_X`/`GH_W` for the Gauss-Hermite nodes
+and weights. They are spelled that way because `theme.schedule` imports them and the
+public interface is frozen; renaming them is a separate, serialized commit.
 """
 
 from .breeding import candidates, sobol_block
@@ -29,7 +34,17 @@ from .diagnostics import (
     spread_out,
     surface_effect,
 )
-from .kernel import LS0, SF2, ard_scales, coords, kmat
+from .kernel import (
+    DEFAULT_LENGTH_SCALES,
+    N_AXES,
+    POLARITY_AXIS,
+    SIGNAL_VARIANCE,
+    ard_scales,
+    coords,
+    kmat,
+    scale_thetas,
+    spread_positions,
+)
 from .legibility import rt_at, rt_fit, rt_penalty
 from .preference import (
     FIT_MEMO,
@@ -37,11 +52,12 @@ from .preference import (
     GH_X,
     RTP_MEMO,
     cv_logloss,
+    duel_rows,
     duels_from,
     fit_laplace,
     fitted,
     h2,
-    mu_at,
+    mean_utility_at,
     posterior_joint,
     posterior_over,
     predict,
@@ -54,13 +70,15 @@ from .space import POOL, prior_mean, realize_many
 
 __all__ = [
     "BEST_MEMO",
+    "DEFAULT_LENGTH_SCALES",
     "FIT_MEMO",
     "GH_W",
     "GH_X",
-    "LS0",
+    "N_AXES",
+    "POLARITY_AXIS",
     "POOL",
     "RTP_MEMO",
-    "SF2",
+    "SIGNAL_VARIANCE",
     "SURF_MEMO",
     "ard_scales",
     "axis_consensus",
@@ -68,13 +86,14 @@ __all__ = [
     "candidates",
     "coords",
     "cv_logloss",
+    "duel_rows",
     "duels_from",
     "factor_effect",
     "fit_laplace",
     "fitted",
     "h2",
     "kmat",
-    "mu_at",
+    "mean_utility_at",
     "posterior_joint",
     "posterior_over",
     "predict",
@@ -85,7 +104,9 @@ __all__ = [
     "rt_exponent",
     "rt_fit",
     "rt_penalty",
+    "scale_thetas",
     "sobol_block",
     "spread_out",
+    "spread_positions",
     "surface_effect",
 ]
