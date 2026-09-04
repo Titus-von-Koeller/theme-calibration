@@ -116,9 +116,40 @@ def page_seed(n):
     return n * 7919 + 17
 
 
-# Deterministic given the log, so a memo keyed by trial number is a pure cache: several
-# callers ask for the same trial and pay for one fit.
+# Deterministic given the trial number and the responses before it, so a memo is a pure
+# cache: several callers ask for the same trial and pay for one fit.
+#
+# Keyed by the HISTORY as well as the trial number. Keying by trial number alone was wrong
+# in a way that hid itself: the page prefetches trial n+1 while the log still holds n rows,
+# so that entry is built from a truncated history, and a number-only key then served it
+# back at record time in place of the trial built from the full log. Measured on the real
+# log at n=40, the two disagree on theta_a -- the row would have described a theme that was
+# never on screen. Including the history in the key means a memo hit can only ever be the
+# same computation, which is the only thing a cache may be.
 TRIAL_MEMO = {}
+
+#: Only the current trial and the one after it are ever asked for, so the memo needs no
+#: history. Bounded because a server runs for weeks and every entry holds two themes.
+TRIAL_MEMO_KEEP = 8
+
+
+def _history_key(n, history):
+    """Identify the history cheaply, without hashing every row.
+
+    Length alone would collide between two different logs of the same length -- which is
+    not hypothetical, since the suite drives the app with a scratch log while other tests
+    read the real one. The last row's timestamp separates them without a scan.
+    """
+    if not history:
+        return (n, 0, None)
+    return (n, len(history), history[-1].get("ts"))
+
+
+def _remember(key, trial):
+    TRIAL_MEMO[key] = trial
+    while len(TRIAL_MEMO) > TRIAL_MEMO_KEEP:
+        TRIAL_MEMO.pop(next(iter(TRIAL_MEMO)))
+    return trial
 
 
 def _uniform_pair(pool, rng):
@@ -351,9 +382,10 @@ def trial_for(n, responses):
     Depends only on `n` and the responses BEFORE trial n, so the recorder can rebuild it
     from the log instead of trusting what the page sent back.
     """
-    if n in TRIAL_MEMO:
-        return TRIAL_MEMO[n]
     history = responses[:n]
+    key = _history_key(n, history)
+    if key in TRIAL_MEMO:
+        return TRIAL_MEMO[key]
     n_duels = sum(1 for row in history if row.get("mode") == "duel")
     polarity, arm = schedule_mode(n, n_duels)
     rng = random.Random(n * 2654435761 % (2**31))
@@ -367,5 +399,4 @@ def trial_for(n, responses):
         trial = _comprehension_trial(n, history, polarity, fit, pool, rng, numpy_rng)
     else:
         trial = _search_trial(n, history, polarity, fit, pool, rng, numpy_rng)
-    TRIAL_MEMO[n] = trial
-    return trial
+    return _remember(key, trial)
