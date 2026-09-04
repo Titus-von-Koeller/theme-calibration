@@ -270,8 +270,8 @@ def test_the_realistic_regime_favours_bred_candidates(search_model):
 def clone_and_spread_candidates():
     """20 near-identical themes and 20 spread across the cube.
 
-    The clones sit within 0.004 of one another on every axis -- far below anything he could
-    see -- so they are one theme as far as any verdict is concerned. Imported by
+    The clones sit within 0.004 of one another on every axis -- far below anything an eye
+    could see -- so they are one theme as far as any verdict is concerned. Imported by
     test_diagnostics, whose progress readout needs the same fixed candidate set.
     """
     base = np.random.default_rng(11).random(9)
@@ -308,3 +308,19 @@ def test_p_best_counts_contenders_rather_than_coordinates(grouped_best_set):
     """
     best, _clones = grouped_best_set
     assert len(best["groups"]) <= 25, f"{len(best['groups'])} groups from 40 candidates"
+
+
+def test_the_fit_memo_names_the_log_it_cached(search_model):
+    """Two different logs of the same length must not be served one fit.
+
+    The memo key was (duel count, RT exponent): how MUCH data was fitted, never WHICH. Two
+    logs of equal length collide, and the second caller gets the first log's utilities back
+    with nothing to say they are not its own. Reachable from `progress_report`, which fits
+    a truncated history alongside the full one, and from any analysis that compares two
+    logs -- and the returned object looks exactly like a measurement either way.
+    """
+    search_model.FIT_MEMO.clear()
+    search_model.RTP_MEMO.clear()
+    first = search_model.fitted(duel_log(search_model, 60, active=(0, 3, 6), seed=1))
+    second = search_model.fitted(duel_log(search_model, 60, active=(2, 5, 8), seed=2))
+    assert not np.array_equal(first["f"], second["f"]), "two different 60-duel logs were served one fit"

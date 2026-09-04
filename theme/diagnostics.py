@@ -67,6 +67,27 @@ def _group_by_resolution(scaled_thetas, p_best, radius):
     return representatives, group_of, order
 
 
+def _fit_identity(fit):
+    """What names a fit for caching.
+
+    `preference.fitted` stamps a content fingerprint on every fit it builds. A fit
+    assembled by hand has none, and falls back to its object identity -- which is only
+    sound while the object is alive, because an address gets reused.
+    """
+    return fit["fingerprint"] if "fingerprint" in fit else ("id", id(fit))
+
+
+def _candidate_fingerprint(thetas):
+    """A hash of every coordinate of every candidate.
+
+    The key used to name only `len(thetas)` and `sum(thetas[0])`, so two candidate sets of
+    equal length sharing a first entry collided and the second caller read the first one's
+    P(best) as its own. 57 kB of bytes for eight hundred candidates, against a Cholesky
+    over the same eight hundred.
+    """
+    return hash(np.ascontiguousarray(np.asarray(thetas, dtype=float)).tobytes())
+
+
 def _credible_groups(group_p, group_order, mass):
     """The smallest set of leading groups holding `mass` of the argmax probability."""
     keep, accumulated = [], 0.0
@@ -89,11 +110,10 @@ def best_set(fit, polarity, thetas, samples=2048, mass=0.5, seed=0, radius=0.9):
     that the log cannot yet tell -- which is a state this reports rather than dressing up
     as a plateau.
     """
-    # Memoized on the fit's identity, the polarity and the candidate set: the analysis
-    # asks for the same verdict three times per polarity (the shelf, and the two
-    # historical fits behind the progress readout), and each call is a Cholesky over
-    # eight hundred candidates.
-    cache_key = (id(fit), polarity, len(thetas), samples, mass, seed, radius, float(np.sum(thetas[0])))
+    # Memoized on the fit, the polarity and the candidate set: the analysis asks for the
+    # same verdict three times per polarity (the shelf, and the two historical fits behind
+    # the progress readout), and each call is a Cholesky over eight hundred candidates.
+    cache_key = (_fit_identity(fit), polarity, _candidate_fingerprint(thetas), samples, mass, seed, radius)
     if cache_key in BEST_MEMO:
         return BEST_MEMO[cache_key]
     mean, cov = posterior_joint(fit, thetas, polarity)
@@ -338,7 +358,11 @@ def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
         polarity,
         nperm,
         seed,
-        hash(tuple((row["choice"], str(row[key]), row["theta_a"][0]) for row in rows)),
+        hash(tuple((row["choice"], str(row[key])) for row in rows)),
+        # Both thetas in full. The key named `theta_a[0]` and nothing of `theta_b`, while
+        # the statistic is built from theta_a - theta_b on all nine axes -- so a hit could
+        # return a permutation test run against data the caller never supplied.
+        _candidate_fingerprint([row["theta_a"] for row in rows] + [row["theta_b"] for row in rows]),
     )
     if cache_key in SURF_MEMO:
         return SURF_MEMO[cache_key]
@@ -358,6 +382,8 @@ def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
     else:
         verdict = f"no {key} effect this data can see"
     result = (len(rows), observed, p_value, verdict)
+    if len(SURF_MEMO) > 8:
+        SURF_MEMO.pop(next(iter(SURF_MEMO)))
     SURF_MEMO[cache_key] = result
     return result
 

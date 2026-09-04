@@ -44,6 +44,36 @@ def duel_rows(responses):
     return [row for row in responses if row.get("mode") == "duel" and row.get("choice") in (0, 1)]
 
 
+def log_fingerprint(rows):
+    """A hash of everything in these duel rows that changes a fit.
+
+    A cache key must name every input that changes the answer. Keying a fit on how MANY
+    duels were answered names how much data there was and never which, so two logs of
+    equal length were served one fit -- and a fit looks exactly like a measurement whether
+    or not it belongs to the log that asked for it. In production the log only ever grows,
+    so the count happened to identify it; the progress readout, which fits a truncated
+    history beside the full one, is one step from the collision, and any analysis
+    comparing two logs is already in it.
+
+    These are exactly the fields `duels_from` reads, so the fingerprint is complete for
+    everything downstream of it.
+    """
+    return hash(
+        tuple(
+            (
+                row["choice"],
+                row["polarity"],
+                tuple(row["theta_a"]),
+                tuple(row["theta_b"]),
+                row.get("rt_ms"),
+                bool(row.get("paused")),
+                bool(row.get("swap")),
+            )
+            for row in rows
+        )
+    )
+
+
 def duels_from(responses, rt_p=0.5):
     """(GP inputs, duel index pairs, per-duel slopes, prior means, winner sides) from a log.
 
@@ -299,9 +329,16 @@ def rt_exponent(responses, grid=(0.0, 0.25, 0.5, 0.75), refit_every=25):
     purpose: if ignoring the clock predicts as well, the channel is noise dressed as
     evidence and the model should say so rather than carry a flattering heuristic.
     """
-    bucket = len(duel_rows(responses)) // refit_every
-    if bucket in RTP_MEMO:
-        return RTP_MEMO[bucket]
+    rows = duel_rows(responses)
+    bucket = len(rows) // refit_every
+    # Refitting only once per `refit_every` duels is deliberate -- each refit costs a
+    # hundred-odd GP fits -- but the bucket alone names how many duels have arrived and
+    # not which, so two logs at the same count shared an exponent. The key names the
+    # prefix the bucket refers to: one refit per bucket, and it belongs to the log that
+    # asked for it.
+    key = (bucket, log_fingerprint(rows[: bucket * refit_every]))
+    if key in RTP_MEMO:
+        return RTP_MEMO[key]
     scores = {}
     for exponent in grid:
         score = cv_logloss(responses, exponent)
@@ -310,22 +347,22 @@ def rt_exponent(responses, grid=(0.0, 0.25, 0.5, 0.75), refit_every=25):
     result = (0.5, {}) if not scores else (min(scores, key=scores.get), scores)
     if len(RTP_MEMO) > 3:
         RTP_MEMO.pop(next(iter(RTP_MEMO)))
-    RTP_MEMO[bucket] = result
+    RTP_MEMO[key] = result
     return result
 
 
 def fitted(responses, rt_p=None):
     """The Laplace fit over a response log, memoized.
 
-    Keyed by how many duels have been answered: the fit is a pure function of the log,
-    three cells ask for the same one, and it is the cubic-cost step. A few entries rather
-    than one, because the progress readout fits the log as it stood some duels ago and
-    compares, which needs two fits alive at once.
+    The fit is a pure function of the log, three cells ask for the same one, and it is the
+    cubic-cost step. A few entries rather than one, because the progress readout fits the
+    log as it stood some duels ago and compares, which needs two fits alive at once -- so
+    the key has to tell those two logs apart, which is what `log_fingerprint` is for.
     """
-    n_duels = len(duel_rows(responses))
+    rows = duel_rows(responses)
     if rt_p is None:
         rt_p = rt_exponent(responses)[0]
-    key = (n_duels, rt_p)
+    key = (len(rows), rt_p, log_fingerprint(rows))
     if key in FIT_MEMO:
         return FIT_MEMO[key]
     parsed = duels_from(responses, rt_p)
@@ -348,6 +385,10 @@ def fitted(responses, rt_p=None):
         "delta": side_bias,
         "sides": winner_sides,
         "rt_p": rt_p,
+        # What names this fit downstream. `diagnostics.best_set` memoizes per fit and had
+        # only `id()` to key on, which is an address: a freed fit's slot gets reused and
+        # answers for an unrelated one.
+        "fingerprint": key,
     }
     if len(FIT_MEMO) > 4:
         FIT_MEMO.pop(next(iter(FIT_MEMO)))

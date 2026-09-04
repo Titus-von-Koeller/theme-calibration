@@ -65,12 +65,12 @@ def surface_duels(tilt, n=96, seed=0):
 def factor_calibration(search_model):
     """`factor_effect` on the surface factor: the row count, six nulls and six planted tilts.
 
-    Computed in this order deliberately. `factor_effect` memoises on (key, polarity, data)
-    and NOT on nperm, so the seed-0 null below is served the 20-permutation answer cached
-    by the row-count call above it (p = 0.95, where a fresh 120-permutation fit gives
-    0.88). Both are nowhere near the 0.10 threshold, so the calibration reads the same
-    either way -- but the order is pinned here rather than left to whichever order pytest
-    happens to call the tests in. `surface_effect` is this same call with key="surface".
+    Every call here is its own reading. `nperm` and `seed` are part of the memo key, so the
+    20-permutation row-count call below does not poison the 120-permutation nulls that
+    follow -- it did once, and the seed-0 null came back as the coarse call's p = 0.95
+    where a fresh 120-permutation fit gives 0.88. Both are nowhere near the 0.10 threshold,
+    so the calibration read the same either way, which is exactly why an incomplete cache
+    key can sit unnoticed. `surface_effect` is this same call with key="surface".
     """
     n_seen = search_model.factor_effect(surface_duels(0.0, seed=0), "day", "surface", nperm=20)[0]
     p_null = [search_model.factor_effect(surface_duels(0.0, seed=s), "day", "surface", nperm=120)[2] for s in range(6)]
@@ -142,8 +142,8 @@ def test_a_settled_axis_reads_narrow_and_an_untouched_one_reads_wide(consensus):
 
 
 def test_the_settled_axis_reports_where_it_settled(consensus):
-    """Narrow is only half the answer; the readout also has to say WHERE, or it cannot tell
-    him which value his clicks have chosen. Measured 0.794 against a planted 0.80."""
+    """Narrow is only half the answer; the readout also has to say WHERE, or it cannot say
+    which value the clicks have settled on. Measured 0.794 against a planted 0.80."""
     mean = consensus[0][2]
     assert abs(mean - 0.8) < 0.05, f"posterior-weighted mean of the settled axis {mean:.3f} against a planted 0.80"
 
@@ -166,3 +166,53 @@ def test_progress_report_compares_two_fits_and_reports_movement(search_model):
         f"leader {100 * prog['lead_then']:.0f}% -> {100 * prog['lead_now']:.0f}%, "
         f"set {prog['set_then']} -> {prog['set_now']} over {prog['back']} duels"
     )
+
+
+def collide_on_the_old_factor_key(rows, seed=0):
+    """The same rows, agreeing on choice, surface and theta_a[0] and differing everywhere else.
+
+    Exactly the fields the `factor_effect` memo key used to name, so two datasets built
+    this way were indistinguishable to the cache while the statistic reads all nine axes of
+    both thetas.
+    """
+    rng = np.random.default_rng(seed)
+    twins = []
+    for row in rows:
+        theta_a = list(rng.random(9))
+        theta_a[0] = row["theta_a"][0]
+        twins.append({**row, "theta_a": theta_a, "theta_b": list(rng.random(9))})
+    return twins
+
+
+def test_the_factor_memo_names_every_theta_it_cached(search_model):
+    """Two datasets the old key could not tell apart must not be served one p-value.
+
+    The key hashed `theta_a[0]` and nothing of `theta_b`, while the test statistic is built
+    from theta_a - theta_b on all nine axes -- so a cache hit returned a permutation test
+    run against data the caller never supplied. Five permutations here: this is about which
+    data was measured, not about the p-value's precision.
+    """
+    search_model.SURF_MEMO.clear()
+    rows = surface_duels(2.5, seed=0)
+    tilted = search_model.factor_effect(rows, "day", "surface", nperm=5)
+    twin = search_model.factor_effect(collide_on_the_old_factor_key(rows), "day", "surface", nperm=5)
+    assert tilted[1] != twin[1], f"two different datasets were served one gain statistic ({tilted[1]:.4f})"
+
+
+def test_the_best_set_memo_names_the_candidates_it_cached(search_model):
+    """Two candidate sets of the same length sharing a first theta must not share a verdict.
+
+    The key was (id(fit), polarity, len(thetas), samples, mass, seed, radius,
+    sum(thetas[0])) -- which names how MANY candidates there were and one scalar of the
+    first of them. Two sets of equal length whose first entry matches collide, and the
+    second caller reads the first one's P(best) as its own. `id(fit)` is worse than
+    incomplete: it is an address, so a freed fit's slot can be reused by an unrelated one.
+    """
+    search_model.BEST_MEMO.clear()
+    fit = search_model.fitted(duel_log(search_model, 120, seed=8))
+    first = [np.random.default_rng(300 + i).random(9) for i in range(40)]
+    second = [np.random.default_rng(700 + i).random(9) for i in range(40)]
+    second[0] = first[0].copy()
+    p_first = search_model.best_set(fit, "day", first, seed=3)["p_best"]
+    p_second = search_model.best_set(fit, "day", second, seed=3)["p_best"]
+    assert not np.array_equal(p_first, p_second), "two candidate sets were served one P(best)"
