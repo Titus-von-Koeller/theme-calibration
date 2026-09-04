@@ -44,26 +44,20 @@ Open questions, most valuable first:
 5. **The 12-13px legacy.** Duels before 2026-09-04 were judged at a size nobody reads code
    at. The factor test says the old and new regimes pool, but that reading is weak and
    worth repeating as the new size accumulates.
-6. **Carry over at integration — found by review, not yet on main.**
-   - `theme/schedule.py`'s `np.einsum("ij,jk,k->i", ...)` is the single largest cost in a
-     warm duel trial (46 of 123 ms) and rewrites to two matrix-vector products:
-     **552 ms to 0.123 ms at 960 candidates**, agreeing to 1e-13. Nobody's branch has it —
-     it was found from an adjacent partition.
-   - `notebooks/analysis.py` held a full second copy of the model, importing nothing from
-     `theme`, and that copy still carried every memo-key bug the package has since fixed.
-     The instrument and the analysis of the instrument could disagree about which theme is
-     best. The notebooks branch removes it; confirm that when merging, and fix
-     `theme/server.py`'s docstring, which claims the analysis imports this package.
-   - `pyproject.toml` needs `[tool.ruff.lint.per-file-ignores]` with
-     `"notebooks/*.py" = ["B018"]` — marimo cells legitimately end in a bare expression.
-     Until then `pixi run check` is red for everyone and unfixable from inside a partition,
-     so the first invariant in CONTRIBUTING cannot be satisfied by anyone.
-   - `characterize.py` from the model review (2191 comparisons over 39 entry points) is
-     worth promoting into `tests/`; it currently lives only in a session scratchpad.
-   - `theme/space.py`'s `theta_key` rounding costs ~18 ms of a warm trial in 18,981 `round`
-     calls, and `data/measured-theme.json` has been stale since the floors tightened
-     (`p_best` 0.1772 to 0.2021 by day; the palette itself is byte-identical, so the winner
-     did not move).
+6. **Regenerate `data/measured-theme.json`.** It has been stale since the contrast floors
+   tightened: `p_best` moved 0.1772 to 0.2021 by day and 0.146 to 0.1694 by night. The
+   palette itself is byte-identical, so the winner did not move. Note that opening the
+   analysis notebook rewrites this tracked file as a documented side effect, so `git status`
+   goes dirty on every read — worth deciding whether it should be tracked at all, since by
+   the project's own rule it is derived rather than measured.
+7. **`theme/space.py`'s `theta_key` rounding** costs about 18 ms of a warm trial across
+   18,981 `round` calls.
+8. **Promote the model review's characterization harness into `tests/`** — 2191 comparisons
+   over 39 entry points, currently only in a session scratchpad.
+9. **The role plan is calibrated for 14-line pages** while every caller asks for 28, so
+   `role_error` never lands inside its tolerance and the tolerance is enforced nowhere. Not
+   invalidating — per-role counts stay tight across seeds — but changing the plan changes
+   the stimulus, so it is a measurement decision rather than a refactor.
 7. **Deferred performance work, measured but not done.** The permutation test in
    `factor_effect` is 60,000 solves of an 11x11 system inside two Python loops; folding the
    permutations into one batched array operation is worth about 8 s per analysis pass and
