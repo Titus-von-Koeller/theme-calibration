@@ -121,10 +121,12 @@ numbering; the app's rows carry `rt_ms` and are told apart by `surface` and `gen
                       measured-theme.json          the published champion, rewritten by
                                                    `pixi run publish` and every analysis
                                                    pass; derived, so not tracked
-                      observer-logp-*.npy          a derived likelihood grid, regenerated
-                                                   on demand and deliberately not tracked
-                                                   (its small companion .json says which
-                                                   log length the grid covers)
+                      observer-logp-*.npy          a derived likelihood grid and the
+                      observer-logp-*.json         sidecar naming the log length it
+                                                   covers; regenerated on demand, and
+                                                   NEITHER is tracked -- a tracked sidecar
+                                                   beside an untracked grid describes
+                                                   something a fresh clone does not have
     notebooks/      the reading half: analysis, the vision calibration, the gallery
     tests/          recovery tests: plant a truth, check it comes back
 

@@ -15,11 +15,19 @@ __pycache__/
 __marimo__/
 
 # Derived caches, not measurements. The observer's log-likelihood grid is recomputed from
-# calibration-responses.jsonl whenever it is absent (see notebooks/vision.py), so tracking
-# it would put a 28 MB binary in history that nothing can diff and every clone must fetch.
+# calibration-responses.jsonl whenever it is absent (see theme/vision.py), so tracking it
+# would put a 28 MB binary in history that nothing can diff and every clone must fetch.
 # The measurements themselves ARE tracked: small, append-only, one JSON object per line,
 # and a real diff when they change.
-data/observer-logp-*.npy
+#
+# The glob covers the SIDECAR .json too, and that is the point. Tracking the metadata of an
+# untracked binary hands a fresh clone a description of something it does not have, and it
+# broke the guard written against the pair: "never let a shorter log overwrite a longer
+# log's cache" read the stored length only when both files existed, so in a worktree --
+# metadata present, grid absent -- the guard never ran and the first suite pass rewrote the
+# tracked json from n=748 to n=0. The guard reads its metadata unconditionally now; the
+# metadata is derived either way, so it goes with the grid it describes.
+data/observer-logp-*
 
 # The published champion is a RESULT, not a record: `pixi run publish` (or any pass of the
 # analysis notebook) rewrites it from the two response logs in seconds. Tracking it made
