@@ -92,6 +92,7 @@ def test_the_published_palette_carries_the_roles_the_theta_and_its_provenance(da
     for role in ("ground", "keyword", "function", "string", "ink", "comment", "punct", "find_fill"):
         assert palette[role] == theme[role]
     assert palette["page"] and palette["border"], "the applier needs the elevation surfaces"
+    assert set(palette["signals"]) >= {"red", "green", "blue", "red_bright"}, "the applier needs the signal set"
     assert len(palette["theta"]) == 9, "a lived duel needs the champion's coordinates"
     assert palette["verdict"] in ("single", "plateau", "undecided")
     provenance = palette["provenance"]

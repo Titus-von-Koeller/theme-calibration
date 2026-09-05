@@ -32,6 +32,7 @@ from .legibility import rt_at, rt_fit, rt_penalty
 from .model import candidates
 from .observer import MODEL_VERSION as OBSERVER_MODEL
 from .preference import duel_rows, fitted, mean_utility_at
+from .signals import signals_for
 from .space import DE_MIN, READING_SIZE_PX, VISION_N, separation_floor
 from .surfaces import derived_surfaces
 
@@ -270,14 +271,19 @@ def palette_of(verdict):
 
     `theta` is here so a lived duel between two applied themes can be recorded as a duel
     the model already understands; `page` and `border` are the two surfaces the applied
-    elevation system derives from the ground and are computed here, once, rather than in
-    an applier that has no colour engine.
+    elevation system derives from the ground, and `signals` are the convention-bound
+    colours (error red, git green, the ANSI set) walked to this ground's floors. All are
+    computed here, once, rather than in an applier that has no colour engine: the applier
+    maps names onto keys and never does colour arithmetic.
     """
     theme = verdict.champion_theme
     return {
         **{role: theme[role] for role in ("ground", "keyword", "function", "string", "ink", "comment", "punct")},
         "find_fill": theme["find_fill"],
         **derived_surfaces(theme["ground"], verdict.polarity),
+        "signals": signals_for(
+            theme["ground"], (theme["keyword"], theme["function"], theme["string"]), verdict.polarity
+        ),
         "theta": [round(float(value), 6) for value in verdict.champion_theta],
         "p_best": round(verdict.lead, 4),
         "verdict": verdict.verdict,
