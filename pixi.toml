@@ -69,5 +69,6 @@ gallery = { cmd = "marimo run notebooks/gallery.py --headless --no-token --host 
 verdict = { cmd = "python -m theme.publish", description = "Print what the model believes, both polarities" }
 publish = { cmd = "python -m theme.publish --write", description = "Publish the champion palettes for the applier" }
 lived = { cmd = "python -m theme.lived", description = "Record which of the last two applied themes was better to live in" }
+census = { cmd = "python -m theme.census", description = "Classify a screenshot's colours against the published palette; the foreign ones are the work list" }
 test = { cmd = "pytest -q", description = "Run the recovery tests" }
 check = { cmd = "ruff format --check . && ruff check .", description = "Lint and format check" }
