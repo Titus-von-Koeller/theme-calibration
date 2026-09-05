@@ -38,6 +38,22 @@ PROBES_PER_BLOCK = 4
 #: Duels needed before the model has enough to probe; until then every trial is a duel.
 BOOTSTRAP_DUELS = 6
 
+#: The share of duels the polarity blocks steer toward night, decided at each block's first
+#: trial from the duels before it.
+#:
+#: Not one half. At 215 duels (2026-09-05) day had a single leader at 52% whose fit predicted
+#: held-out duels at 67.6%, while night was a plateau of eight whose fit predicted its own
+#: second half at 44.6% -- worse than a coin. Strict alternation would keep spending half of
+#: every sitting on the polarity that is already decided. Titus's call was to keep the night
+#: leader applied and collect night duels first, so blocks run night until night holds this
+#: share of the duels and hover there after. Retire to 0.5 when night's time-split predicts;
+#: `pixi run verdict` prints what it takes to decide that.
+#:
+#: Decided from the log rather than by the trial number, and only at a block boundary, so
+#: every trial in a block agrees on its polarity and a replay of the log reconstructs the
+#: same schedule. Until two blocks' worth of duels exist the blocks simply alternate.
+NIGHT_SHARE = 0.6
+
 #: Lines per page. A page, not a snippet: fourteen lines centred on a very large display is
 #: an island spanning a quarter of the field, and a probe needs distractors to reject --
 #: accuracy saturated at 100% over twenty probes, and a 28-line page offers ~97 identifiers
@@ -61,13 +77,29 @@ ANCHOR_DUEL_SHARE = 0.054
 UNTARGETED_SHARE = 0.25
 
 
-def schedule_mode(n, n_duels):
+def duel_counts(history):
+    """(day duels, night duels) answered so far."""
+    day = sum(1 for row in history if row.get("mode") == "duel" and row.get("polarity") == "day")
+    night = sum(1 for row in history if row.get("mode") == "duel" and row.get("polarity") == "night")
+    return day, night
+
+
+def block_polarity(n, history):
+    """Which polarity trial n's block runs at. NIGHT_SHARE says why it is not `n // BLOCK`."""
+    block_start = n - n % BLOCK
+    day, night = duel_counts(history[:block_start])
+    if day + night < 2 * BLOCK:
+        return ("day", "night")[(n // BLOCK) % 2]
+    return "night" if night < NIGHT_SHARE * (day + night) else "day"
+
+
+def schedule_mode(n, history):
     """Twenty-four-trial polarity blocks, each a run of sixteen duels, then four
     comprehension probes, then four find hunts — same-kind trials batched so one
     instruction serves a whole run and no click is spent re-reading. All-duel until the
-    model has something to probe."""
-    polarity = ("day", "night")[(n // BLOCK) % 2]
-    if n_duels < BOOTSTRAP_DUELS:
+    model has something to probe. `history` is the log before trial n."""
+    polarity = block_polarity(n, history)
+    if sum(duel_counts(history)) < BOOTSTRAP_DUELS:
         return polarity, "duel"
     slot = n % BLOCK
     if slot < DUELS_PER_BLOCK:
@@ -99,9 +131,11 @@ def duel_surface(n, n_duels):
     return rotation[duel_index % 3]
 
 
-def run_info(n, n_duels):
-    """(polarity, mode, position within the run, run length) for trial n."""
-    polarity, arm = schedule_mode(n, n_duels)
+def run_info(n, history):
+    """(polarity, mode, position within the run, run length) for trial n, given the log
+    before it."""
+    polarity, arm = schedule_mode(n, history)
+    n_duels = sum(duel_counts(history))
     if n_duels < BOOTSTRAP_DUELS:
         return polarity, arm, min(n_duels, BOOTSTRAP_DUELS - 1), BOOTSTRAP_DUELS
     slot = n % BLOCK
@@ -469,8 +503,8 @@ def trial_for(n, responses):
     key = _history_key(n, history)
     if key in TRIAL_MEMO:
         return TRIAL_MEMO[key]
-    n_duels = sum(1 for row in history if row.get("mode") == "duel")
-    polarity, arm = schedule_mode(n, n_duels)
+    n_duels = sum(duel_counts(history))
+    polarity, arm = schedule_mode(n, history)
     rng = random.Random(n * 2654435761 % (2**31))
     numpy_rng = np.random.default_rng(n * 7919 + 13)
     pool = POOL[polarity]

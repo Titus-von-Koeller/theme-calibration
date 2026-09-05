@@ -12,12 +12,24 @@ import numpy as np
 import pytest
 
 from theme import responses, schedule
-from theme.schedule import duel_surface, run_info, schedule_mode, trial_for
+from theme.schedule import NIGHT_SHARE, block_polarity, duel_surface, run_info, schedule_mode, trial_for
 from theme.space import POOL
 from theme.stimulus import READING_PX, SURFACES
 
 BLOCK = 24  # trials per polarity block
 DUELS_PER_BLOCK = 16
+
+
+def duels(day, night):
+    """A log of answered duels, `day` of one polarity and `night` of the other."""
+    return [{"mode": "duel", "polarity": "day", "choice": 0}] * day + [
+        {"mode": "duel", "polarity": "night", "choice": 0}
+    ] * night
+
+
+#: Plenty of duels, balanced, so the bootstrap is long over and the polarity steering is
+#: at its target: what the arm schedule looks like in steady state.
+STEADY = duels(400, 600)
 
 
 @pytest.fixture(scope="module")
@@ -52,16 +64,42 @@ def test_a_duel_varies_the_theme_and_nothing_else(answered):
 def test_a_run_batches_trials_of_one_kind(slot, expected):
     """Sixteen duels, then four probes, then four hunts: one instruction serves a whole run,
     so no click is spent re-reading it and the task never switches mid-stride."""
-    _polarity, arm = schedule_mode(slot, n_duels=999)
+    _polarity, arm = schedule_mode(slot, STEADY)
     assert arm == expected
 
 
-def test_polarity_alternates_by_block():
+def test_polarity_alternates_by_block_until_the_log_can_steer():
     """Blocked rather than interleaved, so the observer's adaptation state is part of the
     measurement instead of noise in it -- a light page judged with dark-adapted eyes is a
     different stimulus."""
-    assert schedule_mode(0, 999)[0] != schedule_mode(BLOCK, 999)[0]
-    assert schedule_mode(0, 999)[0] == schedule_mode(2 * BLOCK, 999)[0]
+    assert schedule_mode(0, [])[0] != schedule_mode(BLOCK, [])[0]
+    assert schedule_mode(0, [])[0] == schedule_mode(2 * BLOCK, [])[0]
+
+
+def test_a_block_runs_night_while_night_is_short_of_its_share():
+    """Titus's call of 2026-09-05: night's fit predicted its own second half at 44.6%, so
+    the blocks steer night duels first rather than alternating. The steering is decided at
+    the block boundary from the duels before it, and every trial in the block agrees."""
+    short_of_night = duels(111, 104)
+    polarities = {block_polarity(n, short_of_night) for n in range(len(short_of_night), len(short_of_night) + BLOCK)}
+    assert polarities == {"night"}
+
+
+def test_a_block_runs_day_once_night_holds_its_share():
+    at_target = duels(400, 608)  # 1008 rows: a whole number of blocks, so the boundary is the log's end
+    assert block_polarity(len(at_target), at_target) == "day"
+    assert 0.5 < NIGHT_SHARE < 1.0, "a share outside (0.5, 1) is not 'weight night', it is a different rule"
+
+
+def test_a_block_does_not_change_polarity_because_a_duel_landed_inside_it():
+    """The boundary decides; rows arriving inside the block cannot flip it, or the run
+    gate's instruction would name one polarity and the stimulus another."""
+    history = duels(100, 100)
+    start = len(history) - len(history) % BLOCK
+    first = block_polarity(start, history)
+    for extra in range(1, BLOCK):
+        grown = history + duels(0, extra) if first == "night" else history + duels(extra, 0)
+        assert block_polarity(start + extra, grown) == first
 
 
 def test_surfaces_are_sampled_equally_often():
@@ -94,8 +132,8 @@ def test_each_surface_is_shown_at_the_size_it_is_read_at(answered):
 def test_run_info_agrees_with_the_arm_schedule():
     """Two functions describe the same schedule; they must not drift apart."""
     for n in range(3 * BLOCK):
-        polarity, arm, position, run_length = run_info(n, 999)
-        assert (polarity, arm) == schedule_mode(n, 999)
+        polarity, arm, position, run_length = run_info(n, STEADY)
+        assert (polarity, arm) == schedule_mode(n, STEADY)
         assert 0 <= position < run_length
 
 
