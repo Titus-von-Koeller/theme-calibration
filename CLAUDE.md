@@ -46,15 +46,21 @@ sibling project's environment, where `import theme` fails and marimo then report
 `NameError` on every cell downstream. `.vscode/settings.json` pins the interpreter for when
 this directory is the open folder.
 
-**In progress, branch `fourth-arm`, handed to a sibling session** (2026-09-05): the
-colour-discrimination trials as the app's fourth arm, with a clock -- queue item 6, chosen by
-Titus over another notebook sitting. The sibling works in its own worktree on that branch
-with the file partition its kick-off prompt names (schedule, server, trialspec, responses,
-vision, static, the vision notebook, their tests); nothing on main touches those files until
-the branch merges. It reports learnings; the coordinating session deposits them. The
-`_viz.py` white canvas is fixed (loop-to-cluster c835800). Still open from the same sitting:
-the patch engine reports the webview_quiet question-row anchor no longer matches on Claude
-Code 2.1.261.
+**Handover, mid-integration of `fourth-arm`** (2026-09-05, halted at Titus's request so a
+different model can take over). The branch's nine commits (76ff74b..a01a7ea) are MERGED into
+main as 408abbb; `pixi run check` is green on the merge and the full `pixi run test` was run
+on it and is GREEN (exit 0, no failures). Left to do, in order: (a)
+untrack `data/observer-logp-v2.1.json` (`git rm --cached`, verified with `git ls-files`; the
+`.npy` beside it is already ignored -- Titus decided the tracked-metadata-for-an-untracked-
+binary pair goes, and the work-lessons entry that says "still tracked" is then corrected);
+(b) `git worktree remove ../wt-fourth-arm`, delete the branch locally and on origin; (c)
+verify the sibling's seven reported learnings are deposited -- five already sit in
+work-lessons.md (dotfiles 449f101) and the CDP one in the keyhole driving notes (9f8b5fe),
+the two-logs rule and the chrome-ink rule in the method reef (a01a7ea); what is missing is
+the correction in (a); (d) then rewrite this paragraph: item 6 below is done, and
+`notebooks/vision.py` is now the reading half only, with `theme/vision.py` the generator
+both surfaces share. Still open from the same sitting: the patch engine reports the
+webview_quiet question-row anchor no longer matches on Claude Code 2.1.261.
 
 Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 
