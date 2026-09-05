@@ -100,6 +100,9 @@ numbering; the app's rows carry `rt_ms` and are told apart by `surface` and `gen
                       derived from the palette and walked to its floors
       census.py       classify a screenshot's colours against the palette; the foreign
                       ones are what still needs theming
+      appliers/       the writers for surfaces outside this repo: viz.py puts the graph
+                      furniture into loop-to-cluster's palette module, regions.py is the
+                      marker discipline every applier keeps
       schedule.py     which trial comes next
       trialspec.py    turning a trial into a prompt and cards
       responses.py    the append-only response log
@@ -128,6 +131,8 @@ numbering; the app's rows carry `rt_ms` and are told apart by `surface` and `gen
                                                    beside an untracked grid describes
                                                    something a fresh clone does not have
     notebooks/      the reading half: analysis, the vision calibration, the gallery
+    docs/           surfaces.md, the surface contract: every surface that draws the
+                    palette, what it reads, who writes it, how it is pixel-verified
     tests/          recovery tests: plant a truth, check it comes back
 
 Everything under `data/` except the four logs is derived. Regenerate it; never hand-edit
