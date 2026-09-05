@@ -85,6 +85,10 @@ there is no reaction-time channel there at all.
       surfaces.py     the notebook page and card border an applied theme derives from
                       its ground, so the elevation system survives a change of paper
       lived.py        record which of the last two applied themes was better to live in
+      signals.py      the convention-bound colours (error red, git green, the ANSI set),
+                      derived from the palette and walked to its floors
+      census.py       classify a screenshot's colours against the palette; the foreign
+                      ones are what still needs theming
       schedule.py     which trial comes next
       trialspec.py    turning a trial into a prompt and cards
       responses.py    the append-only response log
@@ -123,6 +127,7 @@ it.
     pixi run verdict    # print what the model believes, no browser
     pixi run publish    # the same, and write data/measured-theme.json for the applier
     pixi run lived -- current|previous   # which of the last two applied themes was better to live in
+    pixi run census -- shot.png          # what on this screenshot still speaks another palette
     pixi run test       # the recovery tests
     pixi run check      # ruff format --check and ruff check
 
