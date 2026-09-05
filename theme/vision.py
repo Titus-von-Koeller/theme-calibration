@@ -115,19 +115,35 @@ class Posterior:
         self.sidecar = directory / f"observer-logp-{obs.MODEL_VERSION}.npy"
         self.sidecar_meta = directory / f"observer-logp-{obs.MODEL_VERSION}.json"
         self._n = -1
+        self._last_row = None
         self._logp = None
 
     def logp_for(self, responses):
-        if self._n == len(responses):
+        """The dense log-posterior over `responses`, incrementally where they extend what
+        was folded in last time and from scratch otherwise.
+
+        Keyed on content, not on length alone: a cache keyed by row count served a stale
+        answer for different data of equal length more than once in this project, so the
+        rows folded in so far must be the START of the rows asked for -- checked on the last
+        one folded in, which is cheap and catches a different log of the same length.
+        """
+        extends = self._logp is not None and self._is_prefix_of(responses)
+        if extends and self._n == len(responses):
             return self._logp
         if self._logp is None:
             self._logp = self._from_sidecar(responses)
-        elif self._n < len(responses):
+        elif extends:
             self._logp = obs.add_loglik(self._logp, responses[self._n :])
-        else:  # the log shrank (an external edit): refit from scratch
+        else:  # a different log, or one that shrank under an external edit: refit
             self._logp = obs.add_loglik(np.zeros(self.n_cells), responses, chunk=40_000)
         self._n = len(responses)
+        self._last_row = responses[-1] if responses else None
         return self._logp
+
+    def _is_prefix_of(self, responses):
+        if self._n <= 0:
+            return True
+        return self._n <= len(responses) and responses[self._n - 1] == self._last_row
 
     def _from_sidecar(self, responses):
         stored_n = self._stored_length()
@@ -274,22 +290,25 @@ TRIAL_MEMO = {}
 TRIAL_MEMO_KEEP = 8
 
 
-def _history_key(n, history, generator):
-    if not history:
-        return (n, 0, None, generator)
-    return (n, len(history), history[-1].get("ts"), generator)
+def _history_key(n, history, generator, sizes):
+    """Identify the history by its length and the CONTENT of its last row, not its
+    timestamp: rows land seconds apart in a sitting but within the same second in a test
+    suite, and two logs of equal length whose last rows differ are different histories. One
+    row is cheap to serialise; the whole log is not, and does not need to be."""
+    last = json.dumps(history[-1], sort_keys=True) if history else None
+    return (n, len(history), last, generator, tuple(sizes))
 
 
 def trial_for(n, responses, sizes=SIZES, generator=NOTEBOOK_GENERATOR, posterior=None):
     """The nth discrimination trial, generated to maximise expected information about the
-    observer. Pure in (n, responses[:n], sizes, generator); memoised on the history.
+    observer. Pure in (n, responses[:n], sizes, generator); memoised on all four.
 
     An anchor trial (a declared 5%) shows a plain palette pair, easy by construction, as a
     check against model misspecification. Every other trial is a probe: a jittered palette
     colour against the odd colour whose answer teaches the model most.
     """
     history = responses[:n]
-    key = _history_key(n, history, generator)
+    key = _history_key(n, history, generator, sizes)
     if key in TRIAL_MEMO:
         return TRIAL_MEMO[key]
     rng = random.Random(n * 2654435761 % (2**31))
