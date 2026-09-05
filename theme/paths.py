@@ -37,6 +37,15 @@ DATA_DIR = Path(os.environ.get("THEME_DATA") or ROOT / "data")
 #: Every preference and timing response, appended one JSON object per line.
 RESPONSE_LOG = DATA_DIR / "aesthetics-responses.jsonl"
 
+#: Duels decided by living in a theme for a day rather than by a four-second look. Kept
+#: apart from the instrument's own log because the trial generator is a pure function of
+#: that log's prefix, and a row it never generated would shift every trial after it. The
+#: fit reads both logs as one.
+LIVED_LOG = DATA_DIR / "lived-responses.jsonl"
+
+#: Every theme that was actually applied to the editor, with the measurement it came from.
+APPLIED_LOG = DATA_DIR / "applied-themes.jsonl"
+
 #: The colour-discrimination trials that set the per-polarity dE floors.
 VISION_LOG = DATA_DIR / "calibration-responses.jsonl"
 

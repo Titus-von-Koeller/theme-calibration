@@ -66,5 +66,7 @@ analyse = { cmd = "marimo run notebooks/analysis.py --headless --no-token --host
 # which names the symptom and hides the cause. So each notebook gets a task.
 vision = { cmd = "marimo run notebooks/vision.py --headless --no-token --host 127.0.0.1 -p 2921", description = "Take a colour-discrimination sitting" }
 gallery = { cmd = "marimo run notebooks/gallery.py --headless --no-token --host 127.0.0.1 -p 2922", description = "Serve the palette gallery" }
+verdict = { cmd = "python -m theme.publish", description = "Print what the model believes, both polarities" }
+publish = { cmd = "python -m theme.publish --write", description = "Publish the champion palettes for the applier" }
 test = { cmd = "pytest -q", description = "Run the recovery tests" }
 check = { cmd = "ruff format --check . && ruff check .", description = "Lint and format check" }
