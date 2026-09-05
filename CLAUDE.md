@@ -46,14 +46,15 @@ sibling project's environment, where `import theme` fails and marimo then report
 `NameError` on every cell downstream. `.vscode/settings.json` pins the interpreter for when
 this directory is the open folder.
 
-**In progress, branch `fourth-arm`** (parked 2026-09-05 for a VSCode reload): the
+**In progress, branch `fourth-arm`, handed to a sibling session** (2026-09-05): the
 colour-discrimination trials as the app's fourth arm, with a clock -- queue item 6, chosen by
-Titus over another notebook sitting. The branch's WIP commit says what is done and what is
-next; resume there, make the suite green, merge. Also pending from the same session:
-`_viz.py`'s tensor tiles sit on Vega-Lite's default white chart background (Titus: the
-raster should be furniture) -- `background="transparent"` in `show()`, his notebooks so his
-go, given on 2026-09-05; and the patch engine reports the webview_quiet question-row
-anchor no longer matches on Claude Code 2.1.261.
+Titus over another notebook sitting. The sibling works in its own worktree on that branch
+with the file partition its kick-off prompt names (schedule, server, trialspec, responses,
+vision, static, the vision notebook, their tests); nothing on main touches those files until
+the branch merges. It reports learnings; the coordinating session deposits them. The
+`_viz.py` white canvas is fixed (loop-to-cluster c835800). Still open from the same sitting:
+the patch engine reports the webview_quiet question-row anchor no longer matches on Claude
+Code 2.1.261.
 
 Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 
