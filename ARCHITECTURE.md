@@ -30,17 +30,17 @@ flowchart TB
     O["observer fit"]
     L["legibility GP"]
   end
-  D -- "aesthetics-responses.jsonl" --> P
-  V -- "calibration-responses.jsonl" --> O
-  T -- "aesthetics-responses.jsonl" --> L
-  O -- "dE floors; realize refuses below them" --> P
-  L -- "drops candidates credibly slower to read" --> P
+  D -- "aesthetics log" --> P
+  V -- "vision log" --> O
+  T -- "aesthetics log" --> L
+  O -- "dE floors" --> P
+  L -- "drops the credibly slower" --> P
   P -- "champion, shelf, provenance" --> J["data/measured-theme.json"]
-  J -- "roles to keys, vscode-map.toml" --> S["settings.jsonc regions, dotfiles"]
-  J -- "FURNITURE region" --> F["_palette.py, loop-to-cluster"]
+  J -- "roles to keys" --> S["settings.jsonc regions"]
+  J -- "graph furniture" --> F["_palette.py region"]
   S -- "keys, picked up live" --> X["the screen"]
   X -. "census: foreign colours" .-> J
-  X -. "lived duel: lived-responses.jsonl" .-> P
+  X -. "lived duel" .-> P
 ```
 *Constraints flow into the preference model; the verdict flows out as one file; the screen returns a census and a lived duel.*
 
