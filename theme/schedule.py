@@ -102,10 +102,11 @@ def block_polarity(n, history):
 
 
 def schedule_mode(n, history):
-    """Twenty-four-trial polarity blocks, each a run of sixteen duels, then four
-    comprehension probes, then four find hunts — same-kind trials batched so one
-    instruction serves a whole run and no click is spent re-reading. All-duel until the
-    model has something to probe. `history` is the log before trial n."""
+    """Thirty-two-trial polarity blocks, each a run of sixteen duels, then four
+    comprehension probes, then four find hunts, then eight colour-discrimination trials —
+    same-kind trials batched so one instruction serves a whole run and no click is spent
+    re-reading. All-duel until the model has something to probe. `history` is the log
+    before trial n."""
     polarity = block_polarity(n, history)
     if sum(duel_counts(history)) < BOOTSTRAP_DUELS:
         return polarity, "duel"
@@ -122,13 +123,14 @@ def schedule_mode(n, history):
 def duel_surface(n, n_duels):
     """Which of the three surfaces duel n is shown on.
 
-    NOT `n % 3`. The schedule's block is 24 trials of which the first 16 are duels, and
-    3 divides 24, so a modular rotation never de-phases: editor takes 6 of every 16
-    duels and the other two 5 each, forever, and slot 0 is editor every single run. The
+    NOT `n % 3`. The schedule's block was 24 trials of which the first 16 are duels, and
+    3 divides 24, so a modular rotation never de-phased: editor took 6 of every 16
+    duels and the other two 5 each, forever, and slot 0 was editor every single run. The
     log showed exactly that lock -- 6/5/5 by day, 12/10/10 by night. It is both a
     standing 20% over-sample of one surface and a hard confound between surface and
     position within the run, where first-of-run means the freshest eyes and the largest
-    adaptation step from whatever was on screen before.
+    adaptation step from whatever was on screen before. The block is 32 now, which 3 does
+    not divide, but a fix that depends on the block length is a fix waiting to be undone.
 
     Instead: consecutive groups of three duels each get a shuffled permutation of the
     three surfaces. Balance is exact every three duels rather than asymptotic, and the

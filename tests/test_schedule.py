@@ -11,13 +11,21 @@ import random
 import numpy as np
 import pytest
 
-from theme import responses, schedule
-from theme.schedule import NIGHT_SHARE, block_polarity, duel_surface, run_info, schedule_mode, trial_for
+from theme import responses, schedule, vision
+from theme.schedule import (
+    BLOCK,
+    DISCRIMINATION_PER_BLOCK,
+    DUELS_PER_BLOCK,
+    NIGHT_SHARE,
+    PROBES_PER_BLOCK,
+    block_polarity,
+    duel_surface,
+    run_info,
+    schedule_mode,
+    trial_for,
+)
 from theme.space import POOL
 from theme.stimulus import READING_PX, SURFACES
-
-BLOCK = 24  # trials per polarity block
-DUELS_PER_BLOCK = 16
 
 
 def duels(day, night):
@@ -60,12 +68,32 @@ def test_a_duel_varies_the_theme_and_nothing_else(answered):
     assert "snippet" in trial and isinstance(trial["snippet"], int)
 
 
-@pytest.mark.parametrize("slot,expected", [(0, "duel"), (15, "duel"), (16, "comprehension"), (20, "search")])
+@pytest.mark.parametrize(
+    "slot,expected",
+    [
+        (0, "duel"),
+        (15, "duel"),
+        (16, "comprehension"),
+        (19, "comprehension"),
+        (20, "search"),
+        (23, "search"),
+        (24, "discrimination"),
+        (31, "discrimination"),
+    ],
+)
 def test_a_run_batches_trials_of_one_kind(slot, expected):
-    """Sixteen duels, then four probes, then four hunts: one instruction serves a whole run,
-    so no click is spent re-reading it and the task never switches mid-stride."""
+    """Sixteen duels, then four probes, then four hunts, then eight colour trials: one
+    instruction serves a whole run, so no click is spent re-reading it and the task never
+    switches mid-stride."""
     _polarity, arm = schedule_mode(slot, STEADY)
     assert arm == expected
+
+
+def test_the_block_is_the_sum_of_its_runs():
+    """The slot arithmetic in schedule_mode and run_info is written against these four
+    constants; a block that is not their sum leaves slots no arm claims, or claims twice."""
+    assert BLOCK == DUELS_PER_BLOCK + 2 * PROBES_PER_BLOCK + DISCRIMINATION_PER_BLOCK == 32
+    assert schedule_mode(BLOCK, STEADY)[1] == "duel", "the block after the colour run starts over with duels"
 
 
 def test_polarity_alternates_by_block_until_the_log_can_steer():
@@ -86,7 +114,8 @@ def test_a_block_runs_night_while_night_is_short_of_its_share():
 
 
 def test_a_block_runs_day_once_night_holds_its_share():
-    at_target = duels(400, 608)  # 1008 rows: a whole number of blocks, so the boundary is the log's end
+    at_target = duels(400, 624)  # 1024 rows: a whole number of blocks, so the boundary is the log's end
+    assert len(at_target) % BLOCK == 0
     assert block_polarity(len(at_target), at_target) == "day"
     assert 0.5 < NIGHT_SHARE < 1.0, "a share outside (0.5, 1) is not 'weight night', it is a different rule"
 
@@ -103,9 +132,10 @@ def test_a_block_does_not_change_polarity_because_a_duel_landed_inside_it():
 
 
 def test_surfaces_are_sampled_equally_often():
-    """NOT `n % 3`. The block is 24 trials of which 16 are duels, and 3 divides 24, so a
-    modular rotation never de-phases: one surface would take 6 of every 16 duels and the
-    others 5, forever. The log showed exactly that lock before it was fixed."""
+    """NOT `n % 3`. The block was 24 trials of which 16 are duels, and 3 divides 24, so a
+    modular rotation never de-phased: one surface took 6 of every 16 duels and the others
+    5, forever. The log showed exactly that lock before it was fixed, and the shuffled
+    permutation that fixed it has to stay balanced whatever the block length is."""
     duels = [duel_surface(n, 200) for n in range(BLOCK * 12) if n % BLOCK < DUELS_PER_BLOCK]
     counts = {surface: duels.count(surface) for surface in SURFACES}
     assert max(counts.values()) - min(counts.values()) <= 1, f"unbalanced over 12 blocks: {counts}"
@@ -163,6 +193,58 @@ def test_the_memo_never_serves_a_trial_built_from_a_different_log(answered):
     assert (with_none["mode"], with_none["theta_a"]) != (with_history["mode"], with_history["theta_a"]), (
         "an empty history must not be answered from the cached full-history trial"
     )
+
+
+class TestDiscriminationArm:
+    """The colour trials come from the vision generator and are numbered by the VISION log,
+    not by the app's own: the two logs interleave one series of discrimination trials
+    however the sittings are split between the notebook and the app."""
+
+    @pytest.fixture
+    def scratch_posterior(self, tmp_path):
+        return vision.Posterior(sidecar_dir=tmp_path)
+
+    def test_a_colour_trial_is_numbered_by_the_vision_log(self, scratch_posterior):
+        vision_rows = []
+        for m in range(3):
+            stimulus = vision.trial_for(
+                m, vision_rows, sizes=vision.APP_SIZES, generator=vision.APP_GENERATOR, posterior=scratch_posterior
+            )
+            vision_rows.append(
+                vision.build_entry(m, stimulus, stimulus["odd_position"], f"2026-09-05T10:00:0{m}+00:00")
+            )
+        trial = trial_for(24, STEADY, vision_rows, scratch_posterior)
+        assert trial["mode"] == "discrimination"
+        assert trial["vision_n"] == 3, "the next colour trial is the vision log's length"
+        assert trial["vision"]["generator"] == vision.APP_GENERATOR
+        assert trial["vision"]["size_px"] in vision.APP_SIZES
+
+    def test_the_stimulus_paints_the_page_with_its_own_ground(self, scratch_posterior):
+        trial = trial_for(24, STEADY, [], scratch_posterior)
+        assert trial["theme_a"]["ground"] == trial["vision"]["ground_hex"]
+        assert responses.surround_for(trial, trial["polarity"]) == trial["vision"]["ground_hex"]
+
+    def test_a_colour_trial_is_pure_in_its_number_and_both_logs(self, scratch_posterior):
+        schedule.TRIAL_MEMO.clear()
+        vision.TRIAL_MEMO.clear()
+        first = trial_for(24, STEADY, [], scratch_posterior)
+        schedule.TRIAL_MEMO.clear()
+        vision.TRIAL_MEMO.clear()
+        again = trial_for(24, STEADY, [], scratch_posterior)
+        assert first == again
+
+    def test_the_same_slot_on_a_longer_vision_log_is_a_different_trial(self, scratch_posterior):
+        """The memo is keyed on the vision log too: a colour trial served for one vision log
+        must not be handed back for another, or the row describes squares never shown."""
+        empty = trial_for(24, STEADY, [], scratch_posterior)
+        stimulus = vision.trial_for(
+            0, [], sizes=vision.APP_SIZES, generator=vision.APP_GENERATOR, posterior=scratch_posterior
+        )
+        one = [vision.build_entry(0, stimulus, stimulus["odd_position"], "2026-09-05T10:00:00+00:00")]
+        grown = trial_for(24, STEADY, one, scratch_posterior)
+        assert (empty["vision_n"], grown["vision_n"]) == (0, 1)
+        assert empty["vision"]["odd_position"] == vision.odd_position_for(0)
+        assert grown["vision"]["odd_position"] == vision.odd_position_for(1)
 
 
 def test_a_find_hunt_survives_a_page_whose_highlight_cannot_be_realized():

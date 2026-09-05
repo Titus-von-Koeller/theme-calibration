@@ -87,7 +87,7 @@ def test_twenty_consecutive_trials_stay_answerable(client, scratch_log):
     assert [r["n"] for r in rows] == list(range(20)), "trial numbers must be dense and ordered"
 
 
-@pytest.mark.parametrize("n,expected_polarity", [(0, "day"), (24, "night")])
+@pytest.mark.parametrize("n,expected_polarity", [(0, "day"), (schedule.BLOCK, "night")])
 def test_the_chrome_is_legible_on_both_polarities(client, n, expected_polarity):
     """A screenshot once caught the chrome rendering at 1.1:1 on a light ground, which no
     test asserted and every test passed through. The surround flips with polarity, so an
