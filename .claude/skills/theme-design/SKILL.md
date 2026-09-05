@@ -638,15 +638,18 @@ works for the editor generalises, on one distinction:
 
 Implementation, in order:
 
-1. **One artefact, many writers.** `measured-theme.json` stays the source. Each target gets
-   a marked region written by an applier, never a hand-set value: settings.jsonc (done),
-   the graph furniture in `_viz.py` (BASE, INK, gridline), and a generated mapping from
-   marimo's own variables (`--background`, `--card`, `--primary`, `--border`) onto the
-   `--vscode-*` keys the measured region owns, installed through the webview patch. The
-   chat webview is covered already because it reads the frame keys.
-2. **A surface contract table**: every surface, the keys or variables it reads, the palette
-   role each maps to, how it is pixel-verified. The reef physical checks every mapped role
-   has a writer. This is what stops the next temperature clash from arriving silently.
+1. **One artefact, many writers** -- done 2026-09-05, except the readers. `measured-theme.json`
+   is the source; settings.jsonc has its regions (the dotfiles applier, which now reads the
+   theming map `~/dotfiles/home/theme/vscode-map.toml`, ADR 012); loop-to-cluster's
+   `_palette.py` has `FURNITURE` and the ink pair, written by `theme/appliers/viz.py`; and
+   marimo's `--card`, `--popover` and `--muted-foreground` follow the keys through dotfiles
+   `patches/marimo_theme_vars.py`, the rest of its variables having read `--vscode-*` all
+   along. The chat webview reads the frame keys. Still to write: a chart that reads
+   `FURNITURE` for its axes, and marimo's `--codehilite-*` code-block palette.
+2. **A surface contract table** -- done: `docs/surfaces.md`, one row per surface with what it
+   reads, the role and colour class, the writer and the pixel check. `tests/test_appliers.py`
+   fails when a row names no writer or names one that does not exist; the reef physical checks
+   the cross-repo paths. This is what stops the next temperature clash from arriving silently.
 3. **Measure it.** Duels show only code today. Add an exhibit-page content kind -- a chart
    from the candidate palette's furniture plus a fixed data palette, beside prose and a
    widget row -- so preference over graph furniture and widget chrome is measured. A timed
