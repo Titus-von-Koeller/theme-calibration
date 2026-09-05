@@ -46,6 +46,15 @@ sibling project's environment, where `import theme` fails and marimo then report
 `NameError` on every cell downstream. `.vscode/settings.json` pins the interpreter for when
 this directory is the open folder.
 
+**In progress, branch `fourth-arm`** (parked 2026-09-05 for a VSCode reload): the
+colour-discrimination trials as the app's fourth arm, with a clock -- queue item 6, chosen by
+Titus over another notebook sitting. The branch's WIP commit says what is done and what is
+next; resume there, make the suite green, merge. Also pending from the same session:
+`_viz.py`'s tensor tiles sit on Vega-Lite's default white chart background (Titus: the
+raster should be furniture) -- `background="transparent"` in `show()`, his notebooks so his
+go, given on 2026-09-05; and the patch engine reports the webview_quiet question-row
+anchor no longer matches on Claude Code 2.1.261.
+
 Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 
 **Needs clicks, not code.** These are measurement limits; no engineering removes them.
