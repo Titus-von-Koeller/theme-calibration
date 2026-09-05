@@ -130,24 +130,37 @@ class Posterior:
         return self._logp
 
     def _from_sidecar(self, responses):
-        logp, covered, stored_n = None, 0, 0
-        if self.sidecar.exists() and self.sidecar_meta.exists():
-            meta = json.loads(self.sidecar_meta.read_text())
-            stored_n = meta.get("n", 0)
-            if stored_n <= len(responses) and meta.get("cells") == self.n_cells:
-                logp, covered = np.load(self.sidecar), stored_n
+        stored_n = self._stored_length()
+        logp, covered = None, 0
+        if self.sidecar.exists() and 0 < stored_n <= len(responses):
+            logp, covered = np.load(self.sidecar), stored_n
         if logp is None:
-            logp, covered = np.zeros(self.n_cells), 0
+            logp = np.zeros(self.n_cells)
         if responses[covered:]:
             obs.add_loglik(logp, responses[covered:], chunk=40_000)
         # Never let a shorter log replace a longer log's sidecar. A test's scratch log, or a
         # truncated copy, would otherwise overwrite minutes of refit for the real log with
         # its own posterior -- and the next real sitting would silently start from zero.
-        if len(responses) >= stored_n:
+        # The metadata is consulted whether or not the binary beside it exists: the binary
+        # is gitignored and the metadata is not, so a worktree or a fresh clone has exactly
+        # the metadata and no grid, and reading the length only when both were present let
+        # an empty log's fit overwrite "n": 748 with "n": 0 (2026-09-05, in a worktree, by
+        # the test suite). An empty log writes nothing: there is no work to cache.
+        if responses and len(responses) >= stored_n:
             self.sidecar.parent.mkdir(parents=True, exist_ok=True)
             np.save(self.sidecar, logp)
             self.sidecar_meta.write_text(json.dumps({"n": len(responses), "cells": self.n_cells}))
         return logp
+
+    def _stored_length(self):
+        """How many responses the sidecar on disk claims to cover: 0 when there is no
+        metadata, or it describes a different grid."""
+        if not self.sidecar_meta.exists():
+            return 0
+        meta = json.loads(self.sidecar_meta.read_text())
+        if meta.get("cells") != self.n_cells:
+            return 0
+        return int(meta.get("n", 0))
 
     def condensed_for(self, responses):
         """(posterior weights, grid columns) over the cells that matter -- the generator's

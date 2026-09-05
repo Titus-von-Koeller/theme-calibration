@@ -88,9 +88,31 @@ def test_a_foreign_log_never_overwrites_the_sidecar(tmp_path):
     """The sidecar caches minutes of refit for the real log. A shorter log -- a test's
     scratch log, a truncated copy -- must not replace it with its own posterior."""
     posterior = Posterior(sidecar_dir=tmp_path)
-    posterior.logp_for([])
-    assert posterior.sidecar_meta.exists(), "an empty log may seed an empty directory"
     posterior.sidecar_meta.write_text(json.dumps({"n": 748, "cells": posterior.n_cells}))
     posterior.sidecar.write_bytes(b"real")
     Posterior(sidecar_dir=tmp_path).logp_for([])
     assert posterior.sidecar.read_bytes() == b"real", "a shorter log overwrote the longer log's sidecar"
+    assert json.loads(posterior.sidecar_meta.read_text())["n"] == 748
+
+
+def test_metadata_without_its_grid_still_guards_the_sidecar(tmp_path):
+    """The grid is gitignored and its metadata is tracked, so a worktree or a fresh clone
+    has the metadata alone. That is the case in which the guard was skipped and the suite
+    rewrote the real metadata to "n": 0 (2026-09-05)."""
+    posterior = Posterior(sidecar_dir=tmp_path)
+    posterior.sidecar_meta.write_text(json.dumps({"n": 748, "cells": posterior.n_cells}))
+    posterior.logp_for([])
+    assert json.loads(posterior.sidecar_meta.read_text())["n"] == 748, "an empty log rewrote the metadata"
+    assert not posterior.sidecar.exists(), "an empty log has nothing to cache"
+
+
+def test_a_missing_grid_is_rebuilt_from_the_metadata_length_onward(tmp_path):
+    """Metadata claiming a length the binary cannot back must be ignored for LOADING and
+    honoured for WRITING: a log at least as long refits from zero and then replaces both."""
+    posterior = Posterior(sidecar_dir=tmp_path)
+    posterior.sidecar_meta.write_text(json.dumps({"n": 1, "cells": posterior.n_cells}))
+    trial = vision.trial_for(0, [], posterior=posterior)
+    row = build_entry(0, trial, trial["odd_position"], "2026-09-05T10:00:00+00:00")
+    logp = Posterior(sidecar_dir=tmp_path).logp_for([row])
+    assert posterior.sidecar.exists() and json.loads(posterior.sidecar_meta.read_text())["n"] == 1
+    assert float(abs(logp).max()) > 0, "one answered row must move the posterior off zero"
