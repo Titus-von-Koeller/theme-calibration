@@ -64,16 +64,18 @@ def _(mo):
     themes and ambient light. Grounds and sizes run in sixteen-trial blocks, because
     adaptation to a page is part of what is being measured rather than noise in it.
 
-    **What this task does not measure, and why that is load-bearing.** There is no clock
-    here. The aesthetics arms time every answer, which is why their trial surface had to
-    become a page that owns its own DOM (`pixi run serve`): a notebook rebuilds its widgets
-    between answers, and a rebuild between reveal and click lands directly on the reaction
-    time. This task scores accuracy only, so a rebuild costs a frame and not a measurement,
-    and the trial loop can honestly stay in a notebook. It also means the one input
-    asymmetry that mattered there -- reaching one side of the screen is further than the
-    other -- cannot corrupt a time here. It can still bias a *guess*, so the answer keys are
-    equidistant by construction, and the diagnostics below test whether a positional
-    preference survived anyway.
+    **Where the clock lives, and why it is not here.** The same trials are served with a
+    reaction-time clock by the web app (`pixi run serve`), as the fourth arm of every
+    32-trial block: eight colour trials after the find hunts, at the glyph sizes only,
+    stamped generator `v4`, surface `app`, with `rt_ms` and the input method on every row.
+    A notebook cannot give that clock honestly: it rebuilds its widgets between answers, and
+    a rebuild between reveal and click lands directly on the reaction time. This loop
+    therefore stays clockless -- it scores accuracy only, so a rebuild costs a frame and not
+    a measurement -- and its rows carry no `rt_ms` rather than a fake one. Both surfaces
+    append to the same log in one numbering, so a sitting here and a sitting there are one
+    series; the input asymmetry that corrupts a time cannot corrupt an accuracy, but it can
+    still bias a *guess*, so the answer keys are equidistant on both surfaces and the
+    diagnostics below test whether a positional preference survived anyway.
     """)
     return
 
@@ -802,10 +804,13 @@ def _(mo):
        Varying gap independently would identify them, at the cost of a stimulus parameter
        the model cannot fit today, which would land as pure noise. Recorded, confounded,
        documented.
-    4. **There is no reaction-time channel.** Accuracy only. This is what lets the trial loop
-       live in a notebook at all, and it is also why "decide within about a second" is
-       advice rather than a measurement: nothing here enforces or records it. A slow,
-       reasoned answer and a fast, perceptual one are the same row.
+    4. **The reaction-time channel is the app's, not this notebook's.** Rows answered here
+       are accuracy only, which is what lets this trial loop live in a notebook at all, and
+       is also why "decide within about a second" is advice rather than a measurement for
+       them: a slow, reasoned answer and a fast, perceptual one are the same row. Rows
+       answered in the app's colour arm carry `rt_ms`, `input_method` and `paused`, and are
+       told apart by `surface == "app"`; nothing below reads the clock yet, so the first
+       reading of what reaction time adds to a threshold is still to be written.
     5. **A third of the historical probe trials re-show a pair.** 332 distinct pairs over 489
        probe trials, because the information search kept converging on the same offsets from
        the same finite set of palette colours. Probe bases are now jittered off their palette

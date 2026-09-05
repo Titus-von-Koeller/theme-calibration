@@ -52,12 +52,45 @@ def gate_text_for(mode: str, polarity: str, run_len: int) -> str:
             "highlighted — click the current one, the strongest highlight, as fast as you "
             "can find it."
         ),
+        "discrimination": (
+            f"A run of {run_len} colour trials: four small squares, three of one colour and "
+            "one of another — press 1 to 4 for the odd one, or click it, as fast as you can. "
+            "Chance is 25%, and most of these should feel like guessing: that is the "
+            "instrument working."
+        ),
     }[mode]
 
 
 def _card(theme: dict, page: dict, code_px: int, **how) -> dict:
     """One card: its HTML, and the ground the stage is painted with behind it."""
     return {"html": render_card(theme, page, code_px, **how), "ground": theme["ground"]}
+
+
+def discrimination_prompt() -> str:
+    return 'Which square differs? <span style="opacity:.55">1 · 2 · 3 · 4, or click it.</span>'
+
+
+def squares_card(stimulus: dict) -> dict:
+    """The four squares of a discrimination trial, as one card on the trial's own ground.
+
+    Fixed pixels on purpose: patch size AND separation are stimulus parameters (spatial
+    summation; near-abutting fields give the most sensitive comparison and match how
+    adjacent glyphs are read). Each square carries its slot so a click answers it.
+    """
+    colours = [stimulus["base"]] * 4
+    colours[stimulus["odd_position"]] = stimulus["odd_color"]
+    size, gap = stimulus["size_px"], stimulus["gap_px"]
+    radius = max(1, round(size / 10))
+    squares = "".join(
+        f'<div class="square" data-slot="{slot}" style="width:{size}px;height:{size}px;'
+        f'border-radius:{radius}px;background:{colour}"></div>'
+        for slot, colour in enumerate(colours)
+    )
+    html_ = (
+        f'<div class="squares" style="display:flex;justify-content:center;align-items:center;'
+        f'gap:{gap}px;padding:48px 0">{squares}</div>'
+    )
+    return {"html": html_, "ground": stimulus["ground_hex"]}
 
 
 def stimulus_for(n: int, trial: dict, page: dict) -> tuple[str, list[dict], int | None]:
@@ -72,6 +105,9 @@ def stimulus_for(n: int, trial: dict, page: dict) -> tuple[str, list[dict], int 
     """
     rng = rng_for(n)
     surface = trial.get("surface", "editor")
+
+    if trial["mode"] == "discrimination":
+        return discrimination_prompt(), [squares_card(trial["vision"])], None
 
     if trial["mode"] == "duel":
         current_match = rng.choice(page["ident_ids"]) if page["ident_ids"] else None

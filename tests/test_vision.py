@@ -84,13 +84,73 @@ def test_the_record_says_whether_the_answer_was_right(scratch_posterior):
     assert "rt_ms" not in right, "a notebook row carries no clock rather than a fake one"
 
 
+def _answered(posterior, n, correct=True, ts="2026-09-05T10:00:00+00:00"):
+    trial = vision.trial_for(n, [], posterior=posterior)
+    choice = trial["odd_position"] if correct else (trial["odd_position"] + 1) % 4
+    return build_entry(n, trial, choice, ts)
+
+
+def test_a_different_log_of_the_same_length_is_refit_rather_than_served(scratch_posterior, tmp_path):
+    """The posterior is stateful over one log and used to trust length alone: a second log
+    of equal length got the first log's posterior. Same content, same answer; different
+    content, a refit -- and the refit must equal what a fresh posterior computes."""
+    import numpy as np
+
+    right, wrong = _answered(scratch_posterior, 0), _answered(scratch_posterior, 0, correct=False)
+    posterior = Posterior(sidecar_dir=tmp_path)
+    from_right = posterior.logp_for([right]).copy()
+    from_wrong = posterior.logp_for([wrong])
+    assert not np.allclose(from_right, from_wrong), "a wrong answer and a right one cannot agree"
+    assert np.allclose(from_wrong, Posterior(sidecar_dir=tmp_path / "fresh").logp_for([wrong]))
+    assert np.allclose(
+        posterior.logp_for([wrong, right]), Posterior(sidecar_dir=tmp_path / "f2").logp_for([wrong, right])
+    )
+
+
+def test_the_memo_tells_histories_apart_by_content_and_by_sizes(scratch_posterior):
+    """Rows written by the suite share a timestamp to the second, so a key on the last
+    row's timestamp served one log's trial for another. And the same generator name over
+    different sizes is a different stimulus."""
+    right, wrong = _answered(scratch_posterior, 0), _answered(scratch_posterior, 0, correct=False)
+    assert right["ts"] == wrong["ts"]
+    assert vision._history_key(1, [right], APP_GENERATOR, APP_SIZES) != vision._history_key(
+        1, [wrong], APP_GENERATOR, APP_SIZES
+    )
+    assert vision._history_key(0, [], APP_GENERATOR, APP_SIZES) != vision._history_key(0, [], APP_GENERATOR, SIZES)
+    assert vision._history_key(1, [right], APP_GENERATOR, APP_SIZES) == vision._history_key(
+        1, [dict(right)], APP_GENERATOR, APP_SIZES
+    )
+
+
 def test_a_foreign_log_never_overwrites_the_sidecar(tmp_path):
     """The sidecar caches minutes of refit for the real log. A shorter log -- a test's
     scratch log, a truncated copy -- must not replace it with its own posterior."""
     posterior = Posterior(sidecar_dir=tmp_path)
-    posterior.logp_for([])
-    assert posterior.sidecar_meta.exists(), "an empty log may seed an empty directory"
     posterior.sidecar_meta.write_text(json.dumps({"n": 748, "cells": posterior.n_cells}))
     posterior.sidecar.write_bytes(b"real")
     Posterior(sidecar_dir=tmp_path).logp_for([])
     assert posterior.sidecar.read_bytes() == b"real", "a shorter log overwrote the longer log's sidecar"
+    assert json.loads(posterior.sidecar_meta.read_text())["n"] == 748
+
+
+def test_metadata_without_its_grid_still_guards_the_sidecar(tmp_path):
+    """The grid is gitignored and its metadata is tracked, so a worktree or a fresh clone
+    has the metadata alone. That is the case in which the guard was skipped and the suite
+    rewrote the real metadata to "n": 0 (2026-09-05)."""
+    posterior = Posterior(sidecar_dir=tmp_path)
+    posterior.sidecar_meta.write_text(json.dumps({"n": 748, "cells": posterior.n_cells}))
+    posterior.logp_for([])
+    assert json.loads(posterior.sidecar_meta.read_text())["n"] == 748, "an empty log rewrote the metadata"
+    assert not posterior.sidecar.exists(), "an empty log has nothing to cache"
+
+
+def test_a_missing_grid_is_rebuilt_from_the_metadata_length_onward(tmp_path):
+    """Metadata claiming a length the binary cannot back must be ignored for LOADING and
+    honoured for WRITING: a log at least as long refits from zero and then replaces both."""
+    posterior = Posterior(sidecar_dir=tmp_path)
+    posterior.sidecar_meta.write_text(json.dumps({"n": 1, "cells": posterior.n_cells}))
+    trial = vision.trial_for(0, [], posterior=posterior)
+    row = build_entry(0, trial, trial["odd_position"], "2026-09-05T10:00:00+00:00")
+    logp = Posterior(sidecar_dir=tmp_path).logp_for([row])
+    assert posterior.sidecar.exists() and json.loads(posterior.sidecar_meta.read_text())["n"] == 1
+    assert float(abs(logp).max()) > 0, "one answered row must move the posterior off zero"

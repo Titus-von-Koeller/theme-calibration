@@ -16,8 +16,9 @@ piece worked, and the trial still vanished from the screen.
 import numpy as np
 import pytest
 
-from theme import responses
-from theme.server import app, get_log
+from theme import responses, vision
+from theme import server as theme_server
+from theme.server import app, get_log, get_posterior, get_vision_log
 
 #: A flat pool of feasible points, so the search and the likelihood are exercised without
 #: the colour layer's floors deciding which candidates exist. The floors have their own
@@ -50,6 +51,25 @@ def search_model():
     model.POOL, model.realize_many, model.prior_mean = original
 
 
+@pytest.fixture(scope="session", autouse=True)
+def no_test_reaches_the_real_posterior(tmp_path_factory):
+    """Every process-wide default posterior points at a scratch directory for the whole
+    suite.
+
+    The observer posterior caches its grid beside the real vision log. A test that builds
+    a colour trial without naming a posterior -- the schedule tests do, walking a block
+    ahead of the real log -- falls back to the module default, and the first run of this
+    suite in a worktree rewrote the tracked sidecar metadata to "n": 0 that way. The guard
+    in `Posterior` has been fixed; this makes the property structural as well, so no test
+    can write beside the measurements whatever it forgets to pass.
+    """
+    scratch = vision.Posterior(sidecar_dir=tmp_path_factory.mktemp("default-posterior"))
+    originals = (vision.POSTERIOR, theme_server.DEFAULT_POSTERIOR)
+    vision.POSTERIOR = theme_server.DEFAULT_POSTERIOR = scratch
+    yield
+    vision.POSTERIOR, theme_server.DEFAULT_POSTERIOR = originals
+
+
 @pytest.fixture
 def scratch_log(tmp_path) -> responses.ResponseLog:
     """An empty response log in a temporary directory.
@@ -62,29 +82,54 @@ def scratch_log(tmp_path) -> responses.ResponseLog:
 
 
 @pytest.fixture
-def client(scratch_log):
-    """A TestClient whose app writes to the scratch log."""
+def scratch_vision_log(tmp_path) -> responses.ResponseLog:
+    """An empty colour-discrimination log, for the same reason: the colour arm appends its
+    measurement to the vision log, and the real one is 748 answered trials."""
+    return responses.ResponseLog(tmp_path / "vision.jsonl")
+
+
+@pytest.fixture
+def scratch_posterior(tmp_path) -> vision.Posterior:
+    """An observer posterior whose sidecar lives beside the scratch logs, never beside the
+    real ones. Fresh per test: the posterior is stateful over one log."""
+    return vision.Posterior(sidecar_dir=tmp_path / "posterior")
+
+
+@pytest.fixture
+def client(scratch_log, scratch_vision_log, scratch_posterior):
+    """A TestClient whose app reads and writes the scratch logs and fits the scratch
+    posterior -- all three seams, so the colour arm can be answered end to end."""
     from fastapi.testclient import TestClient
 
     app.dependency_overrides[get_log] = lambda: scratch_log
+    app.dependency_overrides[get_vision_log] = lambda: scratch_vision_log
+    app.dependency_overrides[get_posterior] = lambda: scratch_posterior
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
 
 
-def correct_choice(trial_number: int, answered: list[dict]) -> int:
-    """Which token id answers trial `trial_number` correctly.
+def correct_choice(
+    trial_number: int,
+    answered: list[dict],
+    vision_answered: list[dict] = (),
+    posterior: vision.Posterior | None = None,
+) -> int:
+    """Which token id -- or, on the colour arm, which slot -- answers trial `trial_number`.
 
     Derived the same way the recorder derives it -- the per-trial RNG seeded from the
-    trial number alone -- which is exactly the property that lets a response be recorded
-    from the log rather than from whatever the page was holding. A test that recomputed it
-    some other way would be testing its own arithmetic.
+    trial number alone, or the vision generator's slot permutation -- which is exactly the
+    property that lets a response be recorded from the log rather than from whatever the
+    page was holding. A test that recomputed it some other way would be testing its own
+    arithmetic.
     """
     from theme import trialspec
     from theme.schedule import trial_for
     from theme.server import page_for
 
-    trial = trial_for(trial_number, answered)
+    trial = trial_for(trial_number, answered, vision_answered, posterior)
+    if trial["mode"] == "discrimination":
+        return trial["vision"]["odd_position"]
     page = page_for(trial)
     rng = trialspec.rng_for(trial_number)
     if trial["mode"] == "duel":
@@ -94,10 +139,14 @@ def correct_choice(trial_number: int, answered: list[dict]) -> int:
     return int(rng.choice(page["ident_ids"]))
 
 
-def report(trial_number: int, choice: int, *, ms: float = 1500.0, pauses: int = 0) -> dict:
-    """What the page posts back for one answered trial."""
+def report(
+    trial_number: int, choice: int, *, ms: float = 1500.0, pauses: int = 0, vision_n: int | None = None
+) -> dict:
+    """What the page posts back for one answered trial. `vision_n` is what a colour trial
+    echoes: the vision log's length when it was shown."""
     return {
         "n": trial_number,
+        "vision_n": vision_n,
         "choice": choice,
         "t_render": 1000.0,
         "t_click": 1000.0 + ms,

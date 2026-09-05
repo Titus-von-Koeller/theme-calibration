@@ -18,7 +18,7 @@ drawn from a fixed list — plus a declared share of uniform pairs (7%) and
 champion-versus-worst anchors (5%) as insurance against a model that only asks questions
 it already believes.
 
-Three kinds of trial, in batched runs so one instruction serves many clicks:
+Four kinds of trial, in batched runs so one instruction serves many clicks:
 
 - **a duel** — two candidate pages render the same code; pick the one you would rather
   live in. Reaction time enters the likelihood drift-diffusion style, so a fast click is
@@ -33,6 +33,13 @@ Three kinds of trial, in batched runs so one instruction serves many clicks:
   difficulty and reaction time then measured which kind was drawn.
 - **a find hunt** — several matches are highlighted; click the current one. This calibrates
   how loud the find highlight has to be before it stops earning its salience.
+- **a colour trial** — four small squares on one ground, three of one colour and one of
+  another; press 1 to 4 for the odd one. These are the colour-discrimination trials that
+  fit the observer model behind every contrast floor, generated to maximise expected
+  information about that model and served here at glyph scale (16 and 10 px) with a
+  reaction-time clock, which is the channel the notebook version of the task could not
+  provide. The page takes the trial's own ground, since adaptation is part of the
+  measurement; the instrument's chrome picks the ink that contrasts with it.
 
 The timed arms are not decoration. They fit a second Gaussian process over log reaction
 time, which becomes a **constraint** on the verdict: a theme that is credibly slower to
@@ -64,10 +71,12 @@ comfort: reaching the left card is a different distance of mouse travel than the
 reaction time carried a systematic side component on top of the fitted side bias. The
 input method is recorded per response so mouse and key trials stay separable.
 
-The colour-discrimination calibration in `notebooks/vision.py` is the exception, and for a
-stated reason: it scores accuracy only and runs no clock, so a widget rebuild between
-answers costs a frame rather than a measurement. Its own prose says what that costs it —
-there is no reaction-time channel there at all.
+The colour-discrimination trials come from one generator, `theme/vision.py`, and are
+served on two surfaces. The app's colour arm times every answer. The notebook
+`notebooks/vision.py` keeps a clockless trial loop -- it scores accuracy only, so a widget
+rebuild between answers costs a frame rather than a measurement -- and the reading half:
+the fitted thresholds and their diagnostics. Both surfaces append to the same log in one
+numbering; the app's rows carry `rt_ms` and are told apart by `surface` and `generator`.
 
 ## Layout
 
@@ -78,6 +87,8 @@ there is no reaction-time channel there at all.
       codegen.py      generated stimulus code; a page stays fresh for as long as the
                       corpus lasts, and every response records whether its page was
       observer.py     the fitted observer behind the dE thresholds
+      vision.py       the colour-discrimination trial generator and its warm posterior,
+                      shared by the app's colour arm and the notebook's clockless loop
       stimulus.py     a trial's page, and its HTML
       model.py        the preference GP and the reaction-time GP
       verdict.py      what the log says the best theme is, per polarity, as one object
@@ -95,8 +106,10 @@ there is no reaction-time channel there at all.
       server.py       three JSON endpoints and one static page
       static/         that page: index.html, app.css, app.js
     data/           the measurements, and the published champion
-                      aesthetics-responses.jsonl   duels, probes and hunts
-                      calibration-responses.jsonl  the colour-discrimination trials
+                      aesthetics-responses.jsonl   duels, probes, hunts, and a pointer
+                                                   row for every colour trial
+                      calibration-responses.jsonl  the colour-discrimination trials,
+                                                   from the notebook and from the app
                       lived-responses.jsonl        duels decided by living in a theme
                       applied-themes.jsonl         every palette applied to the editor,
                                                    with the measurement it came from
@@ -120,9 +133,9 @@ it.
 
 ## Running it
 
-    pixi run serve      # the trials, at 127.0.0.1:2919
+    pixi run serve      # the trials -- duels, probes, hunts, timed colour trials -- at 127.0.0.1:2919
     pixi run analyse    # the analysis notebook, at 127.0.0.1:2920
-    pixi run vision     # a colour-discrimination sitting, at 127.0.0.1:2921
+    pixi run vision     # a clockless colour-discrimination sitting, at 127.0.0.1:2921
     pixi run gallery    # the palette gallery, at 127.0.0.1:2922
     pixi run verdict    # print what the model believes, no browser
     pixi run publish    # the same, and write data/measured-theme.json for the applier
@@ -172,8 +185,9 @@ lands on its own baseline instead of on the theme surface. The floors are tested
 *invariants* rather than as examples, with Hypothesis searching for the theta that breaks
 them; that is what caught contrast being checked before hex quantisation, which every
 example-based test had passed straight through. And `tests/test_click_path.py` answers
-twenty consecutive trials through the real app, because every piece of an earlier version
-worked in isolation while the trial vanished from the screen.
+thirty-three consecutive trials through the real app -- across all four arms and into the
+next block -- because every piece of an earlier version worked in isolation while the trial
+vanished from the screen.
 
 Changes that were tried, measured, and **rejected** are recorded there too. A
 plausible-sounding change that quietly degrades an instrument is the expensive kind of
