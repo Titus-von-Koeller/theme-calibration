@@ -80,8 +80,6 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _():
-    import json
-
     import numpy as np
     import pandas as pd
 
@@ -100,68 +98,227 @@ def _():
             "README, 'Running it', has both."
         ) from no_package
 
-    from theme.model import (
-        axis_consensus,
-        best_set,
-        candidates,
-        factor_effect,
-        fitted,
-        mean_utility_at,
-        progress_report,
-        rt_at,
-        rt_exponent,
-        rt_fit,
-        rt_penalty,
-        spread_out,
-        surface_effect,
-    )
-    from theme.paths import CHAMPION, RESPONSE_LOG
+    from theme.model import rt_exponent
+    from theme.paths import CHAMPION, LIVED_LOG, RESPONSE_LOG
     from theme.responses import ResponseLog
     from theme.space import AXES, DE_MIN, THRESH_DETAIL, VISION_N
     from theme.stimulus import render_card, snippet_for
+    from theme.verdict import publish, verdict_for
 
     return (
         AXES,
         CHAMPION,
         DE_MIN,
+        LIVED_LOG,
         RESPONSE_LOG,
         ResponseLog,
         THRESH_DETAIL,
         VISION_N,
-        axis_consensus,
-        best_set,
-        candidates,
-        factor_effect,
-        fitted,
-        json,
-        mean_utility_at,
         np,
         pd,
-        progress_report,
+        publish,
         render_card,
-        rt_at,
         rt_exponent,
-        rt_fit,
-        rt_penalty,
         snippet_for,
-        spread_out,
-        surface_effect,
+        verdict_for,
     )
 
 
 @app.cell(hide_code=True)
-def _(RESPONSE_LOG, ResponseLog, mo):
+def _(LIVED_LOG, RESPONSE_LOG, ResponseLog, mo):
     # Read through the same object the server appends with, so there is exactly one
-    # definition of what a response log is. A refresh re-reads the file, which is how a
-    # sitting in the app and this page open beside it stay in step.
-    _responses = ResponseLog(RESPONSE_LOG).read()
-    get_responses, _set_responses = mo.state(_responses)
+    # definition of what a response log is. The lived duels -- themes compared by living in
+    # them, recorded by `pixi run lived` -- are a second file the fit reads as part of the
+    # same log; they stay apart on disk because the trial generator is a pure function of
+    # the instrument's own log and a row it never generated would shift every trial after
+    # it. A refresh re-reads both, which is how a sitting in the app and this page open
+    # beside it stay in step.
+    _instrument = ResponseLog(RESPONSE_LOG).read()
+    _lived = ResponseLog(LIVED_LOG).read()
+    get_responses, _set_responses = mo.state(_instrument + _lived)
     mo.md(
-        f"Read **{len(_responses):,}** responses from `{RESPONSE_LOG.name}`."
-        if _responses
-        else f"`{RESPONSE_LOG.name}` is empty or absent — take a sitting with `pixi run serve` first."
+        f"Read **{len(_instrument):,}** responses from `{RESPONSE_LOG.name}`"
+        + (f" and **{len(_lived)}** lived duels from `{LIVED_LOG.name}`." if _lived else ".")
+        if _instrument
+        else f"`{RESPONSE_LOG.name}` is empty or absent -- take a sitting with `pixi run serve` first."
     )
     return (get_responses,)
+
+
+@app.cell(hide_code=True)
+def _(AXES, mo):
+    # The sentences of the verdict, each a function of the verdict object and nothing else,
+    # so the wording lives in one place and the numbers in another (theme.verdict). One
+    # sentence per case throughout: joining fragments once produced "Your clicks have still
+    # open on accent hue rotation" the first time night had nothing settled.
+
+    def headline(verdict):
+        lead_pct = 100 * verdict.lead
+        if verdict.verdict == "single":
+            return (
+                f"**one theme leads** -- it holds {lead_pct:.0f}% of the probability of being the "
+                f"best theme, so this is the one to apply"
+            )
+        if verdict.verdict == "plateau":
+            return (
+                f"**a plateau of {len(verdict.credible)} distinct themes** -- the leader holds "
+                f"{lead_pct:.0f}%, and these together hold half the probability of being best. They "
+                f"are equally good by measurement, not merely acceptable: every one has already "
+                f"cleared the legibility floors, so pick by eye"
+            )
+        return (
+            f"**not yet decided** -- the strongest theme holds only {lead_pct:.0f}% of the "
+            f"probability of being best, which is what a thin log looks like rather than a real "
+            f"plateau. {len(verdict.credible)} themes share half the mass; more duels on this "
+            f"polarity will separate them"
+        )
+
+    def legibility_sentence(verdict):
+        # Whether taste is costing reading speed -- as a DIFFERENCE with an interval, never
+        # two point estimates side by side. The posterior sd on either page is around 0.3 in
+        # log time, so the difference of two is wider still, and the minimum over several
+        # hundred noisy predictions is an extreme order statistic, biased low.
+        note = verdict.legibility
+        if note is None:
+            return ""
+        low, high = note.gap_interval
+        head = (
+            f" {note.n_excluded} of {note.n_candidates} candidates were dropped first as credibly "
+            f"slower to read than the fastest ({note.n_timed} timed trials). The leader reads in "
+            f"about {note.champion_seconds / 1000:.1f} s"
+        )
+        if note.champion_credibly_slower:
+            return head + (
+                f", and that is credibly slower than the quickest page the model knows by "
+                f"{note.gap_log_time:+.2f} in log time (95% interval [{low:+.2f}, {high:+.2f}]) -- "
+                f"taste and speed are pulling apart here, and the shelf is worth re-reading with "
+                f"that in mind."
+            )
+        return head + (
+            f", which is not measurably slower than the quickest page the model knows: the "
+            f"difference is {note.gap_log_time:+.2f} in log time with a 95% interval of "
+            f"[{low:+.2f}, {high:+.2f}], so liking these pages is costing you no measurable "
+            f"reading speed."
+        )
+
+    def progress_sentence(verdict):
+        progress = verdict.progress
+        if progress is None:
+            return ""
+        moved = 100 * (progress["lead_now"] - progress["lead_then"])
+        shrunk = progress["set_then"] - progress["set_now"]
+        head = (
+            f" Over the last {progress['back']} duels the leader's share moved {moved:+.0f} points "
+            f"and the credible set changed by {-shrunk:+d} themes"
+        )
+        if progress["duels_to_decide"] is not None:
+            # A leader gaining ground: extrapolate, and say plainly that it is a straight
+            # line through two points.
+            return head + (
+                f"; at that rate roughly {progress['duels_to_decide']} more duels would give one "
+                f"theme a majority -- a naive straight-line estimate, worth reading as 'another "
+                f"sitting' or 'another ten'."
+            )
+        if shrunk > 0:
+            # Mass can move AWAY from the leader while the set shrinks. That is not stalling,
+            # it is the model resolving a real plateau.
+            return head + (
+                " -- so evidence is still arriving and the field is narrowing, but the mass is "
+                "spreading across the survivors rather than concentrating: what a genuine plateau "
+                "looks like as it comes into focus. More duels sharpen WHICH themes are on the "
+                "shelf, not which one wins."
+            )
+        return head + (
+            " -- flat on both counts, so more duels on this polarity are buying little and the "
+            "shelf above is the answer rather than a waypoint."
+        )
+
+    def factor_sentence(verdict):
+        # Whether one theme is even the right SHAPE of answer: if the optimum moves between
+        # the editor, the chat panel and a notebook, converging one theme onto all three
+        # averages over a real difference instead of resolving it. Two factors are tested per
+        # polarity, so about one reading in every two or three sittings lands under 0.10
+        # with nothing real behind it; the sentence says so.
+        n, gain, p_value, _wording = verdict.factors["surface"]
+        polarity = verdict.polarity
+        if n < 24:
+            text = (
+                f" Surface (editor / panel / notebook) is logged but only {n} {polarity} duels carry "
+                f"a label so far, too few to ask whether the optimum moves between them."
+            )
+        elif p_value < 0.02:
+            text = (
+                f" **Surface matters**: a per-surface tilt earns {gain:+.3f} nats/duel on held-out "
+                f"choices against its own permutation null (p = {p_value:.3f}, {n} duels). One theme "
+                f"is the wrong shape of answer here -- the editor, the chat panel and the notebook "
+                f"want different pages."
+            )
+        elif p_value < 0.10:
+            text = (
+                f" Surface may matter: a per-surface tilt earns {gain:+.3f} nats/duel held out "
+                f"(p = {p_value:.3f} over {n} duels) -- suggestive, not established, and one of four "
+                f"such factor readings, of which roughly one lands here by chance anyway. Duels are "
+                f"surface-balanced in groups of three, so this sharpens on its own; worth re-reading "
+                f"at about twice this many duels."
+            )
+        else:
+            text = (
+                f" No surface effect this data can see (p = {p_value:.2f} over {n} duels), so one "
+                f"theme across editor, panel and notebook remains the right shape of answer."
+            )
+        n, _gain, p_value, _wording = verdict.factors["code_px"]
+        if n >= 24 and p_value < 0.10:
+            text += (
+                f" Type size also tilts the answer (p = {p_value:.3f} over {n} duels): the early "
+                f"duels judged at 12-13px are measuring a different question from those at the "
+                f"real 14 and 16, and should carry less weight."
+            )
+        elif n >= 24:
+            text += (
+                f" Duels judged at different type sizes agree (p = {p_value:.2f}), so the early "
+                f"12-13px rounds pool safely with the ones at the real reading sizes."
+            )
+        return text
+
+    def consensus_sentence(verdict):
+        # What the plateau actually disagrees about: four pages that share a ground and
+        # differ only in accent hue read as "four identical themes" unless the reader is
+        # told the ground is decided and the hue is not.
+        settled = sorted((c for c in verdict.consensus if c[1] < 0.55), key=lambda c: c[1])
+        open_axes = sorted((c for c in verdict.consensus if c[1] > 0.85), key=lambda c: -c[1])
+
+        def names(group):
+            return ", ".join(f"**{AXES[axis]}**" for axis, _spread, _mean in group[:3])
+
+        if settled and open_axes:
+            return (
+                f" Your clicks have settled {names(settled)}, and have not yet separated "
+                f"{names(open_axes)} -- so the themes on this shelf mostly differ in the second "
+                f"group, and that is what further duels decide."
+            )
+        if settled:
+            return (
+                f" Your clicks have settled {names(settled)}, and no axis is still wide open: what "
+                f"remains is fine separation rather than an open question."
+            )
+        if open_axes:
+            verb = "are" if len(open_axes) > 1 else "is"
+            return (
+                f" No axis has settled yet, and {names(open_axes)} {verb} still wide open -- the "
+                f"shelf differs there, and that is what further duels decide."
+            )
+        return ""
+
+    def verdict_prose(verdict):
+        return mo.md(
+            f"### The {verdict.polarity} verdict\n\n{headline(verdict)}.{legibility_sentence(verdict)}"
+            f"{progress_sentence(verdict)}{factor_sentence(verdict)}{consensus_sentence(verdict)}"
+            " Shown below: the leader, then the most *different* members of the set holding half "
+            "the probability mass -- near-identical themes are grouped first, so what you see are "
+            "choices rather than variations of one."
+        )
+
+    return (verdict_prose,)
 
 
 @app.cell(hide_code=True)
@@ -171,37 +328,26 @@ def _(
     DE_MIN,
     THRESH_DETAIL,
     VISION_N,
-    axis_consensus,
-    best_set,
-    candidates,
-    factor_effect,
-    fitted,
     get_responses,
-    json,
-    mean_utility_at,
     mo,
     np,
     pd,
-    progress_report,
+    publish,
     render_card,
-    rt_at,
     rt_exponent,
-    rt_fit,
-    rt_penalty,
     snippet_for,
-    spread_out,
-    surface_effect,
+    verdict_for,
+    verdict_prose,
 ):
     # A stable page for the champion preview: the same generated code every time, so
     # what changes between renders is the theme and nothing else.
     _preview_snip = snippet_for(0)
     _log = get_responses()
     if not _log:
-        _out = mo.md("*No responses yet — the analysis fills in as you answer.*")
+        _out = mo.md("*No responses yet -- the analysis fills in as you answer.*")
     else:
         _frame = pd.DataFrame(_log)
         _n_duel = int((_frame["mode"] == "duel").sum())
-        _fit = fitted(_log) if _n_duel >= 5 else None
         _blocks = [
             mo.hstack(
                 [
@@ -215,7 +361,7 @@ def _(
                     mo.stat(str(int((_frame["mode"] == "search").sum())), label="find hunts", bordered=True),
                     mo.stat(
                         f"{DE_MIN['day']:.1f} / {DE_MIN['night']:.1f}",
-                        label=f"ΔE floors (day/night), {VISION_N} vision trials",
+                        label=f"dE floors (day/night), {VISION_N} vision trials",
                         bordered=True,
                     ),
                 ],
@@ -223,333 +369,94 @@ def _(
                 gap=1,
             )
         ]
-        if _fit is not None:
-            for _pol in ("day", "night"):
-                # The verdict is computed over BRED candidates, not the frozen pool: the
-                # answer should be the best theme the search can reach, not the best of 512
-                # points fixed before the first click.
-                _bred = candidates(_fit, _pol, np.random.default_rng(4242), n_trial=0)[0]
-                _thetas = [_b[0] for _b in _bred]
-                _themes = [_b[1] for _b in _bred]
-                # The timed arms bind here. A page you like but read slowly is not a
-                # winner, so candidates the legibility surface says are credibly slower
-                # than the fastest are dropped BEFORE the preference verdict is computed --
-                # constraint first, preference second, the same order the contrast floors
-                # use. A thin or noisy RT log drops nothing, by construction.
-                _rf = rt_fit(_log, _pol, _fit.get("ls"))
-                _rt_note = ""
-                if _rf is not None:
-                    _excl, _secs = rt_penalty(_rf, _thetas, _pol)
-                    _rvar = rt_at(_rf, _thetas, _pol)[1]
-                    _keep_idx = [_i for _i in range(len(_thetas)) if not _excl[_i]]
-                    if len(_keep_idx) >= 32:
-                        # Whether taste is costing reading speed -- as a DIFFERENCE
-                        # with an interval, never as two point estimates side by side. The
-                        # old wording put "5.6 s" next to "3.4 s for the quickest page the
-                        # model knows" and let the reader draw a conclusion the data does not
-                        # support twice over: the posterior sd on either page is around 0.25
-                        # to 0.38 in log time, so the difference of two is wider still; and
-                        # the minimum over several hundred noisy predictions is an extreme
-                        # order statistic, biased low, so the fast end of that comparison was
-                        # partly a selection effect. Measured on the current log the gap is
-                        # +0.03 [-0.80, +0.85] by day: no measurable cost to the preferred
-                        # pages, which is the reassuring answer and also the honest one.
-                        _lead_i = _keep_idx[0]
-                        _fast_i = int(np.argmin(_secs))
-                        _dmu = float(np.log(_secs[_lead_i]) - np.log(_secs[_fast_i]))
-                        _dsd = float(np.sqrt(_rvar[_lead_i] + _rvar[_fast_i]))
-                        _rt_note = (
-                            f" {int(_excl.sum())} of {len(_thetas)} candidates were dropped first "
-                            f"as credibly slower to read than the fastest ({_rf['n']} timed trials). "
-                            f"The leader reads in about {_secs[_lead_i] / 1000:.1f} s"
-                        )
-                        if _dmu - 1.96 * _dsd > 0:
-                            _rt_note += (
-                                f", and that is credibly slower than the quickest page the model "
-                                f"knows by {_dmu:+.2f} in log time (95% interval "
-                                f"[{_dmu - 1.96 * _dsd:+.2f}, {_dmu + 1.96 * _dsd:+.2f}]) — taste "
-                                f"and speed are pulling apart here, and the shelf is worth "
-                                f"re-reading with that in mind."
-                            )
-                        else:
-                            _rt_note += (
-                                f", which is not measurably slower than the quickest page the model "
-                                f"knows: the difference is {_dmu:+.2f} in log time with a 95% "
-                                f"interval of [{_dmu - 1.96 * _dsd:+.2f}, {_dmu + 1.96 * _dsd:+.2f}], "
-                                f"so liking these pages is costing you no measurable reading speed."
-                            )
-                        _thetas = [_thetas[_i] for _i in _keep_idx]
-                        _themes = [_themes[_i] for _i in _keep_idx]
-                _mu = mean_utility_at(_fit, _thetas, _pol)
-                _ci = int(np.argmax(_mu))
-                _champ_theta, _champ = _thetas[_ci], _themes[_ci]
-                _beats = float(np.mean(1.0 / (1.0 + np.exp(-(_mu[_ci] - _mu)))))
-                # Is there ONE best theme or a plateau of equals? P(best) over the joint
-                # posterior answers it as a distribution rather than a ranking: mass
-                # concentrated on one page means a winner, mass spread means any member of
-                # the credible set is a defensible choice -- and the ones shown are picked
-                # for spread, since a plateau is only useful if its members look different.
-                _bs = best_set(_fit, _pol, _thetas, seed=17)
-                _cred = _bs["credible"]
-                _reps = spread_out(_thetas, _cred, 4, _fit.get("ls"))
-                # Each card carries its GROUP's probability, which is the number the verdict
-                # above quotes. Its own p_best is the mass of one point in a continuum and is
-                # always far smaller -- printing that next to "the leader holds 24%" made the
-                # leader's card read 2%. Ordered by it too, so the leader is the first card
-                # rather than wherever the spread-out walk happened to place it.
-                _gp_of = dict(zip(_cred, _bs["credible_p"], strict=True))
-                _reps = sorted(_reps, key=lambda _i: -_gp_of.get(_i, 0.0))
-                _lead_pct = 100 * _bs["lead"]
-                if _bs["verdict"] == "single":
-                    _verdict = (
-                        f"**one theme leads** — it holds {_lead_pct:.0f}% of the probability of "
-                        f"being the best theme, so this is the one to apply"
+        for _pol in ("day", "night"):
+            # Everything below is read off one object, computed once in theme.verdict: the
+            # candidates are BRED rather than taken from the frozen pool (the answer should be
+            # the best theme the search can reach, not the best of 512 points fixed before
+            # the first click), the timed arms bind before the preference posterior picks a
+            # winner, and P(best) is sampled from the joint posterior and grouped.
+            _v = verdict_for(_log, _pol)
+            if _v is None:
+                continue
+            _blocks.append(verdict_prose(_v))
+            # Full-bleed, and each card wide enough for the page it holds. The prose column
+            # is 610px because that is a good measure for READING; four theme cards inside it
+            # are 306px each, which clips the page mid-token. A page needs about 520px to
+            # render whole at 12px, so the row steps out of the measure and the cards wrap
+            # instead of shrinking.
+            _cards = "".join(
+                f'<figure style="margin:0;flex:0 0 520px;max-width:100%">'
+                f'<figcaption style="font:600 13px/1.5 system-ui,sans-serif;margin:0 0 6px 2px">'
+                f"{100 * _v.shown_probability[_i]:.0f}%"
+                f"{' · leads' if _i == _v.shown[0] else ''}"
+                f'<span style="font-weight:400;opacity:.65"> · utility {_v.mean_utility[_i]:.2f}</span>'
+                f"</figcaption>"
+                f'<div style="background:{_v.themes[_i]["ground"]};border-radius:8px;'
+                f'padding:14px;overflow:hidden">'
+                + render_card(_v.themes[_i], _preview_snip, 12, prose=False)
+                + "</div></figure>"
+                for _i in _v.shown
+            )
+            _blocks.append(
+                mo.Html(
+                    '<div style="width:94vw;margin-left:calc(-47vw + 50%);display:flex;'
+                    'flex-wrap:wrap;gap:22px;justify-content:center">' + _cards + "</div>"
+                )
+            )
+            _champ = _v.champion_theme
+            _blocks += [
+                mo.md(
+                    f"**Current best {_pol} page** -- beats a random feasible theme with "
+                    f"p = {_v.beats_random:.2f}; utility marginals below are the posterior-mean change "
+                    f"from the champion when one axis is pushed to its walls (negative = the "
+                    f"champion's setting is better):"
+                ),
+                mo.Html(
+                    f'<div style="background:{_champ["ground"]};border-radius:10px;padding:20px;max-width:620px">'
+                    + render_card(
+                        _champ,
+                        _preview_snip,
+                        16,
+                        find_current=(_preview_snip["ident_ids"] or [None])[0],
                     )
-                elif _bs["verdict"] == "plateau":
-                    _verdict = (
-                        f"**a plateau of {len(_cred)} distinct themes** — the leader holds "
-                        f"{_lead_pct:.0f}%, and these together hold half the probability of being "
-                        f"best. They are equally good by measurement, not merely acceptable: every "
-                        f"one has already cleared the legibility floors, so pick by eye"
-                    )
-                else:
-                    _verdict = (
-                        f"**not yet decided** — the strongest theme holds only {_lead_pct:.0f}% of "
-                        f"the probability of being best, which is what a thin log looks like rather "
-                        f"than a real plateau. {len(_cred)} themes share half the mass; more duels "
-                        f"on this polarity will separate them"
-                    )
-                _prog = progress_report(_log, _pol, _thetas)
-                _prog_note = ""
-                if _prog is not None:
-                    _moved = 100 * (_prog["lead_now"] - _prog["lead_then"])
-                    _shrunk = _prog["set_then"] - _prog["set_now"]
-                    _head = (
-                        f" Over the last {_prog['back']} duels the leader's share moved "
-                        f"{_moved:+.0f} points and the credible set changed by {-_shrunk:+d} themes"
-                    )
-                    if _prog["duels_to_decide"] is not None:
-                        # A leader gaining ground: extrapolate, and say plainly that it is
-                        # a straight line through two points.
-                        _prog_note = (
-                            f"{_head}; at that rate roughly {_prog['duels_to_decide']} more duels "
-                            f"would give one theme a majority — a naive straight-line estimate, "
-                            f"worth reading as 'another sitting' or 'another ten'."
-                        )
-                    elif _shrunk > 0:
-                        # The distinction that matters and that a two-case reading gets
-                        # wrong: mass can move AWAY from the leader while the set shrinks.
-                        # That is not stalling, it is the model resolving a real plateau --
-                        # evidence still arriving, just not concentrating on one page.
-                        _prog_note = (
-                            f"{_head} — so evidence is still arriving and the field is narrowing, "
-                            f"but the mass is spreading across the survivors rather than "
-                            f"concentrating: what a genuine plateau looks like as it comes into "
-                            f"focus. More duels sharpen WHICH themes are on the shelf, not which "
-                            f"one wins."
-                        )
-                    else:
-                        _prog_note = (
-                            f"{_head} — flat on both counts, so more duels on this polarity are "
-                            f"buying little and the shelf above is the answer rather than a "
-                            f"waypoint."
-                        )
-                # Whether one theme is even the right SHAPE of answer. Cheap to ask and
-                # expensive to get wrong: if the optimum moves between the editor, the chat
-                # panel and a notebook, then converging one theme onto all three averages
-                # over a real difference instead of resolving it.
-                _sn, _sd_gain, _sp, _sv = surface_effect(_log, _pol)
-                # Duels used to run at 12-13px, a size nobody reads code at; they now run at
-                # each surface's real reading size (14 in editors, 16 in notebook cells).
-                # That pools two stimulus regimes in one log, so the same test asks
-                # whether they can be pooled: a code_px interaction means the older small-type
-                # duels are answering a different question and should be discounted.
-                _zn, _zd, _zp, _zv = factor_effect(_log, _pol, "code_px")
-                if _sn < 24:
-                    _surf_note = (
-                        f" Surface (editor / panel / notebook) is logged but only {_sn} {_pol} duels "
-                        f"carry a label so far, too few to ask whether the optimum moves between them."
-                    )
-                elif _sp < 0.02:
-                    _surf_note = (
-                        f" **Surface matters**: a per-surface tilt earns {_sd_gain:+.3f} nats/duel on "
-                        f"held-out choices against its own permutation null (p = {_sp:.3f}, {_sn} duels). "
-                        f"One theme is the wrong shape of answer here — the editor, the chat panel and "
-                        f"the notebook want different pages."
-                    )
-                elif _sp < 0.10:
-                    # Two stimulus factors are tested here (surface, type size) across two
-                    # polarities, so about one reading in every two or three sittings lands
-                    # this side of 0.10 with nothing real behind it. Saying so is the
-                    # difference between a finding and a coincidence with a p-value.
-                    _surf_note = (
-                        f" Surface may matter: a per-surface tilt earns {_sd_gain:+.3f} nats/duel "
-                        f"held out (p = {_sp:.3f} over {_sn} duels) — suggestive, not established, "
-                        f"and one of four such factor readings, of which roughly one lands here by "
-                        f"chance anyway. Duels are surface-balanced in groups of three, so this "
-                        f"sharpens on its own; worth re-reading at about twice this many duels."
-                    )
-                else:
-                    _surf_note = (
-                        f" No surface effect this data can see (p = {_sp:.2f} over {_sn} duels), so "
-                        f"one theme across editor, panel and notebook remains the right shape of answer."
-                    )
-                if _zn >= 24 and _zp < 0.10:
-                    _surf_note += (
-                        f" Type size also tilts the answer (p = {_zp:.3f} over {_zn} duels): the "
-                        f"early duels judged at 12-13px are measuring a different question from "
-                        f"those at the real 14 and 16, and should carry less weight."
-                    )
-                elif _zn >= 24:
-                    _surf_note += (
-                        f" Duels judged at different type sizes agree (p = {_zp:.2f}), so the early "
-                        f"12-13px rounds pool safely with the ones at the real reading sizes."
-                    )
-                # What the plateau actually disagrees about. Without this, four pages that
-                # share a ground and differ only in accent hue read as "four identical
-                # themes" and the word "distinct" looks wrong -- when in fact one question
-                # is answered and another is wide open.
-                _cons = axis_consensus(_bs, _thetas)
-                _settled = sorted([_c for _c in _cons if _c[1] < 0.55], key=lambda _c: _c[1])
-                _open = sorted([_c for _c in _cons if _c[1] > 0.85], key=lambda _c: -_c[1])
-
-                # One sentence per case: joining fragments produced "Your clicks have still
-                # open on accent hue rotation" the first time night had nothing settled.
-                def _names(_g):
-                    return ", ".join(f"**{AXES[_a]}**" for _a, _r, _m in _g[:3])
-
-                if _settled and _open:
-                    _axis_note = (
-                        f" Your clicks have settled {_names(_settled)}, and have not yet separated "
-                        f"{_names(_open)} — so the themes on this shelf mostly differ in the second "
-                        f"group, and that is what further duels decide."
-                    )
-                elif _settled:
-                    _axis_note = (
-                        f" Your clicks have settled {_names(_settled)}, and no axis is still wide "
-                        f"open: what remains is fine separation rather than an open question."
-                    )
-                elif _open:
-                    _verb = "are" if len(_open) > 1 else "is"
-                    _axis_note = (
-                        f" No axis has settled yet, and {_names(_open)} {_verb} still wide open — "
-                        f"the shelf differs there, and that is what further duels decide."
-                    )
-                else:
-                    _axis_note = ""
+                    + "</div>"
+                ),
+                mo.ui.table(pd.DataFrame(_v.axis_sweep(AXES)), selection=None),
+            ]
+        # Publish rather than print. The applier reads this file, so the palette crosses
+        # from instrument to editor without a human copying hex codes -- the step where a
+        # digit gets dropped and nobody notices for a week. Written on every analysis pass,
+        # so it always reflects the current log; the applier is what decides when the editor
+        # changes, and it is never this notebook. `pixi run publish` writes the same file
+        # without a browser.
+        if _n_duel >= 5:
+            _published = publish(_log)
+            _blocks.append(
+                mo.md(
+                    f"Champions published to `{CHAMPION.name}` for {', '.join(_published)} -- apply with "
+                    f"`apply-measured-theme` (dotfiles), which reads this file and rewrites the marked "
+                    f"regions of settings.jsonc, and record what living in it was like with "
+                    f"`pixi run lived`. The palettes, for reading:"
+                )
+            )
+            for _pol, _palette in _published.items():
                 _blocks.append(
-                    mo.md(
-                        f"### The {_pol} verdict\n\n{_verdict}.{_rt_note}{_prog_note}{_surf_note}{_axis_note}"
-                        f" Shown below: the leader, then the "
-                        f"most *different* members of the set holding half the probability mass — "
-                        f"near-identical themes are grouped first, so what you see are choices "
-                        f"rather than variations of one."
-                    )
-                )
-                # Full-bleed, and each card wide enough for the page it holds. The prose
-                # column is 610px because that is a good measure for READING; four theme
-                # cards inside it are 306px each, which clips the page mid-token and leaves
-                # palettes compared by the left two-thirds of every line. A page needs
-                # about 520px to render whole at 12px, so the row steps out of the measure
-                # and the cards wrap instead of shrinking -- on a full-screen 8k display all
-                # four sit side by side at full page width, and on a narrow one they become
-                # two rows of whole pages rather than one row of cropped ones.
-                _cards = "".join(
-                    f'<figure style="margin:0;flex:0 0 520px;max-width:100%">'
-                    f'<figcaption style="font:600 13px/1.5 system-ui,sans-serif;margin:0 0 6px 2px">'
-                    f"{100 * _gp_of.get(_i, 0.0):.0f}%"
-                    f"{' · leads' if _i == _reps[0] else ''}"
-                    f'<span style="font-weight:400;opacity:.65"> · utility {_mu[_i]:.2f}</span>'
-                    f"</figcaption>"
-                    f'<div style="background:{_themes[_i]["ground"]};border-radius:8px;'
-                    f'padding:14px;overflow:hidden">'
-                    + render_card(_themes[_i], _preview_snip, 12, prose=False)
-                    + "</div></figure>"
-                    for _i in _reps
-                )
-                _blocks.append(
-                    mo.Html(
-                        '<div style="width:94vw;margin-left:calc(-47vw + 50%);display:flex;'
-                        'flex-wrap:wrap;gap:22px;justify-content:center">' + _cards + "</div>"
-                    )
-                )
-                _sweep = []
-                for _ax in range(9):
-                    _lo_t = np.array(_champ_theta, dtype=float)
-                    _hi_t = _lo_t.copy()
-                    _lo_t[_ax], _hi_t[_ax] = 0.15, 0.85
-                    _mm = mean_utility_at(_fit, [_lo_t, _hi_t], _pol)
-                    _sweep.append(
-                        {
-                            "axis": AXES[_ax],
-                            "low (0.15)": round(float(_mm[0] - _mu[_ci]), 2),
-                            "high (0.85)": round(float(_mm[1] - _mu[_ci]), 2),
-                        }
-                    )
-                # Publish rather than print. The applier reads this file, so the palette
-                # crosses from instrument to editor without a human copying hex codes -- the
-                # step where a digit gets dropped and nobody notices for a week. Written on
-                # every analysis pass, so it always reflects the current log; the applier is
-                # what decides when the editor changes, and it is never this notebook.
-                _pub = {}
-                if CHAMPION.exists():
-                    try:
-                        _pub = json.loads(CHAMPION.read_text())
-                    except Exception:
-                        _pub = {}
-                _pub[_pol] = {
-                    "ground": _champ["ground"],
-                    "find_fill": _champ["find_fill"],
-                    "keyword": _champ["keyword"],
-                    "function": _champ["function"],
-                    "string": _champ["string"],
-                    "comment": _champ["comment"],
-                    "ink": _champ["ink"],
-                    "punct": _champ["punct"],
-                    "p_best": round(float(_bs["lead"]), 4),
-                    "verdict": _bs["verdict"],
-                    "n_duels": int(_frame[(_frame["mode"] == "duel") & (_frame["polarity"] == _pol)].shape[0]),
-                }
-                CHAMPION.write_text(json.dumps(_pub, indent=2, sort_keys=True) + "\n")
-                _blocks += [
-                    mo.md(
-                        f"**Current best {_pol} page** — beats a random feasible theme with "
-                        f"p ≈ {_beats:.2f}; utility marginals below are the posterior-mean change "
-                        f"from the champion when one axis is pushed to its walls (negative = the "
-                        f"champion's setting is better):"
-                    ),
-                    mo.Html(
-                        f'<div style="background:{_champ["ground"]};border-radius:10px;padding:20px;max-width:620px">'
-                        + render_card(
-                            _champ,
-                            _preview_snip,
-                            16,
-                            find_current=(_preview_snip["ident_ids"] or [None])[0],
-                        )
-                        + "</div>"
-                    ),
-                    mo.ui.table(pd.DataFrame(_sweep), selection=None),
-                    mo.md(
-                        f"Champion published to `{CHAMPION.name}` — apply it with "
-                        f"whatever applier owns the editor settings: it reads this file, so the palette "
-                        f"crosses from instrument to editor without anyone retyping a hex code. "
-                        f"The same palette, for reading:"
-                    ),
                     mo.md(
                         "```jsonc\n"
                         + "{\n"
-                        + f"  // {_pol} · ground {_champ['ground']}\n"
-                        + f'  "editor.background": "{_champ["ground"]}",\n'
-                        + f'  "editor.findMatchBackground": "{_champ["find_fill"]}d9",\n'
-                        + f'  "editor.findMatchHighlightBackground": "{_champ["find_fill"]}73",\n'
+                        + f"  // {_pol} · ground {_palette['ground']} · page {_palette['page']}\n"
+                        + f'  "editor.background": "{_palette["ground"]}",\n'
+                        + f'  "editor.findMatchBackground": "{_palette["find_fill"]}d9",\n'
+                        + f'  "editor.findMatchHighlightBackground": "{_palette["find_fill"]}73",\n'
                         + '  "textMateRules": {\n'
-                        + f'    "keyword": "{_champ["keyword"]}", "function": "{_champ["function"]}",\n'
-                        + f'    "string|number": "{_champ["string"]}", "comment (italic)": "{_champ["comment"]}",\n'
-                        + f'    "variables/ink": "{_champ["ink"]}", "punctuation": "{_champ["punct"]}"\n'
+                        + f'    "keyword": "{_palette["keyword"]}", "function": "{_palette["function"]}",\n'
+                        + f'    "string|number": "{_palette["string"]}", '
+                        + f'"comment (italic)": "{_palette["comment"]}",\n'
+                        + f'    "variables/ink": "{_palette["ink"]}", "punctuation": "{_palette["punct"]}"\n'
                         + "  }\n"
                         + "}\n```"
-                    ),
-                ]
+                    )
+                )
         _tasks = _frame[_frame["mode"] == "comprehension"]
         if len(_tasks) >= 6:
             # Correct AND never-paused: a paused trial's clock measures the break, not the
@@ -560,7 +467,7 @@ def _(
                 mo.md(
                     f"**Comprehension**: {len(_tasks)} probes, {100 * _tasks['correct'].mean():.0f}% correct; "
                     f"median time-to-click {_ok['rt_ms'].median():.0f} ms "
-                    f"(fastest quartile {_ok['rt_ms'].quantile(0.25):.0f} ms — the gap is what theming can win)."
+                    f"(fastest quartile {_ok['rt_ms'].quantile(0.25):.0f} ms -- the gap is what theming can win)."
                 )
             )
         _rtp, _rtp_scores = rt_exponent(_log)
@@ -570,8 +477,8 @@ def _(
                 mo.md(
                     f"**The clock's weight is fitted, not assumed**: duels are weighted by "
                     f"(median time / this time) to the power {_rtp}, chosen by held-out log-loss "
-                    f"over {{0, ¼, ½, ¾}} and refit every 25 duels. Zero is in that set on purpose — "
-                    f"it means ignoring the clock — and it currently loses by {_gain:.4f} nats per "
+                    f"over {{0, 1/4, 1/2, 3/4}} and refit every 25 duels. Zero is in that set on purpose -- "
+                    f"it means ignoring the clock -- and it currently loses by {_gain:.4f} nats per "
                     f"duel, so reading a fast click as strong evidence is "
                     + ("earning its keep." if _gain > 0.002 else "not earning much; watch it.")
                 )
@@ -585,7 +492,7 @@ def _(
                 _blocks.append(
                     mo.md(
                         f"**Find hunts**: {len(_hunts)} trials, {100 * _hunts['correct'].mean():.0f}% correct; "
-                        f"log time-to-find slope over salience {_z[0]:+.3f} per ΔE "
+                        f"log time-to-find slope over salience {_z[0]:+.3f} per dE "
                         f"(negative = louder is genuinely faster; near zero = salience past this point buys nothing "
                         f"and beauty should take the wheel)."
                     )
@@ -593,12 +500,12 @@ def _(
         if THRESH_DETAIL.get("day"):
             _blocks.append(
                 mo.md(
-                    "Constraint provenance — your fitted 75%-correct thresholds in CAM16-UCS ΔE (day / night): "
+                    "Constraint provenance -- your fitted 75%-correct thresholds in CAM16-UCS dE (day / night): "
                     + ", ".join(
                         f"{_ax} {THRESH_DETAIL['day'][_ax]:.1f} / {THRESH_DETAIL['night'][_ax]:.1f}"
                         for _ax in THRESH_DETAIL["day"]
                     )
-                    + " — the pairwise floor is 2x the minimum "
+                    + " -- the pairwise floor is 2x the minimum "
                     + f"({2 * DE_MIN['day']:.1f} day, {2 * DE_MIN['night']:.1f} night)."
                 )
             )
