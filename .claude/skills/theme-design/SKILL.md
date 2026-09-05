@@ -399,6 +399,44 @@ interact, and choose the best combination — every step from measurement.
   missing guarantee is the signal to change the architecture, not to add a fourth.
 - **Verify the click path as a path.** Every unit passed while the trial vanished from the
   screen. A suite that only checks the model's arithmetic cannot see that.
+- **A four-second duel and a day of living measure different things, and the first one
+  disagrees with him.** The day duels put the champion at the light wall of the space
+  (ground lightness 1.0, warmth 0.98, P(best) mass at 0.90 on lightness, and in 78 day
+  duels involving a page above 0.9 that page won 66), while the paper he chose by living
+  in it was walked DOWN from near-white because near-white tires over hours. A brief
+  high-contrast page looks crisper than it reads all day; the duel cannot see fatigue.
+  So an applied palette is a hypothesis until it has been lived in, and the lived duel
+  (`pixi run lived`, surface `vscode`, no clock) is the arm that arbitrates. Corollary
+  for the space: an optimum sitting on a box wall is either a real preference for
+  beyond the wall or the wall doing its job; the wall here IS the fatigue floor, so do
+  not widen it on the duels' say-so.
+- **Held-out accuracy above chance with held-out log-loss below chance is an overconfident
+  model, and a time-split is the cheapest drift test.** Night at 104 duels: accuracy
+  62.5%, log-loss 0.81 against chance's 0.69, and a fit on the first half predicts the
+  second half at 44.6% (day: 67.6%, 0.56, 61.5%). Report all three, not the accuracy alone;
+  a fit that only just beats a coin on new duels and is confidently wrong when wrong has
+  no verdict to give, whatever its P(best) says.
+- **The champion and the leader are two different pages.** The published palette is the
+  posterior-MEAN argmax; the card that leads the shelf is the P(best) GROUP leader from the
+  joint posterior. They coincide with a single winner (day) and diverge on a plateau
+  (night). Say so whenever they differ, and never let a readout put the leader's
+  probability under the champion's card.
+- **An applier that owns one key of a system owns the system.** Writing the measured ground
+  under `editor.background` alone left notebook cells, terminal, sidebar and panel on the
+  old paper, breaking the one-paper rule the elevation design exists for. The instrument
+  therefore publishes the derived page and border with the ground (`theme/surfaces.py`,
+  steps read off the hand-chosen values), and the applier writes every key of the system
+  or none. Same for the semantic mirror: Pylance names an imported module `module`, ty
+  (which the marimo extension runs on notebook cells) names it `namespace`; with only the
+  first, `import numpy` rendered the theme's raw orange in every cell -- pixel-measured
+  #f77d25 -- until the second rule was added.
+- **Position bias is not a constant of the observer.** The 61% right-hand preference at 79
+  duels is 50%/51% left at 215 (z -0.09 day, +0.20 night), and the fitted term sits at
+  +0.09 logits. Keep fitting it; never bake a measured bias in as a correction.
+- **The clock barely earns its keep, and the readout says so.** Exponent 0.25 beats
+  ignoring the clock by 0.0013 nats/duel on held-out log-loss at 215 duels, under the 0.002
+  the notebook treats as earning. Keep zero in the grid; the channel stays honest by being
+  allowed to lose.
 - A surface's beauty is allowed to vote and never to overrule the instruments; Titus's eyes
   outrank both — his comparison across a gallery row is the final measurement.
 - Verify a theme change by **pixel-sampling a screenshot against the expected hexes**, never by
@@ -426,6 +464,12 @@ interact, and choose the best combination — every step from measurement.
 4. **Apply and verify per surface**: `nh home switch .` lands the symlink in seconds and VSCode
    picks it up live, no reload; then re-sample every surface kind touched — plain editor,
    native notebook, terminal, chat — because each can dissent independently.
+5. **A measured palette goes through the applier, never by hand**: `pixi run publish` in
+   theme-calibration, then `apply-measured-theme --apply` (dotfiles, on PATH), which rewrites
+   the `// >>> measured:*` regions of settings.jsonc and appends the application with its
+   provenance to `data/applied-themes.jsonl`. Verify by pixel-sampling a code region per
+   role against the published hexes (a screenshot of any open window over CDP is a read
+   and needs no lock). Glyph cores hit the exact hex at 14-16 px; the rest is antialiasing.
 
 ## What "pretty" means here — the aesthetics the program applies
 
@@ -501,6 +545,17 @@ Beauty votes through these; the instruments still veto, and Titus's eyes outrank
   rules, routing, and resume points.
 
 ## Standing verdicts (dated, superseded by newer measurements in the instruments)
+
+- 2026-09-05, 320 responses / 215 duels: **day has a single leader** at 52% of the
+  probability of being best (credible set of 1, flat over the last 25 duels; held-out
+  accuracy 67.6%): ground #f9ecdd at the light wall, keyword violet #7f0179, function
+  teal #004b64, literals brown-orange #7d2800, ink #474442. **Night is a plateau of eight**
+  led at 16%, and its fit does not yet predict (time-split 44.6%), so its leader is
+  provisional. Both are APPLIED to settings.jsonc and pixel-verified; the day paper is a
+  hypothesis against the fatigue floor until lived duels say otherwise. No surface effect
+  visible at 56/64 labelled duels; no type-size effect; side bias washed out. The size
+  exponent is still unmeasured (748 vision trials, all at 104 px): the glyph-scale floor
+  remains the 2x constant.
 
 - 2026-09-02, 602 trials: the exhibit-scale (104px) stage is **converged** — 68% CIs on all
   six per-axis thresholds within ±5%, further clicking at this scale is low-yield. Numbers and
