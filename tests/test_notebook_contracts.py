@@ -21,6 +21,7 @@ pick an interpreter -- so the presence of that task is a contract worth assertin
 """
 
 import ast
+import contextlib
 import importlib
 import tomllib
 from pathlib import Path
@@ -60,6 +61,11 @@ def test_the_notebooks_are_discovered():
 def test_notebook_imports_resolve(notebook, module, name):
     """Every name a notebook imports from `theme` exists in the module it names."""
     imported = importlib.import_module(module)
+    if not hasattr(imported, name):
+        # `from theme import vision` names a submodule, which is an attribute of the package
+        # only once something has imported it. Importing it IS the check.
+        with contextlib.suppress(ModuleNotFoundError):
+            importlib.import_module(f"{module}.{name}")
     assert hasattr(imported, name), (
         f"{notebook.name} imports `{name}` from {module}, which no longer defines it. "
         "A rename in the package is a rename in the notebooks."

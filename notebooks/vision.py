@@ -102,94 +102,41 @@ def _():
         ) from no_package
 
     from theme import observer as obs
+    from theme import vision
     from theme.paths import VISION_LOG
     from theme.responses import ResponseLog
+    from theme.vision import (
+        ANCHOR_SHARE,
+        BLOCK,
+        GROUND_LIST,
+        NOTEBOOK_GENERATOR,
+        PALETTES,
+        POSTERIOR,
+        SIZES,
+    )
 
-    # The palettes under evaluation, as literals. They used to be scraped from a matplotlib
-    # install and from `~/.vscode/extensions/*horizon*` at runtime, which made the trial
-    # generator depend on what happened to be installed on the machine taking the sitting:
-    # the same trial number produced different stimuli on two machines, and a clone with no
-    # editor extension silently lost two palettes. The palette label is provenance only --
-    # the model reads the CAM16-UCS distance between two hexes and never the name -- so
-    # pinning the hexes costs nothing and makes a log replayable anywhere.
-    #
-    # The two Horizon rows are the editor theme's own accents, already alpha composited onto
-    # their page (the rule that caught the 30%-alpha comments). The reference rows are the
-    # standard sequential and categorical sets, at the sample counts the earlier sittings
-    # used, so their historical rows keep their meaning.
-    PALETTES = {
-        "okabe-ito": ["#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"],
-        "cividis": ["#00224e", "#2a3f6d", "#575d6d", "#7d7c78", "#a59c74", "#d2c060", "#fee838"],
-        "viridis": ["#440154", "#443983", "#31688e", "#21918c", "#35b779", "#90d743", "#fde725"],
-        "batlow": ["#011959", "#144d62", "#3c6d56", "#828231", "#d29343", "#fdac9e", "#faccfa"],
-        "tab10": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f"],
-        "Set1": ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf"],
-        "horizon-day": ["#8a31b9", "#1d8991", "#f6661e", "#e84a72", "#da103f", "#989190"],
-        "horizon-night": ["#a96ec9", "#24a2ad", "#e4a88a", "#e95378", "#d55170", "#4c4d53"],
-    }
-
-    # Every within-palette pair is a candidate anchor, and the seed of every probe:
-    # neighbours in a sequential ramp measure exactly the local contrast a gallery can only
-    # assert.
-    PAIRS = [
-        (name, a, b) for name, hexes in PALETTES.items() for i, a in enumerate(hexes) for b in hexes[i + 1 :] if a != b
-    ]
-
-    # The ground family spans the theme programme's whole candidate field in lightness (and,
-    # weakly for now, in warmth): threshold is modelled as a smooth function of ground, so
-    # every page here sharpens the prediction for pages never shown. Sources: the two
-    # Horizon pages; Selenized light/dark (jan-warchol/selenized, the-values.md); Modus
-    # operandi/vivendi (pure white/black by design); GitHub dark default.
-    #
-    # The first two labels are "day" and "night" and not "horizon-day"/"horizon-night" on
-    # purpose. Those are the labels the existing rows carry, and they are the two keys
-    # `theme.observer.trial_features` falls back to when a row predates the `ground_hex`
-    # field. Renaming them would fork the log's own vocabulary at the row where the rename
-    # landed, for no gain.
-    GROUND_LIST = [
-        ("day", "#fdf0ed"),
-        ("night", "#1c1e26"),
-        ("selenized-light", "#fbf3db"),
-        ("selenized-dark", "#103c48"),
-        ("modus-light", "#ffffff"),
-        ("modus-dark", "#000000"),
-        ("github-dark", "#0d1117"),
-    ]
-    # Patch sizes: exhibit scale, and the glyph scale that actually decides the editor theme.
-    # Gap scales with size (near-abutting, like adjacent glyphs); both ride with every
-    # response. See the limitations section: gap is a deterministic function of size in this
-    # design, so the two are perfectly confounded and the fitted small-field exponent
-    # absorbs both.
-    SIZES = (104, 16, 10)
-    GAPS = {104: 12, 16: 2, 10: 1}
-    BLOCK = 16
-    #: Declared share of trials that are plain palette pairs rather than generated probes.
-    ANCHOR_SHARE = 0.05
-    #: How far a probe's base colour is moved off its palette colour, in CAM16-UCS units.
-    BASE_JITTER = 2.5
-    #: Stamped on every response. A generator change is a stimulus change, and a stimulus
-    #: change that is not written down is indistinguishable later from a change in the
-    #: observer. v3 is: balanced position permutation, jittered probe base, declared anchor
-    #: share, `kind` as its own field.
-    GENERATOR = "v3"
+    # The palettes, the ground family, the sizes and the generator itself live in
+    # theme/vision.py, extracted from this notebook so the web app can serve the same trials
+    # with a clock. This notebook keeps the reading half and a clockless trial loop; every
+    # constant it quotes is the module's.
     LOG = ResponseLog(VISION_LOG)
+    GENERATOR = NOTEBOOK_GENERATOR
 
     return (
         ANCHOR_SHARE,
-        BASE_JITTER,
         BLOCK,
-        GAPS,
         GENERATOR,
         GROUND_LIST,
         LOG,
-        PAIRS,
         PALETTES,
+        POSTERIOR,
         SIZES,
         np,
         obs,
         pd,
         random,
         stats,
+        vision,
         VISION_LOG,
     )
 
@@ -202,217 +149,16 @@ def _(LOG, mo):
 
 
 @app.cell(hide_code=True)
-def _(
-    ANCHOR_SHARE,
-    BASE_JITTER,
-    BLOCK,
-    GAPS,
-    GENERATOR,
-    GROUND_LIST,
-    PAIRS,
-    SIZES,
-    VISION_LOG,
-    np,
-    obs,
-    random,
-):
-    # The observer model lives in theme/observer.py -- one model, one fit, shared with the
-    # aesthetics instrument so constraints never fork from measurements. This cell only
-    # maintains a live posterior over its parameter grid and generates informative trials.
-    #
-    # NOTE (marimo name mangling): a cell-local (underscore) name referenced from inside a
-    # function resolves only if it is defined ABOVE that function in the same cell. A later
-    # definition stays unmangled in the function body and raises NameError at call time
-    # under `marimo run` while working fine under `marimo edit`. Helpers therefore precede
-    # their callers throughout this file.
-    _COLS = obs.grid_columns()
-    _N_CELLS = len(_COLS[0])
-    # Dense log-posterior, bootstrapped from a binary sidecar so a fresh kernel does not pay
-    # the full refit -- measured at 227 s over 748 responses and 3.57M grid cells on a busy
-    # machine. Per-response updates are incremental (tens of ms) and equal to a
-    # from-scratch fit up to float accumulation noise (~1e-4 log units, measured).
-    _LOGP_NPY = VISION_LOG.parent / f"observer-logp-{obs.MODEL_VERSION}.npy"
-    _LOGP_META = VISION_LOG.parent / f"observer-logp-{obs.MODEL_VERSION}.json"
-    _PSTATE = {"n": -1, "logp": None}
-
-    def _posterior_logp(responses):
-        import json as _json
-
-        if _PSTATE["n"] == len(responses):
-            return _PSTATE["logp"]
-        if _PSTATE["logp"] is None:
-            _logp, _base = None, 0
-            if _LOGP_NPY.exists() and _LOGP_META.exists():
-                _meta = _json.loads(_LOGP_META.read_text())
-                if _meta.get("n", 0) <= len(responses) and _meta.get("cells") == _N_CELLS:
-                    _logp, _base = np.load(_LOGP_NPY), _meta["n"]
-            if _logp is None:
-                _logp, _base = np.zeros(_N_CELLS), 0
-            if responses[_base:]:
-                obs.add_loglik(_logp, responses[_base:], chunk=40_000)
-            np.save(_LOGP_NPY, _logp)
-            _LOGP_META.write_text(_json.dumps({"n": len(responses), "cells": _N_CELLS}))
-        elif _PSTATE["n"] < len(responses):
-            _logp = obs.add_loglik(_PSTATE["logp"], responses[_PSTATE["n"] :])
-        else:  # log shrank (external edit): refit from scratch
-            _logp = obs.add_loglik(np.zeros(_N_CELLS), responses, chunk=40_000)
-        _PSTATE["n"], _PSTATE["logp"] = len(responses), _logp
-        return _logp
-
-    def posterior_for(responses):
-        """(condensed posterior, condensed grid columns) -- the trial generator's view."""
-        _logp = _posterior_logp(responses)
-        if len(responses) < BLOCK:
-            # A near-flat posterior makes top-k selection an arbitrary corner of the grid;
-            # a strided subset spans it evenly until the data has an opinion.
-            _idx = np.arange(0, _N_CELLS, max(1, _N_CELLS // 25_000))
-            _p = np.exp(_logp[_idx] - _logp[_idx].max())
-            return _p / _p.sum(), [c[_idx] for c in _COLS]
-        return obs.condense(_logp, _COLS)
+def _(POSTERIOR, vision):
+    # The observer model lives in theme/observer.py and its trial generator in
+    # theme/vision.py -- one model, one fit, one generator, shared with the web app so the
+    # trials a notebook sitting and an app sitting append to the same log are the same
+    # trials. Bound here under the names the cells below have always used.
+    def trial_for(n, responses):
+        return vision.trial_for(n, responses)
 
     def dense_posterior(responses):
-        """The full-grid normalised posterior. Pays the refit if no sidecar covers the log."""
-        _logp = _posterior_logp(responses)
-        _p = np.exp(_logp - _logp.max())
-        return _p / _p.sum(), _COLS
-
-    def _entropy(q):
-        return -(q * np.log(q + 1e-12) + (1 - q) * np.log(1 - q + 1e-12))
-
-    def block_for(n):
-        """(ground label, ground hex, patch size) for trial n.
-
-        Sixteen-trial blocks cycle every ground, then rotate the patch size. Adaptation to a
-        page is part of the measurement, so a ground is held long enough to adapt to.
-        """
-        _b = n // BLOCK
-        _glabel, _ghex = GROUND_LIST[_b % len(GROUND_LIST)]
-        return _glabel, _ghex, SIZES[(_b // len(GROUND_LIST)) % len(SIZES)]
-
-    def odd_position_for(n):
-        """Which of the four slots holds the odd square.
-
-        NOT `rng.randrange(4)`. An independent draw per trial leaves position free to
-        correlate with anything else the schedule is doing, and leaves its own balance to
-        chance: over the first 748 trials the four slots came out 189/178/189/192. Instead
-        each consecutive group of four trials gets a shuffled permutation of the four slots,
-        so balance is exact every four trials rather than asymptotic, and position is
-        decorrelated from position-within-block. Deterministic in n, like everything else
-        here, so a log replays.
-
-        This is the same fix the aesthetics duels needed for surface assignment, for the
-        same reason. Randomising is not enough on its own -- see the diagnostics below,
-        which fit what the randomisation could not remove.
-        """
-        _perm = [0, 1, 2, 3]
-        random.Random(0x5EED + n // 4).shuffle(_perm)
-        return _perm[n % 4]
-
-    # Deterministic given the log; the memo only spares two sibling cells the recompute.
-    _TRIAL_MEMO = {}
-
-    def trial_for(n, responses):
-        """The nth trial, generated to maximise expected information about the observer.
-
-        Within a block, candidate stimuli are built from a jittered palette colour plus
-        offsets along the CAM16-UCS axes, the diagonals, and the current confusion-axis
-        estimate, at magnitudes swept coarse-then-fine; the winner maximises mutual
-        information between the response and the posterior.
-
-        The base colour is moved off its palette colour by a small random CAM16-UCS offset,
-        which is what makes a probe stimulus fresh. Holding the base exactly on a palette
-        hex meant the information search kept converging on the same offsets from the same
-        finite set of starting points: 489 probe trials produced only 332 distinct colour
-        pairs, so a third of them were re-shows, and a re-shown pair measures memory as much
-        as perception. The model reads the distance between the two hexes and never their
-        provenance, so jittering the base changes nothing about what is being measured. The
-        palette colour is still logged, as provenance.
-        """
-        if n in _TRIAL_MEMO:
-            return _TRIAL_MEMO[n]
-        _rng = random.Random(n * 2654435761 % (2**31))
-        _glabel, _ghex, _size = block_for(n)
-        _pal, _a, _b2 = _rng.choice(PAIRS)
-        if _rng.random() < ANCHOR_SHARE:
-            if _rng.random() < 0.5:
-                _a, _b2 = _b2, _a
-            _base, _odd, _kind = _a, _b2, "anchor"
-        else:
-            _post, _cols = posterior_for(responses[:n])
-            _seed_u = obs.hex_to_ucs(_a)[0]
-            _dir = np.array([_rng.gauss(0.0, 1.0) for _ in range(3)])
-            _base_u = _seed_u + BASE_JITTER * _dir / max(float(np.linalg.norm(_dir)), 1e-9)
-            _base = obs.ucs_to_hex(_base_u[None, :])[0]
-            _base_u = obs.hex_to_ucs(_base)[0]
-            _gj = np.array([obs.hex_to_ucs(_ghex)[0, 0] / 100.0], dtype=np.float32)
-            _sz = np.array([float(_size)], dtype=np.float32)
-            _s2 = 1 / np.sqrt(2)
-            _phi_hat = float((_post * _cols[0]).sum())
-            _rad = np.radians(_phi_hat)
-            _dirs = [
-                np.array(_v)
-                for _v in [
-                    (1, 0, 0),
-                    (-1, 0, 0),
-                    (0, 1, 0),
-                    (0, -1, 0),
-                    (0, 0, 1),
-                    (0, 0, -1),
-                    (0, _s2, _s2),
-                    (0, -_s2, _s2),
-                    (0, np.cos(_rad), np.sin(_rad)),
-                    (0, -np.cos(_rad), np.sin(_rad)),
-                ]
-            ]
-
-            def _eig_batch(_dv, _mags):
-                """(best_eig, best_mag, best_hex) along one direction at several magnitudes."""
-                _cands = np.array([_base_u + _dv * _m for _m in _mags])
-                _hexes = obs.ucs_to_hex(_cands)
-                _du = (_base_u[None, :] - obs.hex_to_ucs(_hexes)).astype(np.float32)
-                _p = obs.p_correct_cells(_cols, _du, np.repeat(_gj, len(_mags)), np.repeat(_sz, len(_mags)))
-                _pbar = _post @ _p
-                _eig = _entropy(_pbar) - _post @ _entropy(_p)
-                for _i, _h in enumerate(_hexes):
-                    if _h == _base:
-                        _eig[_i] = -1.0
-                _j = int(np.argmax(_eig))
-                return float(_eig[_j]), float(_mags[_j]), _hexes[_j]
-
-            # Two-stage magnitude search per direction (a coarse-only grid measured ~28%
-            # information lost when the threshold falls between its steps).
-            _best, _best_hex = -1.0, None
-            for _dv in _dirs:
-                _e1, _m1, _h1 = _eig_batch(_dv, np.geomspace(0.3, 90.0, 7))
-                if _e1 > _best:
-                    _best, _best_hex = _e1, _h1
-                _e2, _, _h2 = _eig_batch(_dv, np.geomspace(_m1 / 2.5, min(_m1 * 2.5, 110.0), 8))
-                if _e2 > _best:
-                    _best, _best_hex = _e2, _h2
-            _odd, _kind = _best_hex, "probe"
-        _trial = {
-            # `kind` is its own field. It used to be encoded by writing "probe" into
-            # `palette`, which threw away the provenance of 95% of trials and left the
-            # per-palette table reporting one enormous "probe" row beside a handful of real
-            # ones. Both facts now have their own column.
-            "kind": _kind,
-            "palette": _pal,
-            "base": _base,
-            "base_source": _a,
-            "odd_color": _odd,
-            "ground": _glabel,
-            "ground_hex": _ghex,
-            "size_px": _size,
-            "gap_px": GAPS[_size],
-            # Recorded because it is a stimulus parameter, not because the model fits it.
-            # A row that does not say how the squares were arranged cannot be re-analysed
-            # once the arrangement changes.
-            "layout": "row",
-            "odd_position": odd_position_for(n),
-            "generator": GENERATOR,
-        }
-        _TRIAL_MEMO[n] = _trial
-        return _trial
+        return POSTERIOR.dense_for(responses)
 
     return dense_posterior, trial_for
 
@@ -514,7 +260,7 @@ def _(get_responses, mo, sitting, trial_for):
 
 
 @app.cell(hide_code=True)
-def _(GENERATOR, LOG, answer_keys, get_responses, set_responses, trial_for):
+def _(LOG, answer_keys, get_responses, set_responses, trial_for, vision):
     from datetime import UTC, datetime
 
     # Recording watches the four buttons' click counters. The array is rebuilt per trial, so
@@ -528,29 +274,11 @@ def _(GENERATOR, LOG, answer_keys, get_responses, set_responses, trial_for):
     def _record(choice, n=_n):
         if n != len(get_responses()):
             return
-        _now = trial_for(n, get_responses())
-        _entry = {
-            "ts": datetime.now(UTC).isoformat(timespec="seconds"),
-            "n": n,
-            # Everything the model reads, plus everything needed to re-analyse the trial
-            # under a model that does not exist yet. A measurement whose conditions were not
-            # written down cannot be re-read later, and this log has already been re-read
-            # under two successive observer models.
-            "kind": _now["kind"],
-            "palette": _now["palette"],
-            "base": _now["base"],
-            "base_source": _now["base_source"],
-            "odd_color": _now["odd_color"],
-            "ground": _now["ground"],
-            "ground_hex": _now["ground_hex"],
-            "size_px": _now["size_px"],
-            "gap_px": _now["gap_px"],
-            "layout": _now["layout"],
-            "odd_position": _now["odd_position"],
-            "generator": GENERATOR,
-            "choice": choice,
-            "correct": choice == _now["odd_position"],
-        }
+        # The row is built by the module the app records with, so a notebook sitting and
+        # an app sitting write the same record; the notebook's rows simply carry no clock.
+        _entry = vision.build_entry(
+            n, trial_for(n, get_responses()), choice, datetime.now(UTC).isoformat(timespec="seconds")
+        )
         LOG.append(_entry)
         set_responses([*get_responses(), _entry])
 
