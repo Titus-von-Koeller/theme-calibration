@@ -336,9 +336,9 @@ interact, and choose the best combination — every step from measurement.
   conspicuity floor.** It is defined as the minimum CAM16-UCS distance from the current
   highlight to the ground and to every coloured role — but across all 884 feasible pool
   themes the GROUND is always the nearest competitor, because the contrast floors push text
-  far from the page while the fill is built to sit near it. So the floor gates on
-  fill-versus-ground distance alone; the four role terms are a correct safety net that has
-  never once been the binding minimum.
+  far from the page while the fill is built to sit near it. So the baseline is stated on
+  fill-versus-page distance alone (`conspicuity`, in the observer's steps); the four role
+  terms in `salience` are a correct safety net that has never once been the binding minimum.
 - **The lightness bisection assumes monotonicity that contrast does not have.** WCAG
   contrast against a fixed ground is V-shaped in lightness, not monotone, so the bracket
   finds the intended root only because every polarity's ground sits at an end of the
@@ -361,13 +361,34 @@ interact, and choose the best combination — every step from measurement.
   variance is highest. Measured over 33 hunts: salience correlates with log find time at
   −0.43 (day) and −0.37 (night), and splitting at the median gives 3489 ms against 2066
   (day), 2897 against 2225 (night). A faint highlight costs over a second, which measures
-  patience rather than the theme. The floor is now 4x the measured threshold.
-- **Put a stimulus floor on the ARM whose measurement it protects, not on the whole
-  space.** A quiet highlight is a legitimate thing to PREFER, and the axis exists to find
-  that trade-off, so duels must keep exploring it. What a faint highlight destroys is the
-  timed hunt. Filtering the candidate grid BEFORE the acquisition, rather than rejecting
-  after, also keeps the chosen trial the best available one rather than the first
-  acceptable one.
+  patience rather than the theme. The baseline is 4 of the observer's steps
+  (`conspicuity.CURRENT_BASELINE_JND`), a constant said out loud: `find_time_knee` fits the
+  same quantity from the hunts (3.4 steps by day and 7.4 by night on 29 and 24 hunts,
+  explaining 16% and 27% of log-time variance -- not identified) and the constant is to be
+  promoted to it when the knee identifies, never before.
+- **A floor that keeps a stimulus BEING what it claims to be belongs on the whole space;
+  only a floor that protects one arm's measurement belongs on the arm.** The 4x floor was
+  first put on the hunt arm alone, on the reasoning that a quiet highlight is a legitimate
+  thing to prefer and the duels should keep exploring it. Titus contradicted that from the
+  chair (2026-09-05: "highlights barely distinguishable from the background and not really
+  signal colours"), and his duels already had: with the fainter side under 3 steps the
+  louder highlight won 9 of 9 day duels and 4 of 4 at night; with a gap over 3 steps, 84%
+  of 43 by day. A tint at 1.5 discrimination steps is not a quiet highlight, it is not a
+  highlight, and every duel spent on it re-measured an answered question. So the baseline
+  now lives in `realize()` for every arm (current match 4 steps, other matches the meaning
+  roles' 2x multiple through `separation_floor`), carving 32% of day and 17% of night pool
+  themes; the hunt arm still asks `conspicuous_enough` by name, because a floor protecting a
+  measurement is stated where the measurement is taken even when the space guarantees it.
+  Filtering the candidate grid BEFORE the acquisition, rather than rejecting after, keeps
+  the chosen trial the best available one rather than the first acceptable one.
+- **State a colour floor in the observer's own steps, not in raw dE.** CAM16-UCS is near
+  uniform for the average eye; the fitted observer is not average. His confusion-axis
+  ellipse (phi 0.9 deg, w1 0.31, w2 0.81) makes a red-green step cost 1.6x the dE of a
+  lightness step, and threshold grows with page lightness (gL 0.33). Raw dE scored a red
+  fill and a blue fill of equal dE as equally findable; `conspicuity.observer_jnd` weights
+  the difference by the ellipse and scales the step to the page. A floor stated in steps
+  forces no hue, which is what keeps the highlight free of the conventional signal colours
+  while still guaranteeing it reads as a signal.
 - **Check a floor on the pixels that render, not on the values that were solved for.** The
   bisection converged correctly to Lc 60.27 and 60.06; rounding to 8-bit hex moved those by
   up to 0.38, and the check ran before the rounding — so themes shipped at 59.89 and 59.83
@@ -383,8 +404,10 @@ interact, and choose the best combination — every step from measurement.
   as "every pair clears 2x the threshold" fails immediately and correctly: comment and ink
   are MEANT to sit closer, because both are neutral text and a comment is a deliberate step
   quieter than body ink. Accents pairwise and against ink get 2x (they carry meaning by
-  hue); comment against ink gets 1x, with the italic carrying the rest; the highlight gets
-  1.5x against the ground and 1x against its siblings.
+  hue); comment against ink gets 1x, with the italic carrying the rest; the current
+  highlight gets 1x against its siblings. What the two fills owe the PAGE is not a
+  discrimination multiple at all but a search baseline in the observer's steps (4 and 2),
+  stated in `conspicuity`.
 - **The instrument's own chrome must never wear the theme under test.** The prompt, the
   chip, the progress and the gate are furniture; a theme being judged must not colour the
   frame it is judged in. And the chrome's ink has to follow the SURROUND, not the polarity:

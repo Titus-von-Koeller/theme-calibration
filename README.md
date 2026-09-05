@@ -50,7 +50,12 @@ lands on its own intercept instead of on the theme surface.
 Contrast floors (WCAG 4.5:1 for every role; APCA |Lc| ≥ 60 for body tokens and ≥ 45 for
 comments and punctuation) and measured per-observer colour-difference thresholds are
 **hard constraints, never objectives**. Every candidate shown is already legible; the only
-question ever asked is which is *better*.
+question ever asked is which is *better*. The find highlight has a floor of its own kind: it
+is found by search, not told apart side by side, so the current match must sit four of the
+observer's own discrimination steps from the page and the other matches two, with the step
+weighted by the fitted confusion-axis ellipse and scaled to the page's lightness
+(`theme/conspicuity.py`). Stated in steps, the floor forces no hue -- the highlight is free
+to be any colour that genuinely reads as a signal.
 
 ## Why the trials are a web app and the analysis is not
 

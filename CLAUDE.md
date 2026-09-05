@@ -85,45 +85,33 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
    near-white tires. A brief high-contrast page looks crisper than it reads for eight
    hours. The lived duels exist to measure this; until they do, the applied day paper is
    a hypothesis, not a verdict.
-4. **The find-highlight axes -- and the highlight has no baseline** (Titus, 2026-09-05:
-   "every few trials I get highlights barely distinguishable from the background and not
-   really signal colours"; wants a baseline from perception theory, the observer model and
-   his own measured preferences, not a retreat to the conventional signal hues). Diagnosed,
-   not yet built; the sitting stopped for the allowance. What the tree does today:
-   `space._separations_hold` lets a theme through when the CURRENT match sits 1.5x the
-   discrimination threshold from the page and the OTHER matches (alpha 0.45) 1x from the
-   current -- discrimination floors, so a 6-9 dE tint is a legal highlight in every duel and
-   probe; the 4x `CONSPICUITY_FLOOR` gates only the timed hunt. Measured on the pool (884
-   themes, observer-weighted JND): the current fill sits under 4 JND in 32% of day themes
-   and 17% of night; the other-matches fill under 2 JND in 25% / 13%. His duels already
-   say faint loses: by day, with the fainter side under 3 JND the louder highlight won 9 of
-   9 shown, and with a gap over 3 JND 84% of 43; day winners' current fill has q10 4.5 JND
-   against losers' 2.4 (night is noisier: 54% of 57, q10 3.9 vs 3.4). The reef entry "a
-   quiet highlight is a legitimate thing to prefer, so duels must keep exploring it" is
-   therefore contradicted by his own data and by him, and is to be revised. Design agreed
-   with the evidence, to build next: (a) `theme/conspicuity.py`: conspicuity in the
-   OBSERVER'S metric -- CAM16-UCS delta weighted by the fitted confusion-axis ellipse
-   (phi 0.9 deg, w1 0.31, w2 0.81: a red-green fill needs 1.6x the dE of a lightness step)
-   and scaled to the page's lightness by gL -- so hue stays free and the floor is stated in
-   his JNDs, not in a hue list; (b) the baseline moves INTO realize for the whole space:
-   current >= 4 JND (the measured search floor, now global), other matches >= the
-   separation_floor multiple (2x, regime-switching with the size exponent as the meaning
-   roles do), current-vs-other >= 1 JND kept; pool survival 68% day / 82% night, so the
-   pool draw may need widening in its own commit; (c) `conspicuous_enough` and the hunt
-   grid read the same function, so one place decides; (d) the constant stays a constant,
-   said out loud, with the analysis notebook fitting the knee of log find-time over JND so
-   the floor can be promoted to the fitted value once it identifies -- the
-   `separation_floor` pattern. Checks owed: characterization that every surviving theme
-   is byte-identical to today's (a carve only adds refusals); a property test that every
-   realized theme clears both baselines measured from its hexes; the schedule test that
-   pins a base refusing every hunt variant may need a new base. Then the two reef entries
-   (lines ~335 and ~365 of the method reef) and the README's axis prose. Later, its own
-   item: reparametrize axis 8 so theta 8 = 0 IS the baseline (today theta 8 maps to
-   chroma 8 + 26 s and a lightness step 4 + 14 s, so its delivered JND depends on hue and
-   page), which needs the logged rows' theta 8 re-derived from their hexes (inverse.py is
-   the tool) or the model would read old faint themes as baseline-loud ones. Also still
-   open here: the legibility surface could not resolve axis 8's effect on speed at 29
-   hunts (53 now); re-read around 60.
+4. **The find-highlight axes.** The highlight now has a perceptual baseline (2026-09-05,
+   after Titus saw "highlights barely distinguishable from the background and not really
+   signal colours" every few trials). The cause was a DISCRIMINATION floor doing a SEARCH
+   floor's job: `realize()` admitted a current match 1.5 threshold-steps from the page and
+   the 4x conspicuity floor gated only the timed hunt, on the reef's reasoning that a quiet
+   highlight is a legitimate preference. His duels had already rejected that: with the
+   fainter side under 3 steps the louder highlight won 9 of 9 day duels and 4 of 4 at night.
+   Shipped: `theme/conspicuity.py` -- fill-versus-page distance in the OBSERVER'S steps
+   (CAM16-UCS delta weighted by the fitted confusion-axis ellipse, phi 0.9 deg, w1 0.31,
+   w2 0.81, so a red-green step costs 1.6x a lightness step; scaled to page lightness by
+   gL 0.33) with the baseline current >= 4 steps, other matches >= the meaning roles' 2x
+   multiple through `separation_floor`, applied in `realize()` for every arm; hue stays
+   free, so nothing pushes toward the conventional signal hues. Characterized against the
+   old module over 4024 thetas: every surviving theme byte-identical, every new refusal
+   explained by the baseline; the pool keeps 284 of 420 day and 382 of 464 night themes.
+   The theme dict carries `conspicuity` (steps) beside the raw-dE `salience`. The inverse
+   search stopped mutating the find axes, which enter no distance and were now costing
+   feasibility. What this item still owes: (i) `find_time_knee` fits where loudness stops
+   buying find time -- 3.4 steps by day and 7.4 by night on 29 and 24 hunts, explaining 16%
+   and 27% of variance, not identified -- so the 4-step constant stands and is to be
+   promoted when the knee identifies (re-read around 60 hunts, together with axis 8's
+   effect on the legibility surface); (ii) whether the thinner pool wants a wider draw
+   (`POOL_THETA` is 512), its own commit; (iii) later and separately, reparametrize axis 8
+   so theta 8 = 0 IS the baseline (today theta 8 maps to chroma 8 + 26 s and a lightness
+   step 4 + 14 s, so its delivered steps depend on hue and page), which needs the logged
+   rows' theta 8 re-derived from their hexes first (inverse.py is the tool) or the model
+   would read old faint themes as baseline-loud ones.
 
 5. **Preference versus speed.** The leader's point estimate is about 1.5x slower to read
    than the quickest page the model knows, with an interval far too wide to act on. The
