@@ -16,8 +16,11 @@ engineering contract, including the procedure for several agents working at once
 - `theme/` — the instrument as an ordinary package. Each module's docstring says what it
   owns and why it is separate. `theme/verdict.py` is where the answer is computed; the
   notebook only words it, and `pixi run verdict` prints it without a browser.
-- `notebooks/` — analysis, the vision calibration, the gallery. A notebook's closing prose
-  holds the findings of the instrument it belongs to: findings live WITH their instrument.
+- `notebooks/` — the reading half: analysis, the gallery, and the vision sitting's prose
+  with a clockless trial loop. The vision GENERATOR is `theme/vision.py`, shared with the
+  app's fourth arm, so a trial is defined once and served with or without a clock. A
+  notebook's closing prose holds the findings of the instrument it belongs to: findings
+  live WITH their instrument.
 - `data/` — the measurements. Append-only text, tracked. Derived caches are not.
 - `tests/` — recovery tests (plant a truth, check it comes back), property tests over the
   whole parameter space, a flow test through the real app, and static contract tests over
@@ -46,21 +49,16 @@ sibling project's environment, where `import theme` fails and marimo then report
 `NameError` on every cell downstream. `.vscode/settings.json` pins the interpreter for when
 this directory is the open folder.
 
-**Handover, mid-integration of `fourth-arm`** (2026-09-05, halted at Titus's request so a
-different model can take over). The branch's nine commits (76ff74b..a01a7ea) are MERGED into
-main as 408abbb; `pixi run check` is green on the merge and the full `pixi run test` was run
-on it and is GREEN (exit 0, no failures). Left to do, in order: (a)
-untrack `data/observer-logp-v2.1.json` (`git rm --cached`, verified with `git ls-files`; the
-`.npy` beside it is already ignored -- Titus decided the tracked-metadata-for-an-untracked-
-binary pair goes, and the work-lessons entry that says "still tracked" is then corrected);
-(b) `git worktree remove ../wt-fourth-arm`, delete the branch locally and on origin; (c)
-verify the sibling's seven reported learnings are deposited -- five already sit in
-work-lessons.md (dotfiles 449f101) and the CDP one in the keyhole driving notes (9f8b5fe),
-the two-logs rule and the chrome-ink rule in the method reef (a01a7ea); what is missing is
-the correction in (a); (d) then rewrite this paragraph: item 6 below is done, and
-`notebooks/vision.py` is now the reading half only, with `theme/vision.py` the generator
-both surfaces share. Still open from the same sitting: the patch engine reports the
-webview_quiet question-row anchor no longer matches on Claude Code 2.1.261.
+**The fourth arm is merged** (2026-09-05): the colour-discrimination trials are served by
+the app with a reaction-time clock -- eight per 32-trial block, glyph sizes only, generator
+`v4`, surface `app` -- into the same log and the same numbering as the notebook sitting.
+Nine commits on branch `fourth-arm` (76ff74b..a01a7ea), integrated as 408abbb with `pixi run
+check` and the FULL `pixi run test` green on the merge; the worktree and the branch are
+gone. Rows from the two surfaces are told apart by `surface` (`app` against absent) and
+`generator` (`v4` against `v3`), and only the app's carry `rt_ms`. What the clock adds to a
+threshold has not been read yet: that is the first thing to ask of the new rows. Still open
+from the same sitting: the patch engine reports the webview_quiet question-row anchor no
+longer matches on Claude Code 2.1.261.
 
 Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 
@@ -97,12 +95,14 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 
 **Code, and mine to do.**
 
-6. **Vision has no timing channel.** Reaction time carries information about distance from
-   threshold, which the duels demonstrated, so adding it would sharpen thresholds from
-   clicks already being made. It requires the timing guarantees a notebook cannot give, so
-   it means moving the vision trials into the web app as a fourth arm. Deliberately queued
-   behind item 1: the binding constraint today is the exponent, and the notebook already
-   collects it.
+6. **Vision has a timing channel** — DONE 2026-09-05, branch `fourth-arm`, merged as
+   408abbb. Reaction time carries information about distance from threshold, and a notebook
+   cannot give that clock honestly (it rebuilds its widgets between answers), so the trials
+   moved into the web app as its fourth arm. `theme/vision.py` generates them for both
+   surfaces; the app serves eight per 32-trial block at glyph sizes with `rt_ms` and the
+   input method on every row; the notebook keeps the clockless loop, which scores accuracy
+   only, and the reading half. The number is kept so nothing pointing at it breaks. What
+   the clock buys a threshold is unread, and that reading is what this item now owes.
 7. **No observer-fit provenance on a response.** Tightening a threshold silently re-bases
    every past duel. Pixel size already has this discipline; the thresholds need the same
    stamp. The PUBLISHED and APPLIED palettes carry it now (fit fingerprint, observer model,
