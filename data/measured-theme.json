@@ -11,8 +11,8 @@
     "p_best": 0.5181,
     "page": "#efe2d3",
     "provenance": {
-      "code": "dd01553",
-      "fit": "-2558600377889902768",
+      "code": "6b157ea",
+      "fit": "-6980886718558214900",
       "n_duels": 111,
       "observer": {
         "de_min": 3.228,
@@ -21,10 +21,26 @@
         "regime": "2x the 104-px threshold, a constant standing in for an unmeasured size exponent (equivalent to 0.35 at 14 px). No trial has been shown at another size, so the model's own exponent carries its prior rather than data.",
         "separation_floor": 6.455
       },
-      "published": "2026-09-05T08:01:19+00:00",
+      "published": "2026-09-05T10:04:58+00:00",
       "rt_exponent": 0.25
     },
     "punct": "#5a5754",
+    "signals": {
+      "blue": "#005aff",
+      "blue_bright": "#005aff",
+      "cyan": "#00777a",
+      "cyan_bright": "#00767f",
+      "green": "#007c00",
+      "green_bright": "#007c00",
+      "magenta": "#b926a8",
+      "magenta_bright": "#c000b4",
+      "orange": "#bb4300",
+      "orange_bright": "#cb2c00",
+      "red": "#c83023",
+      "red_bright": "#d70000",
+      "yellow": "#876500",
+      "yellow_bright": "#8e6200"
+    },
     "string": "#7d2800",
     "theta": [
       1.0,
@@ -51,8 +67,8 @@
     "p_best": 0.1646,
     "page": "#1b1c1e",
     "provenance": {
-      "code": "dd01553",
-      "fit": "-2558600377889902768",
+      "code": "6b157ea",
+      "fit": "-6980886718558214900",
       "n_duels": 104,
       "observer": {
         "de_min": 2.468,
@@ -61,10 +77,26 @@
         "regime": "2x the 104-px threshold, a constant standing in for an unmeasured size exponent (equivalent to 0.35 at 14 px). No trial has been shown at another size, so the model's own exponent carries its prior rather than data.",
         "separation_floor": 4.936
       },
-      "published": "2026-09-05T08:01:20+00:00",
+      "published": "2026-09-05T10:04:58+00:00",
       "rt_exponent": 0.25
     },
     "punct": "#a6a5a7",
+    "signals": {
+      "blue": "#7e99f5",
+      "blue_bright": "#6f9aff",
+      "cyan": "#00afaf",
+      "cyan_bright": "#00afb0",
+      "green": "#67ae5c",
+      "green_bright": "#48b340",
+      "magenta": "#d87fc5",
+      "magenta_bright": "#eb6fd5",
+      "orange": "#e6853d",
+      "orange_bright": "#f77a00",
+      "red": "#ee7d6c",
+      "red_bright": "#ff715d",
+      "yellow": "#b79c14",
+      "yellow_bright": "#bd9a00"
+    },
     "string": "#d5be7b",
     "theta": [
       0.613829,
