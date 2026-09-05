@@ -557,6 +557,51 @@ Beauty votes through these; the instruments still veto, and Titus's eyes outrank
   every tensor sat in a white frame. `background="transparent"` in `_viz.show()`; the
   page's colour, never a literal.
 
+## The four kinds of colour on a screen, and who writes each (architecture, 2026-09-05)
+
+A colour census of the live windows (`pixi run census -- shot.png`: every pixel colour
+classified against the published palette, its derived surfaces, their alpha composites and
+antialiasing blends; the foreign ones are the work list) showed that "themed" had meant
+three different things, and the fourth was still Horizon's. Every colour on screen is one
+of these, and each has exactly one writer:
+
+1. **Furniture** -- paper, page, border, and the ink family (ink, comment, punctuation).
+   Carries no meaning. Derived from the palette by `theme/surfaces.py`; written by the
+   applier's workbench region. ONE ink: workbench text, terminal, sidebar, inputs, menus and
+   the active tab all take the measured ink, and what recedes (inactive tabs and titles)
+   takes the comment colour. Two inks on one screen was the census's largest finding.
+2. **Controls** -- the one accent every primary control shares (buttons, badges, focus ring,
+   progress bar, links, the Remote Control pill): the function colour with the paper as
+   text. Written by the applier; the chat panel's literals through its patch.
+3. **Signals** -- colours that carry meaning by convention: error red, warning orange,
+   success green, info blue, the git decorations, the ANSI sixteen, the diagnostics. The HUE
+   is the world's; the lightness and chroma are the palette's. `theme/signals.py` walks each
+   conventional hue at the accents' chroma to the body-text floor on the measured ground, so a
+   signal is legible by the same measurement as the text and sits a step lighter than the
+   syntax accents, which keeps a git orange from reading as a string. Published under
+   `signals` in the palette; written by the applier's signals region (~60 keys) and, for the
+   chat panel's own status dots, by the patch mapping its literals to `charts.*`. On a light
+   paper "bright" ANSI cannot mean lighter without losing the text, so bright means more
+   chroma at the same floor, and gamut clipping makes some day brights coincide with their
+   base.
+4. **Data** -- ramps, categorical sets, polarity pairs. Chosen by discriminability under the
+   fitted observer at mark size (the gallery), constrained to harmony with the accents and
+   separation from them. Written in `_viz.py`; never by the applier.
+
+Rules that fall out: a literal colour in any writer is a bug (the notebook card frame and the
+markdown rule were the last two in the derivation CSS; both now read theme keys); a colour
+with no writer is Horizon's or VSCode's default and the census will name it; the census runs
+after every application, on a screenshot of the real window, because the palette is applied
+to pixels and only pixels can confirm it.
+
+**Next measurement arm, from Titus's question on contrast (2026-09-05).** Body contrast is
+an axis of the duels and the day verdict settled it near 7.7:1 -- but only on code pages at
+14 and 16 px. Unmeasured: GUI text at 11-13 px, icons, and the interaction between the
+frame's contrast and the page's (a bright frame around a dim page pulls the eye off the
+work). The exhibit-page stimulus (item 20) should therefore render a whole window -- tab
+strip, sidebar, status bar and a code page from one palette -- so duels judge the ensemble,
+and the legibility arm needs a 12 px size baseline. Queue item 22.
+
 ## Widgets and graphs: aligning the other surfaces (design, 2026-09-05)
 
 Titus asked how widget and graph theming should join the optimisation. The frame that

@@ -127,7 +127,13 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 **Widgets and graphs** (Titus's question, 2026-09-05; design in the method reef's "Widgets
 and graphs" section). 19. A surface contract table and appliers for `_viz.py` furniture and
 marimo's variables. 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
-(50, 12, 2 px) in the vision arm.
+(50, 12, 2 px) in the vision arm. 22. **Contrast beyond the code page** (Titus, 2026-09-05):
+body contrast is settled near 7.7:1 by day but only on code at 14 and 16 px; GUI text at
+11-13 px, icons, and the frame-against-page interaction are unmeasured. The exhibit page of
+item 20 renders a whole window from one palette, and the legibility arm gets a 12 px baseline.
+The four colour classes (furniture, controls, signals, data) and `pixi run census` are in the
+method reef's architecture section; `theme/signals.py` and `theme/census.py` implement two of
+them.
 
 **External validity: measured but never checked against the thing being optimised.**
 These are not in any test and were not previously written down.
