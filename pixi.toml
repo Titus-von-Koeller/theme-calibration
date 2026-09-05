@@ -68,5 +68,6 @@ vision = { cmd = "marimo run notebooks/vision.py --headless --no-token --host 12
 gallery = { cmd = "marimo run notebooks/gallery.py --headless --no-token --host 127.0.0.1 -p 2922", description = "Serve the palette gallery" }
 verdict = { cmd = "python -m theme.publish", description = "Print what the model believes, both polarities" }
 publish = { cmd = "python -m theme.publish --write", description = "Publish the champion palettes for the applier" }
+lived = { cmd = "python -m theme.lived", description = "Record which of the last two applied themes was better to live in" }
 test = { cmd = "pytest -q", description = "Run the recovery tests" }
 check = { cmd = "ruff format --check . && ruff check .", description = "Lint and format check" }
