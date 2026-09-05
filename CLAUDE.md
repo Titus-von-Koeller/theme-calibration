@@ -52,9 +52,9 @@ this directory is the open folder.
 **The fourth arm is merged** (2026-09-05): the colour-discrimination trials are served by
 the app with a reaction-time clock -- eight per 32-trial block, glyph sizes only, generator
 `v4`, surface `app` -- into the same log and the same numbering as the notebook sitting.
-Nine commits on branch `fourth-arm` (76ff74b..a01a7ea), integrated as 408abbb with `pixi run
-check` and the FULL `pixi run test` green on the merge; the worktree and the branch are
-gone. Rows from the two surfaces are told apart by `surface` (`app` against absent) and
+Nine commits on branch `fourth-arm` (76ff74b..a01a7ea), integrated as 408abbb; both
+`pixi run check` and the whole of `pixi run test` are green on the merge, and the worktree
+and the branch are gone. Rows from the two surfaces are told apart by `surface` (`app` against absent) and
 `generator` (`v4` against `v3`), and only the app's carry `rt_ms`. What the clock adds to a
 threshold has not been read yet: that is the first thing to ask of the new rows. Still open
 from the same sitting: the patch engine reports the webview_quiet question-row anchor no
