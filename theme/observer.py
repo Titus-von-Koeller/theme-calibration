@@ -172,6 +172,11 @@ def threshold_de(post, cols, direction, g_j, p_target=0.75, size=104.0):
     return float(np.exp((post * np.log(np.maximum(de, 1e-9))).sum()))
 
 
+#: The page each polarity's tabulated thresholds (`de_min_day`, `de_dir_night`, ...) are
+#: stated on: Horizon's own grounds, which are also the theme space's anchors. Any reader
+#: that scales a polarity's threshold to another page starts from these.
+REFERENCE_GROUNDS = {"day": "#fdf0ed", "night": "#1c1e26"}
+
 _DIRECTIONS = {
     "lightness": np.array([1.0, 0.0, 0.0]),
     "a (red-green)": np.array([0.0, 1.0, 0.0]),
@@ -251,7 +256,7 @@ def fit(log_path, cache=True, force=False):
     }
     # Directional thresholds at the reference (mid) ground and at the two measured pages.
     payload["de_dir_at_mid"] = {name: threshold_de(post, cols, v, 0.5) for name, v in _DIRECTIONS.items()}
-    for label, g in (("day", "#fdf0ed"), ("night", "#1c1e26")):
+    for label, g in REFERENCE_GROUNDS.items():
         g_j = float(hex_to_ucs(g)[0, 0] / 100.0)
         payload[f"de_dir_{label}"] = {name: threshold_de(post, cols, v, g_j) for name, v in _DIRECTIONS.items()}
         payload[f"de_min_{label}"] = min(payload[f"de_dir_{label}"].values())
