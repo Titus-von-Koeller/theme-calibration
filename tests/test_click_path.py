@@ -18,6 +18,7 @@ from conftest import correct_choice, report
 
 from theme import schedule
 from theme.color import hex_to_rgb, wcag
+from theme.server import app, get_log, get_posterior, get_vision_log
 
 APP_JS = Path(__file__).resolve().parents[1] / "theme" / "static" / "app.js"
 
@@ -41,6 +42,33 @@ def text_of(html: str) -> str:
 
 def test_a_fresh_log_starts_at_the_first_trial(client):
     assert client.get("/api/status").json() == {"responses": 0, "duels": 0}
+
+
+def test_the_warm_up_fits_the_logs_the_app_is_wired_to(
+    monkeypatch, scratch_log, scratch_vision_log, scratch_posterior
+):
+    """The lifespan warm-up must go through the same seams as the endpoints. Read from the
+    module defaults it fitted the REAL aesthetics log at every test-client start, and would
+    have run the real observer posterior -- sidecar write included -- from inside the suite
+    the moment the real log stood at a colour slot."""
+    from fastapi.testclient import TestClient
+
+    from theme import server
+
+    warmed = []
+    monkeypatch.setattr(server, "payload", lambda *args: warmed.append(args))
+    app.dependency_overrides[get_log] = lambda: scratch_log
+    app.dependency_overrides[get_vision_log] = lambda: scratch_vision_log
+    app.dependency_overrides[get_posterior] = lambda: scratch_posterior
+    try:
+        with TestClient(app):
+            pass
+    finally:
+        app.dependency_overrides.clear()
+    assert len(warmed) == 1, "the warm-up fits exactly the next trial"
+    n, answered, vision_answered, posterior = warmed[0]
+    assert (n, answered, vision_answered) == (0, [], []), "the scratch logs, not the real ones"
+    assert posterior is scratch_posterior
 
 
 def test_a_trial_carries_everything_the_page_needs(client):

@@ -37,7 +37,7 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 @asynccontextmanager
-async def warm_the_model(_app: FastAPI):
+async def warm_the_model(app_: FastAPI):
     """Fit the model before the first click rather than during it.
 
     A fresh process pays about 3.3 s for the first trial: the reaction-time exponent is
@@ -45,13 +45,25 @@ async def warm_the_model(_app: FastAPI):
     Laplace fits, and it is memoised only once it has run. Paying that at boot costs
     nobody anything -- the server starts while the tab is still being opened -- whereas
     paying it on the first answer puts three seconds inside a measurement.
+
+    Warms the logs the app is WIRED to, through the same seams the endpoints use, so a
+    test client warms its scratch logs and its scratch posterior. Read straight from the
+    module defaults, this would fit the real aesthetics log at every test-client start and,
+    the moment the real log stood at a colour slot, run the real observer posterior -- and
+    its sidecar write -- from inside the suite.
     """
     try:
-        answered = responses.DEFAULT_LOG.read()
-        payload(len(answered), answered, DEFAULT_VISION_LOG.read(), DEFAULT_POSTERIOR)
+        log, vision_log, posterior = (_wired(app_, seam)() for seam in (get_log, get_vision_log, get_posterior))
+        answered = log.read()
+        payload(len(answered), answered, vision_log.read(), posterior)
     except Exception as exc:  # a warm-up must never stop the app from serving
         print(f"warm-up skipped, so the first trial will pay for the fit: {exc!r}")
     yield
+
+
+def _wired(app_: FastAPI, seam):
+    """The dependency the app actually resolves for `seam`: a test's override, or the seam."""
+    return app_.dependency_overrides.get(seam, seam)
 
 
 app = FastAPI(title="theme trials", lifespan=warm_the_model)
