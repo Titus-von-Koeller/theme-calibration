@@ -544,6 +544,44 @@ Beauty votes through these; the instruments still veto, and Titus's eyes outrank
 - Results live with their instrument or in Titus's Notion (his hands only); CLAUDE.md carries
   rules, routing, and resume points.
 
+## Widgets and graphs: aligning the other surfaces (design, 2026-09-05)
+
+Titus asked how widget and graph theming should join the optimisation. The frame that
+works for the editor generalises, on one distinction:
+
+- **Furniture carries no data and is THEME colour**: paper, page, borders, axes, gridlines,
+  widget chrome, input boxes, inline-code chips. It derives from the one published palette,
+  never per surface -- a chart's ground is the code paper, its axis ink the measured ink,
+  its gridlines the border tint. The applier writing the window frame from the ground is
+  the pattern.
+- **Data marks carry information and are NOT theme colour**: the cividis ramp, the
+  categorical set, the polarity pair. They are chosen by discriminability under the fitted
+  observer at the size the marks are drawn (the gallery's worst-pair ranking), with two
+  theme constraints on top: harmony with the applied accents (the Ou-Luo term the prior
+  already carries) and a separation floor between the data set and the accent set, so a
+  data mark never reads as a syntax token.
+
+Implementation, in order:
+
+1. **One artefact, many writers.** `measured-theme.json` stays the source. Each target gets
+   a marked region written by an applier, never a hand-set value: settings.jsonc (done),
+   the graph furniture in `_viz.py` (BASE, INK, gridline), and a generated mapping from
+   marimo's own variables (`--background`, `--card`, `--primary`, `--border`) onto the
+   `--vscode-*` keys the measured region owns, installed through the webview patch. The
+   chat webview is covered already because it reads the frame keys.
+2. **A surface contract table**: every surface, the keys or variables it reads, the palette
+   role each maps to, how it is pixel-verified. The reef physical checks every mapped role
+   has a writer. This is what stops the next temperature clash from arriving silently.
+3. **Measure it.** Duels show only code today. Add an exhibit-page content kind -- a chart
+   from the candidate palette's furniture plus a fixed data palette, beside prose and a
+   widget row -- so preference over graph furniture and widget chrome is measured. A timed
+   chart arm ("click the series named X") measures data-palette conspicuity at mark size
+   as the find hunts do for the highlight. The vision arm must include real mark sizes:
+   tile ~50 px, legend swatch ~12 px, line stroke ~2 px; the size exponent decides all of it.
+4. **Interaction**, the programme's stated goal: once exhibit pages are a stimulus, the
+   graph palette becomes an axis the duels vary on top of the editor theme, and the
+   surface factor test already in the analysis says whether the two interact.
+
 ## Standing verdicts (dated, superseded by newer measurements in the instruments)
 
 - 2026-09-05, 320 responses / 215 duels: **day has a single leader** at 52% of the

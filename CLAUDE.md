@@ -114,6 +114,11 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
     final count -- which is why two suite logs ended at the durations table with no
     summary line.
 
+**Widgets and graphs** (Titus's question, 2026-09-05; design in the method reef's "Widgets
+and graphs" section). 19. A surface contract table and appliers for `_viz.py` furniture and
+marimo's variables. 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
+(50, 12, 2 px) in the vision arm.
+
 **External validity: measured but never checked against the thing being optimised.**
 These are not in any test and were not previously written down.
 
