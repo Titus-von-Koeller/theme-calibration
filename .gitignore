@@ -20,3 +20,9 @@ __marimo__/
 # The measurements themselves ARE tracked: small, append-only, one JSON object per line,
 # and a real diff when they change.
 data/observer-logp-*.npy
+
+# The published champion is a RESULT, not a record: `pixi run publish` (or any pass of the
+# analysis notebook) rewrites it from the two response logs in seconds. Tracking it made
+# `git status` dirty on every reading. What IS tracked is the event of applying one --
+# data/applied-themes.jsonl carries each applied palette with its provenance.
+data/measured-theme.json
