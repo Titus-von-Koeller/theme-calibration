@@ -98,6 +98,7 @@ def _():
             "README, 'Running it', has both."
         ) from no_package
 
+    from theme.conspicuity import conspicuity_of, find_time_knee, highlight_baseline
     from theme.model import rt_exponent
     from theme.paths import CHAMPION, LIVED_LOG, RESPONSE_LOG
     from theme.responses import ResponseLog
@@ -114,6 +115,9 @@ def _():
         ResponseLog,
         THRESH_DETAIL,
         VISION_N,
+        conspicuity_of,
+        find_time_knee,
+        highlight_baseline,
         np,
         pd,
         publish,
@@ -328,7 +332,10 @@ def _(
     DE_MIN,
     THRESH_DETAIL,
     VISION_N,
+    conspicuity_of,
+    find_time_knee,
     get_responses,
+    highlight_baseline,
     mo,
     np,
     pd,
@@ -497,6 +504,31 @@ def _(
                         f"and beauty should take the wheel)."
                     )
                 )
+                # The baseline is a constant until this knee identifies. Read per polarity, in
+                # the observer's own steps, from the hexes that were on screen.
+                for _pol in ("day", "night"):
+                    _hp = _hok[_hok["polarity"] == _pol]
+                    _knee = find_time_knee(
+                        [conspicuity_of(_t, _pol)[0] for _t in _hp["theme_a"]], _hp["rt_ms"].to_numpy()
+                    )
+                    _floor = highlight_baseline(_pol)[0]
+                    if _knee is None:
+                        _blocks.append(mo.md(f"*{_pol} hunts: {len(_hp)} correct so far; a knee needs 12.*"))
+                        continue
+                    _blocks.append(
+                        mo.md(
+                            f"**Where loudness stops buying time, {_pol}**: a hinge on log find-time over "
+                            f"the highlight's conspicuity puts the knee at {_knee.knee_jnd:.1f} observer steps "
+                            f"({_knee.n} hunts, {_knee.slope_per_step:+.2f} log-time per step below it, "
+                            f"explaining {100 * _knee.gain:.0f}% of the variance over a flat line). The "
+                            f"baseline every highlight owes the page is {_floor:g} steps, a constant; "
+                            + (
+                                "the knee has not identified it, so the constant stands."
+                                if _knee.gain < 0.3 or _knee.n < 40
+                                else "the knee is identifying -- read it against the constant."
+                            )
+                        )
+                    )
         if THRESH_DETAIL.get("day"):
             _blocks.append(
                 mo.md(
