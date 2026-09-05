@@ -91,8 +91,12 @@ def duels_from(responses, rt_p=0.5):
                 points.append(coords(theta, row["polarity"]))
             ids.append(index_of[key])
         duels.append((ids[row["choice"]], ids[1 - row["choice"]]))
-        reaction_times.append(float(row.get("rt_ms", 2500.0)))
-        was_paused.append(bool(row.get("paused")))
+        # A lived duel -- two applied themes compared over days in the editor -- has no
+        # clock at all. It is recorded with rt_ms absent and takes the neutral slope below,
+        # the same treatment as a paused trial: its choice counts, the clock says nothing.
+        clockless = row.get("rt_ms") is None
+        reaction_times.append(2500.0 if clockless else float(row["rt_ms"]))
+        was_paused.append(bool(row.get("paused")) or clockless)
         # Which SIDE the winner was displayed on. Measured 2026-09-03 over 79 duels: the
         # right-hand card is picked 61% of the time (z = -1.91 against no bias).
         # Unmodelled, that lands on the utility as noise; as a fitted term it is
