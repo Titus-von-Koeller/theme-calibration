@@ -8,6 +8,7 @@ been importing them from here:
 
   thresholds.py   the observer-derived perceptual floors: DE_MIN and friends
   harmony.py      Ou & Luo (2006) two-colour harmony, transcribed from the paper
+  conspicuity.py  the find highlight's metric (observer steps from the page) and baseline
 
 What stayed is what genuinely belongs to the space: the axes, the anchor colours, the
 realization, the feasible pool, and the prior standardized over that pool. raw_prior in
@@ -32,6 +33,7 @@ from .color import (
     ucs_to_rgb,
     wcag,
 )
+from .conspicuity import CURRENT_BASELINE_JND, baselines_hold, observer_jnd
 from .harmony import lab, ou_luo_pair
 from .thresholds import (  # noqa: F401
     DE_MIN,
@@ -267,9 +269,10 @@ class _Measured(NamedTuple):
     ink_on_fills: np.ndarray  # (themes, 2) WCAG of ink over [current, other]
     string_on_fills: np.ndarray
     separations: np.ndarray  # (themes, 8, 3) CAM16-UCS of the separated colours
+    conspicuity: np.ndarray  # (themes, 2) observer steps of [current, other] from the page
 
 
-def _quantize_and_measure(role_rgb, ground_rgb, fill_rgb):
+def _quantize_and_measure(role_rgb, ground_rgb, fill_rgb, polarity):
     """Quantize a whole batch to hex, then measure every floor on the quantized values.
 
     Measured on the QUANTIZED colours -- the 8-bit values the page will actually write --
@@ -317,6 +320,11 @@ def _quantize_and_measure(role_rgb, ground_rgb, fill_rgb):
         )
     ).reshape(themes, 8, 3)
 
+    # The highlight's loudness in the observer's own steps, along the direction each fill
+    # took and scaled to its page's lightness: what the baseline is stated in.
+    fills_from_page = separations[:, [FIND_CURRENT, FIND_OTHER], :] - separations[:, GROUND, None, :]
+    conspicuity = observer_jnd(fills_from_page, separations[:, GROUND, 0, None] / 100.0, polarity)
+
     return _Measured(
         role_hex=[role_hex[i * roles : (i + 1) * roles] for i in range(themes)],
         ground_hex=ground_hex,
@@ -328,6 +336,7 @@ def _quantize_and_measure(role_rgb, ground_rgb, fill_rgb):
         ink_on_fills=on_fills[INK],
         string_on_fills=on_fills[STRING],
         separations=separations,
+        conspicuity=conspicuity,
     )
 
 
@@ -360,9 +369,10 @@ def _separations_hold(gap, threshold, meaning_floor):
         return False
     if gap(COMMENT, INK) < threshold:
         return False
-    # The highlight has to be findable against the page and separable from its siblings,
-    # which is the whole point of the salience axis.
-    return gap(FIND_CURRENT, GROUND) >= 1.5 * threshold and gap(FIND_CURRENT, FIND_OTHER) >= threshold
+    # The current match has to be separable from its siblings. What both owe the PAGE is
+    # not a discrimination question and is not decided here: `conspicuity.baselines_hold`
+    # states it in the observer's own steps, and _assemble asks it next.
+    return gap(FIND_CURRENT, FIND_OTHER) >= threshold
 
 
 def _fills_readable(ink_on_fills, string_on_fills):
@@ -385,6 +395,8 @@ def _assemble(measured, i, polarity):
 
     if not _separations_hold(gap, DE_MIN[polarity], separation_floor(polarity, READING_SIZE_PX)[0]):
         return None
+    if not baselines_hold(*measured.conspicuity[i], polarity):
+        return None
     if not _fills_readable(measured.ink_on_fills[i], measured.string_on_fills[i]):
         return None
 
@@ -400,6 +412,9 @@ def _assemble(measured, i, polarity):
         # Distance from everything the highlight has to win against, which is the right
         # measure for visual search rather than for discrimination.
         "salience": round(min(gap(FIND_CURRENT, other) for other in (GROUND, *MEANING_ROLES)), 2),
+        # The same distance to the page in the observer's steps, which is what the baseline
+        # and the hunt gate read; `salience` stays as the raw-dE record the log has always had.
+        "conspicuity": round(float(measured.conspicuity[i][0]), 2),
         "body_ratio": round(float(measured.contrast[i][:BODY_ROLE_COUNT].min()), 2),
     }
 
@@ -417,43 +432,20 @@ def _realize_batch(thetas, polarity):
     role_ab, ratios = _role_chromaticities(table, polarity, ground_hue)
     role_rgb, _walked_grounds = _walk_to_both_bars(role_ab, ground_rgb, ratios, night)
     fill_rgb = _find_fills(table, ground_lightness, night)
-    measured = _quantize_and_measure(role_rgb, ground_rgb, fill_rgb)
+    measured = _quantize_and_measure(role_rgb, ground_rgb, fill_rgb, polarity)
     return [_assemble(measured, i, polarity) for i in range(len(table))]
-
-
-#: How conspicuous a find highlight must be before a TIMED hunt may use it, in multiples
-#: of the measured discrimination threshold.
-#:
-#: These are two different perceptual questions and the instrument was conflating them.
-#: DE_MIN is a DISCRIMINATION threshold: can two patches be told apart, side by side, at
-#: 104 px. Finding one highlighted token in a page of code is VISUAL SEARCH, which needs
-#: conspicuity -- the target has to win against every distractor at a glance -- and that
-#: takes many multiples of a discrimination step. realize() only ever required the current
-#: highlight to sit 1.5x the threshold from the ground, so themes at ~2x came through, and
-#: the active sampler sought exactly those out because an unexplored corner is where a
-#: GP's variance is highest.
-#:
-#: 4x, from the logged hunts. Over 33 usable trials, salience correlates with log find time
-#: at -0.43 (day) and -0.37 (night) -- more conspicuous really is faster -- and splitting at
-#: the median gives 3489 ms against 2066 ms by day, 2897 against 2225 by night. A faint
-#: highlight costs well over a second, which is not a measurement of the theme but of
-#: patience. 4x excludes roughly the slowest quarter of what has been shown.
-#:
-#: Applied per ARM, deliberately, and not inside realize(). A quiet highlight is a
-#: legitimate thing to PREFER, and theta 8 exists to find that trade-off, so duels must
-#: keep exploring it. What a faint highlight destroys is the timed hunt, so that is where
-#: the floor belongs.
-CONSPICUITY_FLOOR = 4.0
 
 
 def conspicuous_enough(theme, polarity):
     """Is this theme's find highlight loud enough for a timed hunt to mean anything?
 
-    `salience` is the minimum CAM16-UCS distance from the current highlight to the ground
-    and to every coloured role -- distance from everything it has to win against, which is
-    the right measure for search rather than for discrimination.
+    Every theme realize() returns already clears `conspicuity.CURRENT_BASELINE_JND`, so for
+    a realized theme this is "not None". The hunt arm still asks the question by name:
+    the baseline used to live only here, the sampler sought out the faintest highlight it
+    was allowed, and a floor that protects a measurement should be stated where that
+    measurement is taken even when the space happens to guarantee it.
     """
-    return theme is not None and theme["salience"] >= CONSPICUITY_FLOOR * DE_MIN[polarity]
+    return theme is not None and theme["conspicuity"] >= CURRENT_BASELINE_JND
 
 
 def realize_many(thetas, polarity):
@@ -485,10 +477,11 @@ def realize_uncached(theta, polarity):
 def realize(theta, polarity):
     """theta in [0,1]^9 -> a full, floor-satisfying theme (hexes + meta), or None when
     the hard constraints cannot be met. Floors are constraints, never objectives: WCAG
-    4.5:1 and APCA |Lc| >= 60 for body tokens (comments >= 4.5:1, |Lc| >= 45), and
+    4.5:1 and APCA |Lc| >= 60 for body tokens (comments >= 4.5:1, |Lc| >= 45),
     pairwise CAM16-UCS separation >= 2x the measured 104-px threshold between any two
     colored roles and ink — doubled because discrimination collapses toward glyph
-    scale; the comprehension probes measure the truth of that margin directly."""
+    scale; the comprehension probes measure the truth of that margin directly — and the
+    find highlight's baseline in the observer's own steps (`conspicuity.baselines_hold`)."""
     key = theta_key(theta, polarity)
     if key in REALIZE_CACHE:
         return REALIZE_CACHE[key]

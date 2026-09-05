@@ -25,7 +25,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from theme import space, thresholds
+from theme import conspicuity, space, thresholds
 from theme.color import apca_lc, hex_to_rgb, rgb_to_ucs, wcag
 
 # A theta is nine numbers in the unit cube; that is the whole parameter space.
@@ -69,10 +69,10 @@ def test_roles_stay_apart_by_the_margin_each_pair_is_owed(theta, polarity):
           scale and the thresholds were measured on 104-px patches.
       comment against ink : 1x threshold
           Distinguishable, deliberately not more. The italic carries the rest.
-      find-current against the ground : 1.5x
       find-current against find-other : 1x
-          The highlight has to be findable against the page and separable from its
-          siblings, which is the whole point of the salience axis.
+          The current match has to be separable from its siblings. What the fills owe the
+          PAGE is a search question, not a discrimination one, and is asserted separately
+          below in the observer's own steps.
     """
     theme = space.realize(np.array(theta), polarity)
     if theme is None:
@@ -83,7 +83,7 @@ def test_roles_stay_apart_by_the_margin_each_pair_is_owed(theta, polarity):
 
     accents = ("keyword", "function", "string")
     owed = [(a, b, 2.0) for i, a in enumerate(accents) for b in (*accents[i + 1 :], "ink")]
-    owed += [("comment", "ink", 1.0), ("find_current", "ground", 1.5), ("find_current", "find_other", 1.0)]
+    owed += [("comment", "ink", 1.0), ("find_current", "find_other", 1.0)]
     for first, second, multiple in owed:
         margin = multiple * threshold
         gap = _gap(coords, first, second)
@@ -124,14 +124,35 @@ def test_text_stays_readable_sitting_on_a_find_highlight(theta, polarity):
 
 
 @given(theta=thetas, polarity=polarities)
+@settings(max_examples=150, deadline=None)
+def test_every_highlight_clears_the_baseline_it_owes_the_page(theta, polarity):
+    """The find fills are found by SEARCH, so they owe the page a conspicuity baseline in
+    the observer's own steps -- not the 1.5 discrimination steps that used to let a tint
+    through as a highlight every few trials. Both fills, recomputed from the hexes, and the
+    published `conspicuity` field has to be that recomputation."""
+    theme = space.realize(np.array(theta), polarity)
+    if theme is None:
+        return
+    current, other = conspicuity.conspicuity_of(theme, polarity)
+    assert current >= conspicuity.CURRENT_BASELINE_JND - 1e-6, (
+        f"{polarity}: current match only {current:.2f} observer steps from the page"
+    )
+    assert other >= conspicuity.other_baseline_jnd(polarity) - 1e-6, (
+        f"{polarity}: other matches only {other:.2f} observer steps from the page"
+    )
+    assert abs(theme["conspicuity"] - current) <= 0.005 + 1e-9
+
+
+@given(theta=thetas, polarity=polarities)
 @settings(max_examples=120, deadline=None)
 def test_the_reported_salience_is_the_distance_to_everything_it_competes_with(theta, polarity):
-    """`salience` decides which themes a TIMED hunt may use, so it has to be the real number.
+    """`salience` is the raw-dE record every logged theme carries, so it has to be the real
+    number.
 
-    conspicuous_enough() gates the hunt arm on it, which means a salience computed on the
-    continuous colour rather than the rendered one would admit highlights the page never
-    actually shows. Recomputed here from the theme's own hexes -- the only values a
-    downstream reader has -- and compared against what realize() published.
+    The analysis reads it back to relate find time to loudness, which means a salience
+    computed on the continuous colour rather than the rendered one would describe highlights
+    the page never actually shows. Recomputed here from the theme's own hexes -- the only
+    values a downstream reader has -- and compared against what realize() published.
     """
     theme = space.realize(np.array(theta), polarity)
     if theme is None:
@@ -206,7 +227,7 @@ def test_every_theme_defines_every_role_the_renderer_asks_for(theta, polarity):
     theme = space.realize(np.array(theta), polarity)
     if theme is None:
         return
-    for role in (*BODY_ROLES, *QUIET_ROLES, "ground", "find_current", "find_other", "salience"):
+    for role in (*BODY_ROLES, *QUIET_ROLES, "ground", "find_current", "find_other", "salience", "conspicuity"):
         assert role in theme, f"realised {polarity} theme is missing {role!r}"
 
 
