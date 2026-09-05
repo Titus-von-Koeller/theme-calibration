@@ -139,10 +139,14 @@ def correct_choice(
     return int(rng.choice(page["ident_ids"]))
 
 
-def report(trial_number: int, choice: int, *, ms: float = 1500.0, pauses: int = 0) -> dict:
-    """What the page posts back for one answered trial."""
+def report(
+    trial_number: int, choice: int, *, ms: float = 1500.0, pauses: int = 0, vision_n: int | None = None
+) -> dict:
+    """What the page posts back for one answered trial. `vision_n` is what a colour trial
+    echoes: the vision log's length when it was shown."""
     return {
         "n": trial_number,
+        "vision_n": vision_n,
         "choice": choice,
         "t_render": 1000.0,
         "t_click": 1000.0 + ms,

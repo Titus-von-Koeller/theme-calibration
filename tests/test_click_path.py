@@ -16,9 +16,14 @@ from pathlib import Path
 import pytest
 from conftest import correct_choice, report
 
-from theme import schedule
+from theme import schedule, vision
 from theme.color import hex_to_rgb, wcag
-from theme.server import app, get_log, get_posterior, get_vision_log
+from theme.server import CHROME_INK, app, get_log, get_posterior, get_vision_log
+
+#: The first colour trial of the first block, and the trial after the colour run: a run that
+#: reaches the second is a run that crossed the arm.
+FIRST_COLOUR = schedule.DUELS_PER_BLOCK + 2 * schedule.PROBES_PER_BLOCK
+PAST_THE_COLOUR_RUN = schedule.BLOCK + 1
 
 APP_JS = Path(__file__).resolve().parents[1] / "theme" / "static" / "app.js"
 
@@ -38,6 +43,29 @@ def chrome_contrast(trial: dict) -> float:
 def text_of(html: str) -> str:
     """The characters a reader sees, with every tag and therefore every colour removed."""
     return re.sub(r"\s+", " ", re.sub(r"<[^>]*>", "", html)).strip()
+
+
+def answer_next(client, scratch_log, scratch_vision_log, scratch_posterior, *, choice=None, **how) -> dict:
+    """Answer whatever trial is next, correctly unless a choice is given, the way the page
+    would: the trial rebuilt from the logs, the vision numbering echoed back."""
+    answered, vision_answered = scratch_log.read(), scratch_vision_log.read()
+    n = len(answered)
+    if choice is None:
+        choice = correct_choice(n, answered, vision_answered, scratch_posterior)
+    return client.post("/api/response", json=report(n, choice, vision_n=len(vision_answered), **how)).json()
+
+
+def seeded_vision_log(scratch_vision_log, scratch_posterior, rows: int) -> None:
+    """A vision log as a sitting in the app would have left it: `rows` answered trials, all
+    correct, from the app's generator."""
+    history = []
+    for m in range(rows):
+        stimulus = vision.trial_for(
+            m, history, sizes=vision.APP_SIZES, generator=vision.APP_GENERATOR, posterior=scratch_posterior
+        )
+        row = vision.build_entry(m, stimulus, stimulus["odd_position"], f"2026-09-05T10:{m:02d}:00+00:00")
+        scratch_vision_log.append(row)
+        history.append(row)
 
 
 def test_a_fresh_log_starts_at_the_first_trial(client):
@@ -115,6 +143,100 @@ def test_twenty_consecutive_trials_stay_answerable(client, scratch_log):
     assert [r["n"] for r in rows] == list(range(20)), "trial numbers must be dense and ordered"
 
 
+def test_a_run_through_the_colour_arm(client, scratch_log, scratch_vision_log, scratch_posterior):
+    """Thirty-three consecutive trials from an empty log: sixteen duels, four probes, four
+    hunts, eight colour trials, and the first duel of the next block. The colour arm is the
+    one that writes to a second log and paints the page with a ground of its own, so every
+    served trial is checked for a legible frame and both logs are checked for what they
+    gained. One colour trial is answered wrong on purpose, and one is answered after a
+    notebook sitting appended to the vision log, which must be refused."""
+    served = {}
+    for n in range(PAST_THE_COLOUR_RUN):
+        if n == FIRST_COLOUR:
+            # The vision log is shared with the notebook. A row lands there between the
+            # page being shown and the answer arriving; the answer echoes the numbering it
+            # was shown and is refused, and nothing is written to either log.
+            foreign = vision.trial_for(0, [], posterior=scratch_posterior)
+            scratch_vision_log.append(vision.build_entry(0, foreign, 0, "2026-09-05T09:00:00+00:00"))
+            stale = client.post("/api/response", json=report(n, 0, vision_n=0)).json()
+            assert stale == {"ok": False, "reason": "stale", "next": stale["next"]}
+            assert stale["next"]["n"] == n and stale["next"]["vision_n"] == 1
+            assert len(scratch_log.read()) == n and len(scratch_vision_log.read()) == 1
+        wrong = n == FIRST_COLOUR + 1
+        choice = (correct_choice(n, scratch_log.read(), scratch_vision_log.read(), scratch_posterior) + 1) % 4
+        out = answer_next(client, scratch_log, scratch_vision_log, scratch_posterior, choice=choice if wrong else None)
+        assert out["ok"] is True, f"trial {n} was refused: {out}"
+        following = out["next"]
+        served[following["n"]] = following
+        assert following["cards"], f"trial {n + 1} came back with nothing to show"
+        ratio = chrome_contrast(following)
+        assert ratio >= CHROME_FLOOR, (
+            f"trial {following['n']} ({following['polarity']}, {following['mode']}) draws its chrome at "
+            f"{ratio:.2f}:1 on {following['page_bg']}"
+        )
+
+    colour_trials = [served[n] for n in range(FIRST_COLOUR, schedule.BLOCK)]
+    assert [t["mode"] for t in colour_trials] == ["discrimination"] * schedule.DISCRIMINATION_PER_BLOCK
+    assert served[schedule.BLOCK]["mode"] == "duel", "the block after the colour run starts over"
+    assert colour_trials[0]["gate"] is True and not any(t["gate"] for t in colour_trials[1:]), (
+        "one instruction serves the whole colour run"
+    )
+    for trial in colour_trials:
+        assert trial["chip"].startswith("colour") and "1 2 3 4" in trial["keys"]
+        (card,) = trial["cards"]
+        assert card["ground"] == trial["page_bg"], "the stimulus paints the whole page with its ground"
+        assert len(re.findall(r'data-slot="(\d)"', card["html"])) == 4, "four squares, one slot each"
+        assert card["html"].count(card["ground"]) == 0, "no square may be the ground colour"
+
+    rows = scratch_log.read()
+    assert [r["n"] for r in rows] == list(range(PAST_THE_COLOUR_RUN)), "trial numbers must be dense and ordered"
+    colour_rows = [r for r in rows if r["mode"] == "discrimination"]
+    assert [r["vision_n"] for r in colour_rows] == list(range(1, 9)), "each points at the vision row it made"
+    assert all("snippet" not in r and "snippet_fresh" not in r for r in colour_rows), "no page was shown"
+    assert [r["correct"] for r in colour_rows] == [True, False] + [True] * 6
+
+    vision_rows = scratch_vision_log.read()
+    assert [r["n"] for r in vision_rows] == list(range(9)), "one series across both surfaces"
+    assert "rt_ms" not in vision_rows[0] and vision_rows[0]["generator"] == vision.NOTEBOOK_GENERATOR
+    app_rows = vision_rows[1:]
+    assert len(app_rows) == schedule.DISCRIMINATION_PER_BLOCK
+    for row in app_rows:
+        assert row["rt_ms"] == pytest.approx(1500.0) and row["paused"] is False
+        assert row["surface"] == "app" and row["input_method"] == "mouse"
+        assert row["generator"] == vision.APP_GENERATOR and row["size_px"] in (16, 10)
+        assert row["ground_hex"] == served[FIRST_COLOUR + row["n"] - 1]["page_bg"], (
+            "the row's ground was the one painted"
+        )
+    assert [r["correct"] for r in app_rows] == [True, False] + [True] * 6
+
+
+def test_a_dark_ground_inside_a_day_block_gets_the_light_ink(
+    client, scratch_log, scratch_vision_log, scratch_posterior
+):
+    """The colour arm paints the page with a ground from its own family, which is dark for
+    four of the seven grounds, inside a block whose chrome ink was chosen for a light page.
+    Sixteen vision trials already answered put the app's first colour run on the night
+    ground; the block is still a day block."""
+    seeded_vision_log(scratch_vision_log, scratch_posterior, vision.BLOCK)
+    for _ in range(FIRST_COLOUR):
+        answer_next(client, scratch_log, scratch_vision_log, scratch_posterior)
+    trial = client.get(f"/api/trial/{FIRST_COLOUR}").json()
+    assert (trial["mode"], trial["polarity"], trial["vision_n"]) == ("discrimination", "day", vision.BLOCK)
+    assert trial["page_bg"] == dict(vision.GROUND_LIST)["night"], "the second ground of the family is the dark one"
+    assert trial["chrome_ink"] == CHROME_INK["night"], "the ink follows the surround, not the block's polarity"
+    assert chrome_contrast(trial) >= CHROME_FLOOR
+    out = answer_next(client, scratch_log, scratch_vision_log, scratch_posterior)
+    assert out["ok"] and scratch_vision_log.read()[-1]["ground_hex"] == trial["page_bg"]
+
+
+@pytest.mark.parametrize("ground", [hex_ for _label, hex_ in vision.GROUND_LIST])
+def test_the_chrome_is_legible_on_every_ground_the_colour_arm_can_paint(ground):
+    from theme.server import chrome_ink_for
+
+    ratio = float(wcag(hex_to_rgb([chrome_ink_for(ground)]), hex_to_rgb([ground]))[0])
+    assert ratio >= CHROME_FLOOR, f"{chrome_ink_for(ground)} on {ground} is {ratio:.2f}:1"
+
+
 @pytest.mark.parametrize("n,expected_polarity", [(0, "day"), (schedule.BLOCK, "night")])
 def test_the_chrome_is_legible_on_both_polarities(client, n, expected_polarity):
     """A screenshot once caught the chrome rendering at 1.1:1 on a light ground, which no
@@ -171,6 +293,19 @@ def test_the_clock_is_baselined_only_by_a_reveal():
     reveal = source.split("function reveal()", 1)[1].split("\nfunction ", 1)[0]
     assert now_assignments[0] in reveal, "the clock's baseline must be set inside reveal()"
     assert "t0 < 0" in source, "answering with no baseline must be refused, not timed from -1"
+
+
+def test_the_page_echoes_the_vision_numbering_and_answers_the_slots_with_four_keys():
+    """Two things only the page can do for the colour arm, checked in the source because
+    that is where they live: echo `vision_n` so the recorder can refuse an answer whose
+    vision log moved on, and answer the four slots with four keys equidistant from the hand
+    -- at glyph scale a square is a near-unclickable target, and a per-slot difference in
+    motor cost is exactly what a guess drifts toward."""
+    source = APP_JS.read_text()
+    body = source.split("const body = {", 1)[1].split("};", 1)[0]
+    assert "vision_n: trial.vision_n" in body, "the answer must carry the vision numbering it was shown"
+    assert '["1", "2", "3", "4"].includes(k)' in source, "four keys, one per slot"
+    assert "answer(parseInt(k, 10) - 1)" in source, "key 1 is slot 0"
 
 
 def test_a_refused_answer_is_shown_to_whoever_gave_it():

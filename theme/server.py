@@ -127,7 +127,7 @@ def _chrome(trial: dict, polarity: str, position: int, run_length: int) -> dict:
     """The instrument's own furniture around the stimulus."""
     page_bg = responses.surround_for(trial, polarity)
     chip = (
-        f"colour · {trial['vision']['size_px']} px · {trial['vision']['ground']}"
+        f"{ARM_LABEL['discrimination']} · {trial['vision']['size_px']} px · {trial['vision']['ground']}"
         if trial["mode"] == "discrimination"
         else f"{ARM_LABEL[trial['mode']]} · {polarity} page"
     )
@@ -165,6 +165,10 @@ def payload(n: int, answered: list[dict], vision_answered: list[dict], posterior
     page = page_for(trial)
     return {
         "n": n,
+        # The colour arm is numbered by the vision log. The page echoes this back with its
+        # answer, as it echoes n, so the recorder can refuse an answer whose vision log has
+        # moved on -- a notebook sitting appends to the same log.
+        "vision_n": trial.get("vision_n"),
         **_stage(n, trial, page),
         **_chrome(trial, polarity, position, run_length),
     }
@@ -205,6 +209,8 @@ def api_trial(n: int, log: LogDep, vision_log: VisionLogDep, posterior: Posterio
 
 class Answer(BaseModel):
     n: int
+    #: The vision log's length when a colour trial was shown; None on the other arms.
+    vision_n: int | None = None
     choice: int
     t_render: float
     t_click: float
@@ -225,12 +231,19 @@ def api_response(a: Answer, log: LogDep, vision_log: VisionLogDep, posterior: Po
     rows before it, so the trial rebuilt here is the same one the page was shown -- with no
     dependence on anything cached in this process, and therefore none on whether the server
     has restarted since the page loaded.
+
+    A colour trial is built from the VISION log as well, which a notebook sitting appends
+    to. The same guard covers it: the page echoes the vision numbering it was shown, and an
+    answer whose vision log has since grown is refused rather than recorded against squares
+    that were never on screen. Neither number is trusted; both are compared with the logs.
     """
     answered = log.read()
     vision_answered = vision_log.read()
     if a.n != len(answered):
         return {"ok": False, "reason": "stale", "next": payload(len(answered), answered, vision_answered, posterior)}
     trial = trial_for(a.n, answered, vision_answered, posterior)
+    if trial["mode"] == "discrimination" and a.vision_n != trial["vision_n"]:
+        return {"ok": False, "reason": "stale", "next": payload(a.n, answered, vision_answered, posterior)}
     entry = responses.build_entry(a.n, trial, page_for(trial), a.model_dump())
     if trial["mode"] == "discrimination":
         # The measurement goes to the vision log, which is the observer's one input; the

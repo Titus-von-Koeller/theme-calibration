@@ -167,6 +167,7 @@ async function answer(choice) {
   if (idleTimer) clearTimeout(idleTimer);
   const body = {
     n: trial.n,
+    vision_n: trial.vision_n ?? null,   // the colour arm's own numbering, echoed for the stale check
     choice,
     t_render: t0,
     t_click: performance.now(),
@@ -239,7 +240,7 @@ document.addEventListener("keydown", (ev) => {
     ev.preventDefault();
     inputMethod = "key";
     answer(k === "ArrowLeft" ? 0 : 1);
-  } else if (trial && trial.mode === "discrimination" && revealed && !paused && "1234".includes(k) && k !== "") {
+  } else if (trial && trial.mode === "discrimination" && revealed && !paused && ["1", "2", "3", "4"].includes(k)) {
     // Four keys, one per slot, equidistant from the hand: at glyph scale the squares are
     // near-unclickable targets, and a per-slot difference in motor cost is exactly what a
     // guess drifts toward -- and a guess is what a threshold trial elicits.
