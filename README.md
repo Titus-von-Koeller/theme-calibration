@@ -151,6 +151,38 @@ it.
     pixi run test       # the recovery tests
     pixi run check      # ruff format --check and ruff check
 
+## A sitting, start to finish
+
+Start the instrument and open it in your real browser, full screen:
+
+    pixi run serve          # then http://127.0.0.1:2919
+
+The page opens on a **begin** button with one instruction. That gate appears once per run
+and never inside one: the clock starts when you press it, so opening the tab and walking away
+costs nothing. A block is 32 trials in four runs, each kind batched so you never switch task
+mid-stride:
+
+| run | trials | what you do | answer with |
+|---|---|---|---|
+| duels | 16 | two pages of the same code, one theme each; pick the one you would rather read. Trust the first pull; a slow choice reads as a tie | ← → or click a page |
+| probes | 4 | one page; the line above names a function; find it | click the name |
+| hunts | 4 | one page with several highlighted matches; find the current one | click it |
+| colour | 8 | four small squares, three of one colour; find the odd one. Most should feel like guessing; that is the instrument working | 1 2 3 4 or click |
+
+Space pauses and resumes; hiding the tab pauses; 25 s without an answer covers the stimulus
+until you resume. A paused trial still counts, at the neutral slope. A block takes about five
+minutes; a sitting is one or two. Blocks alternate day and night pages, leaning night while
+night is the thinner half. Every answer appends one row to `data/aesthetics-responses.jsonl`
+(colour trials also to `data/calibration-responses.jsonl`) before the next trial appears, so
+closing the tab loses nothing and reopening it resumes exactly where you stopped.
+
+Afterwards, read what changed:
+
+    pixi run verdict        # both polarities, in the terminal
+    pixi run analyse        # the same as a notebook, with the shelf drawn
+
+Then, when a verdict is worth applying, the section below.
+
 ## From the log to the editor, and back
 
 `pixi run publish` writes the champion palettes; `apply-measured-theme --apply` (in
