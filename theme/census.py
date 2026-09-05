@@ -8,9 +8,18 @@ this finds: the badge in Horizon's pink, the workbench text a step darker than t
 the notebook card frame baked as a literal. Every pixel colour that covers more than a
 declared share of the screenshot is classified as one of the palette's colours, a derived
 surface, one of their alpha composites, an antialiasing blend between two of them, or
-FOREIGN -- and the foreign ones are the work list. The filtered renders (grayscale,
-deuteranope, saturation-only) are written beside the screenshot for the eye's second
-opinion; the table is the measurement.
+FOREIGN -- and the foreign ones are the work list. Two model-free renders (grayscale,
+saturation-only) are written beside the screenshot for the eye's second opinion; the table
+is the measurement.
+
+The second table is the observer's. A population colour-deficiency filter was here first
+and was removed the same day (Titus: it biases the judgement toward a spectrum position he
+has not been measured to hold). Instead the census asks the ONE observer model in
+`theme.observer` -- fitted from his own discrimination log -- which pairs of colours on
+this screen his eyes tell apart worst. As the vision arm accumulates trials the fit sharpens
+and this table tightens on its own; nothing here encodes an assumption about his eyes that
+the log did not put there. Predictions are made at the patch size the log has measured; the
+glyph-scale prediction waits on the size exponent, and the table says which regime it is in.
 
 Takes a PNG rather than taking the screenshot, so the keyhole (or anyone) supplies the
 pixels and this stays a pure function of an image and a palette.
@@ -24,8 +33,9 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from . import paths
+from . import observer, paths
 from .color import composite, hex_to_rgb, rgb_to_ucs
+from .thresholds import REFERENCE_SIZE_PX, size_is_identified
 
 #: A colour under this share of the pixels is noise (antialiasing edges, icons) unless it
 #: is loud; a loud colour is reported from a far smaller share, because a badge is small.
@@ -46,10 +56,9 @@ BLEND_RGB = 6.0
 #: The alphas the applier writes tints at, so their composites are known colours too.
 TINT_ALPHAS = (0x99, 0x80, 0xB3, 0x66, 0x4D, 0xD9, 0x73)
 
-# Machado, Oliveira and Fernandes (2009), deuteranopia at full severity, linear RGB.
-DEUTERANOPE = np.array(
-    [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.011820, 0.042940, 0.968881]]
-)
+#: The P(correct) under which the observer's pairwise check reports a pair as hard to tell
+#: apart (chance in the four-alternative task is 0.25).
+CONFUSION_P = 0.90
 
 
 def known_colours(palette):
@@ -132,19 +141,53 @@ def census(png_path, palette):
     return rows
 
 
+def colours_that_mean_something(palette, foreign_rows):
+    """The colours whose confusion would matter: every palette role and signal, plus whatever
+    the census found foreign. Antialiasing variants of one colour are left out on purpose --
+    a pair one hex step apart is at chance for every observer and says nothing."""
+    roles = ("ground", "page", "border", "ink", "comment", "punct", "keyword", "function", "string", "find_fill")
+    hexes = [palette[role].lower() for role in roles]
+    hexes += [hex_.lower() for name, hex_ in palette.get("signals", {}).items() if not name.endswith("_bright")]
+    hexes += [row[1] for row in foreign_rows]
+    return list(dict.fromkeys(hexes))
+
+
+def observer_confusions(hexes, ground_hex, fit=None, size_px=None):
+    """Pairs among `hexes` the fitted observer tells apart worst on this ground, sorted by
+    predicted P(correct) in the four-alternative task; (pair, p, size used, regime note)."""
+    fit = fit or observer.fit(paths.VISION_LOG)
+    if size_px is None:
+        size_px = REFERENCE_SIZE_PX
+        regime = f"at the measured {REFERENCE_SIZE_PX:.0f} px; the glyph-scale prediction waits on the size exponent"
+        if size_is_identified(fit):
+            regime = f"at {REFERENCE_SIZE_PX:.0f} px (the size exponent is identified; pass --size to predict a glyph)"
+    else:
+        regime = f"at {size_px:.0f} px" + (
+            "" if size_is_identified(fit) else " -- scaled by the exponent's PRIOR, not data"
+        )
+    pairs = []
+    for i, first in enumerate(hexes):
+        for second in hexes[i + 1 :]:
+            p = observer.discriminability(fit, first, second, ground_hex, size_px)
+            if p < CONFUSION_P:
+                pairs.append((first, second, float(p)))
+    pairs.sort(key=lambda row: row[2])
+    return pairs, size_px, regime
+
+
 def write_filters(png_path):
-    """Grayscale, deuteranope and saturation-only renders beside the screenshot."""
+    """Grayscale and saturation-only renders beside the screenshot: model-free views that
+    show structure without hue and hue without structure."""
     image = Image.open(png_path).convert("RGB")
     stem = Path(png_path).with_suffix("")
     image.convert("L").save(f"{stem}-gray.png")
     linear = np.asarray(image) / 255.0
-    Image.fromarray((np.clip(linear @ DEUTERANOPE.T, 0, 1) * 255).astype(np.uint8)).save(f"{stem}-deuteranope.png")
     high, low = linear.max(-1), linear.min(-1)
     saturation = np.where(high > 0, (high - low) / np.maximum(high, 1e-9), 0.0)
     gray = np.asarray(image.convert("L"))[..., None] // 3 + 150
     stray = np.where((saturation > 0.18)[..., None], np.asarray(image), gray)
     Image.fromarray(stray.astype(np.uint8)).save(f"{stem}-saturation.png")
-    return [f"{stem}-gray.png", f"{stem}-deuteranope.png", f"{stem}-saturation.png"]
+    return [f"{stem}-gray.png", f"{stem}-saturation.png"]
 
 
 def main(argv=None) -> int:
@@ -153,6 +196,7 @@ def main(argv=None) -> int:
     parser.add_argument("--polarity", choices=("day", "night"), default="day")
     parser.add_argument("--champion", type=Path, default=paths.CHAMPION)
     parser.add_argument("--no-filters", action="store_true")
+    parser.add_argument("--size", type=float, help="predict discriminability at this patch size in px")
     args = parser.parse_args(argv)
     palette = json.loads(args.champion.read_text())[args.polarity]
     rows = census(args.png, palette)
@@ -160,6 +204,15 @@ def main(argv=None) -> int:
     for _verdict, hex_, count, share, label, distance, box, loud in rows:
         flag = "LOUD " if loud else "     "
         print(f"  {flag}{hex_} {count:8d} px {100 * share:6.3f}%  {label} ({distance:.1f} dE)  at {box}")
+    if paths.VISION_LOG.exists():
+        hexes = colours_that_mean_something(palette, rows)
+        pairs, size_px, regime = observer_confusions(hexes, palette["ground"], size_px=args.size)
+        print(f"pairs among the {len(hexes)} colours that carry meaning here which your fitted observer")
+        print(f"tells apart worst, {regime}:")
+        for first, second, p in pairs[:12]:
+            print(f"  {first} vs {second}  P(correct) {p:.2f}")
+        if not pairs:
+            print(f"  none under P(correct) {CONFUSION_P} at {size_px:.0f} px")
     if not args.no_filters:
         for path in write_filters(args.png):
             print(f"  wrote {path}")

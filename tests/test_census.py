@@ -8,7 +8,7 @@ badge is the only thing the census may report.
 import numpy as np
 from PIL import Image
 
-from theme.census import census, known_colours
+from theme.census import census, known_colours, observer_confusions
 from theme.color import composite, hex_to_rgb
 
 PALETTE = {
@@ -51,3 +51,12 @@ def test_known_colours_include_the_signals_and_the_tints():
     known = known_colours(PALETTE)
     assert known["#c83023"] == "signal red"
     assert any(label.startswith("border tint") for label in known.values())
+
+
+def test_the_observer_check_uses_the_fitted_model_not_a_population_filter():
+    """A near-identical pair is reported, a far pair is not, and the report says which size
+    regime the prediction is made in -- the fit is Titus's own log, sharpening as it grows."""
+    pairs, size_px, regime = observer_confusions(["#f9ecdd", "#f9ecde", "#7f0179"], "#f9ecdd")
+    assert [pair[:2] for pair in pairs] == [("#f9ecdd", "#f9ecde")]
+    assert pairs[0][2] < 0.5, "two colours one step apart are at chance"
+    assert size_px == 104.0 and "px" in regime
