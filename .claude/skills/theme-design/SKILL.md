@@ -454,6 +454,12 @@ interact, and choose the best combination — every step from measurement.
   ignoring the clock by 0.0013 nats/duel on held-out log-loss at 215 duels, under the 0.002
   the notebook treats as earning. Keep zero in the grid; the channel stays honest by being
   allowed to lose.
+- **No population vision model in any instrument; ask the fitted observer and say the regime.**
+  A deuteranope render in the census was removed the day it was added (Titus: it biases the
+  judgement toward a spectrum position he has not been measured to hold). Every prediction
+  about what he can tell apart comes from `theme.observer`'s fit of his own log, at the size
+  the log has measured, with the regime stated when the size exponent's prior is doing the
+  scaling. The fit sharpens as the vision arm accumulates; a hardcoded filter never would.
 - A surface's beauty is allowed to vote and never to overrule the instruments; Titus's eyes
   outrank both — his comparison across a gallery row is the final measurement.
 - Verify a theme change by **pixel-sampling a screenshot against the expected hexes**, never by
