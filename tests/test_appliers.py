@@ -1,4 +1,5 @@
-"""The appliers write exactly their region and refuse anything else.
+"""The appliers write exactly their region, refuse anything else, and the contract table
+names a writer that exists for every surface.
 
 Plant a palette module shaped like loop-to-cluster's, write the region, and check what came
 back: the measured values where the hand-written ones stood, the data palettes byte-identical,
@@ -6,6 +7,7 @@ a second write replacing in place, a hand-written owned name retired wherever it
 and a refusal whenever the result would not be the module the notebooks import.
 """
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -156,3 +158,53 @@ def test_the_ink_pair_keeps_the_viz_crossovers():
     for arm in (0.5 - 0.74 / 2, 0.5 + 0.74 / 2):  # beyond 0.71 of either arm the light ink wins
         assert _contrast(light, _along(polarity, arm)) > _contrast(dark, _along(polarity, arm))
     assert _contrast(dark, _along(polarity, 0.5)) > _contrast(light, _along(polarity, 0.5))
+
+
+# -- the contract table ---------------------------------------------------------------------
+
+SURFACES_DOC = ROOT / "docs" / "surfaces.md"
+
+
+def _table_rows() -> list[list[str]]:
+    lines = [ln for ln in SURFACES_DOC.read_text().splitlines() if ln.startswith("|")]
+    header, _rule, *rows = lines
+    columns = [c.strip() for c in header.strip("|").split("|")]
+    assert columns == ["Surface", "Reads", "Role -> class", "Writer", "Pixel-verified by"], columns
+    return [[c.strip() for c in row.strip("|").split("|")] for row in rows]
+
+
+def test_every_surface_names_a_writer_or_says_none_yet():
+    rows = _table_rows()
+    names = [row[0] for row in rows]
+    for wanted in (
+        "Plain editor",
+        "Notebook cell",
+        "Notebook page",
+        "Notebook markdown",
+        "Notebook outputs",
+        "Terminal",
+        "Chat panel",
+        "marimo widgets",
+        "matplotlib / altair",
+        "The trial app",
+    ):
+        assert any(name.startswith(wanted) for name in names), f"no row for {wanted}"
+    for row in rows:
+        writer = row[3]
+        assert writer, f"{row[0]}: empty writer cell"
+        assert "none yet" in writer or re.search(r"`[^`]+`", writer), f"{row[0]}: names no writer and does not say so"
+
+
+def test_every_writer_the_table_names_exists():
+    """Every relative writer path the table names exists in this repo or in loop-to-cluster.
+
+    The same severity model as the reef physical: a relative path is a claim about a known
+    tree and fails here; a `~/dotfiles/...` path is a claim about another repository, which
+    the physical checks against the live tree and reports as a warning, because the file
+    can legitimately be on a branch that has not merged yet."""
+    repos = [repo for repo in (ROOT, Path.home() / "src" / "loop-to-cluster") if repo.exists()]
+    for row in _table_rows():
+        for token in re.findall(r"`([^`]+)`", row[3]):
+            if " " in token or "/" not in token or token.startswith("~"):
+                continue  # a command, a key, a name, or another repository's file
+            assert any((repo / token).exists() for repo in repos), f"{row[0]}: no {token} in any known repo"

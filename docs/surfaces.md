@@ -1,0 +1,47 @@
+# The surface contract: which surface reads what, and who writes it
+
+Every colour on a screen is one of four kinds -- furniture, controls, signals, data -- and
+each kind has exactly one writer (the method reef, "The four kinds of colour on a screen").
+This table is that rule per SURFACE: what each surface reads, which palette role and colour
+class each key maps to, the writer, and how the result is pixel-verified. The syntax roles
+(keyword, function, string, comment, punct on tokens) are the measured palette itself rather
+than one of the four classes; the table marks them "syntax".
+
+The source is the published palette (`pixi run publish` writes data/measured-theme.json, one
+object per polarity: ground, page, border, ink, comment, punct, keyword, function, string,
+find_fill, and signals.*). A role with no writer is Horizon's or VSCode's default and
+`pixi run census -- shot.png` names it on a screenshot of the real window. Every row below
+names a writer or says **none yet**; `tests/test_appliers.py` checks that each named writer
+exists on every commit, and the reef physical checks the same paths against the live tree.
+
+This is the view per surface. The view per KEY -- which palette role each VSCode colour key
+carries, grouped by colour class, with the measurement that put it there -- is the theming
+map `~/dotfiles/home/theme/vscode-map.toml`, which the dotfiles applier reads; the two must
+agree, and a key that appears here must have a role there.
+
+| Surface | Reads | Role -> class | Writer | Pixel-verified by |
+| --- | --- | --- | --- | --- |
+| Plain editor (the workbench document; textMate plus semantic tokens) | `editor.background`, `editor.foreground`, `editorIndentGuide.*`, `editor.selectionBackground` and the other border tints, `editor.findMatch*`, `editorCursor.foreground`, `editorRuler.foreground`; the textMate rules and the semantic `module`/`namespace`/`class`/`type`/`decorator`/`string` | ground, ink, border tints -> furniture; find_fill and the cursor -> controls; token scopes -> syntax | `~/dotfiles/home/editors/vscode/apply-measured-theme.py`, regions `day-workbench`, `day-tokens`, `day-semantic` and their night twins in `~/dotfiles/home/editors/vscode/settings.jsonc` | `pixi run census -- shot.png` on a window screenshot; the application is recorded in data/applied-themes.jsonl |
+| Notebook cell (the code editor inside a cell, workbench document) | `notebook.cellEditorBackground` plus the editor keys above; `ty`'s semantic tokens (`namespace`); the card frame `notebook.outputContainerBorderColor` and its focused state `focusBorder` | ground -> furniture; frame -> furniture; focused frame -> controls; tokens -> syntax | the applier's `*-workbench` and `*-semantic` regions; the card, column and fold strip that read the two frame keys: `~/dotfiles/home/editors/vscode/notebook/cell-chrome.css` | census on a notebook window screenshot |
+| Notebook page (the ground the cards sit on) | `notebook.editorBackground`; the card elevation `--notebook-card-elevation` | page -> furniture; the shadow is a literal rgba of a darkened Horizon page (day) and black (night) | the applier's `*-workbench` region for the page; the shadow: **none yet** (a literal in `~/dotfiles/home/editors/vscode/notebook/cell-chrome.css` and restated in `~/dotfiles/home/editors/vscode/notebook/webview-layout.py`, because no theme key carries an elevation) | census |
+| Notebook markdown (the preview shadow root inside each markdown cell) | `--vscode-editor-foreground`, `--vscode-textLink-foreground`, `--vscode-textBlockQuote-background`, `--vscode-textSeparator-foreground`, `--vscode-textPreformat-foreground` and `-background` | ink, border tint (rules, chips, quotes) -> furniture; textLink -> controls | the keys: the applier's `*-workbench` and `*-signals` regions; the rules that read them: `~/dotfiles/home/editors/vscode/notebook/preview-typography.py` | census; `getComputedStyle` over CDP inside the backlayer webview's shadow roots |
+| Notebook outputs (the backlayer webview document) | `notebook.outputContainerBackgroundColor`; the output card's frame `notebook.outputContainerBorderColor`, which arrives as `--theme-notebook-output-border` | ground, border -> furniture | the keys: the applier's `*-workbench` region; the card rule: `~/dotfiles/home/editors/vscode/notebook/webview-layout.py` | census; computed styles over CDP in the webview's `#active-frame` document |
+| Terminal | `terminal.background`, `terminal.foreground`, `terminal.ansiBlack`, `terminal.ansiWhite`, `terminal.ansiBright*`, the other `terminal.ansi*` | ground, ink, comment (ansiWhite, ansiBrightBlack) -> furniture; the sixteen ANSI colours -> signals | the applier's `*-workbench` region (paper and inks) and `*-signals` region (the ANSI set, from `theme/signals.py`) | census on a screenshot with the terminal open |
+| Chat panel (the Claude Code webview) | `--vscode-menu-background`, `--vscode-input-border`, `--vscode-badge-*`, `--vscode-button-*`, `--vscode-charts-*`, `--vscode-descriptionForeground`, `--vscode-textPreformat-*`, `--vscode-focusBorder`, `--vscode-foreground`; two literals in the extension's webview stylesheet (the Remote Control pill's blue, the status greens and reds) | page, border, comment, ink -> furniture; badge, button, focus ring -> controls; charts.* -> signals | the keys: the applier's `*-workbench` and `*-signals` regions; the literals: `~/dotfiles/home/editors/vscode/patches/claude_code_composer_theme.py` through `~/dotfiles/home/editors/vscode/patches/engine.py` | census; `getComputedStyle` over CDP one frame down (the panel lives in `#active-frame`) |
+| marimo widgets (the marimo renderer inside the outputs webview) | marimo's own `--background`, `--foreground`, `--muted`, `--muted-foreground`, `--border`, `--input`, `--primary`, `--primary-foreground`, `--secondary`, `--secondary-foreground`, `--accent`, `--accent-foreground`, `--ring`, `--card`, `--card-foreground`, `--popover`, `--popover-foreground`, `--destructive`, `--success`, `--action`, `--link`, each mapped onto a `--vscode-*` key | ground, page (muted, input, card, popover), border, ink, comment (muted-foreground) -> furniture; primary, ring, link, accent -> controls; destructive, success, action -> signals | the mapping: marimo's renderer for most of them; `~/dotfiles/home/editors/vscode/patches/marimo_theme_vars.py` for card, popover and muted-foreground, which the renderer left as literals and a default; the key values: the applier's `*-workbench` and `*-signals` regions | `getComputedStyle(document.documentElement)` over CDP in the notebook webview's `#active-frame`, one property at a time; census |
+| matplotlib / altair output (graph furniture) | `FURNITURE[polarity]` (paper, page, ink, label, grid, axis) and the ink pair `INK_LIGHT` / `INK_DARK` in loop-to-cluster's `notebooks/pytorch-basics/_palette.py` | paper, page, ink, comment (label), border (grid, axis) -> furniture; the ink pair on a data fill is the two papers -> furniture | `theme/appliers/viz.py` writes the region; the charts that read FURNITURE for their axes and gridlines: **none yet** (`notebooks/pytorch-basics/_viz.py` draws axis-less tensors on a transparent canvas, and nothing sets matplotlib's rcParams) | census on a screenshot of the rendered output; `marimo export html` for a headless render |
+| Data marks (RAMP, OKABE_ITO, POLARITY, BASE, ACCENT) | the constants in `notebooks/pytorch-basics/_palette.py` | data: chosen by discriminability under the fitted observer at mark size, never by the theme | **no applier, by design**: `theme/appliers/viz.py` refuses any write that would change them; the gallery ranks them | the gallery's worst-pair ranking; the census reports them as foreign, which for a data mark is correct |
+| The trial app itself (the instrument's page) | the candidate theme's roles inlined per trial by `theme/stimulus.py`; the chrome ink chosen against the surround by `theme/server.py`; one literal in `theme/static/app.css` for the instant before the first trial | the candidate -> the stimulus, deliberately not the applied palette; chrome ink -> furniture | `theme/stimulus.py` and `theme/server.py` | `tests/test_click_path.py` through the real app, and a screenshot of the served page; never the census, since a candidate is meant to be foreign to the applied palette |
+
+## What the table does not cover yet
+
+- **marimo's code highlighting** inside markdown code blocks reads `--codehilite-*` and
+  `--linenos-*` custom properties declared as `light-dark()` literals in the renderer; no
+  writer maps them onto the token colours, so a fenced code block in a marimo markdown output
+  shows marimo's own syntax palette.
+- **The notebook card elevation** has no theme key on either surface, so it stays a literal
+  derived from Horizon's page hue (row 3). The census does not see it as a flat colour, so it
+  hides; it would show as a temperature clash on a very different paper.
+- **Pixel verification of the marimo widget variables** requires a notebook webview that has
+  loaded the patched renderer, which happens when a notebook webview next opens: the patch
+  writes a file on disk, and a running webview keeps the stylesheet it parsed.
