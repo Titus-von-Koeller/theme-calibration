@@ -135,6 +135,34 @@ def _comprehension_fields(page: dict, reported: dict, rng) -> dict:
     }
 
 
+def _discrimination_fields(trial: dict, reported: dict) -> dict:
+    """The bookkeeping half of a discrimination answer. The measurement itself is the row
+    `vision_entry` builds for the vision log; this row keeps the app's trial numbering dense
+    and says where to find it."""
+    stimulus = trial["vision"]
+    return {
+        "vision_n": trial["vision_n"],
+        "size_px": stimulus["size_px"],
+        "ground_hex": stimulus["ground_hex"],
+        "choice": reported["choice"],
+        "correct": reported["choice"] == stimulus["odd_position"],
+    }
+
+
+def vision_entry(trial: dict, reported: dict, ts: str) -> dict:
+    """The row a discrimination answer appends to the VISION log: the generator's own record
+    plus the clock this surface exists to provide."""
+    from .vision import build_entry as build_vision_entry
+
+    timing = {
+        "surface": "app",
+        "input_method": reported.get("input_method", "mouse"),
+        "rt_ms": round(reported["t_click"] - reported["t_render"], 1),
+        "paused": reported.get("pauses", 0) > 0,
+    }
+    return build_vision_entry(trial["vision_n"], trial["vision"], reported["choice"], ts, timing)
+
+
 def _search_fields(trial: dict, page: dict, reported: dict, rng) -> dict:
     target_span = rng.choice(page["ident_ids"])
     return {
@@ -154,6 +182,12 @@ def build_entry(trial_number: int, trial: dict, page: dict, reported: dict) -> d
     else is recomputed here from the trial itself.
     """
     rng = rng_for(trial_number)
+    if trial["mode"] == "discrimination":
+        return {
+            "n": trial_number,
+            **_stimulus_fields(trial, {"id": None}, reported),
+            **_discrimination_fields(trial, reported),
+        }
     per_arm = {
         "duel": lambda: _duel_fields(trial, page, reported, rng),
         "comprehension": lambda: _comprehension_fields(page, reported, rng),

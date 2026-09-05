@@ -29,7 +29,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import responses, stimulus, trialspec
+from . import paths, responses, stimulus, trialspec, vision
+from .color import hex_to_rgb, wcag
 from .schedule import run_info, trial_for
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -47,7 +48,7 @@ async def warm_the_model(_app: FastAPI):
     """
     try:
         answered = responses.DEFAULT_LOG.read()
-        payload(len(answered), answered)
+        payload(len(answered), answered, DEFAULT_VISION_LOG.read(), DEFAULT_POSTERIOR)
     except Exception as exc:  # a warm-up must never stop the app from serving
         print(f"warm-up skipped, so the first trial will pay for the fit: {exc!r}")
     yield
@@ -62,11 +63,29 @@ app = FastAPI(title="theme trials", lifespan=warm_the_model)
 CHROME_INK = {"day": "#3a3634", "night": "#cfcac6"}
 
 # What the chip in the corner calls each arm: short, so the eye takes it in one hit.
-ARM_LABEL = {"duel": "duel", "comprehension": "spot", "search": "find"}
+ARM_LABEL = {"duel": "duel", "comprehension": "spot", "search": "find", "discrimination": "colour"}
+
+#: The vision log the fourth arm appends to, and the posterior kept warm beside it.
+DEFAULT_VISION_LOG = responses.ResponseLog(paths.VISION_LOG)
+DEFAULT_POSTERIOR = vision.POSTERIOR
 
 
-def page_for(trial: dict) -> dict:
-    """The code page a trial is shown on, with its width and length preferences."""
+def chrome_ink_for(page_bg: str) -> str:
+    """The chrome ink that contrasts with THIS surround.
+
+    A discrimination trial paints the page with its own ground, which may be dark inside a
+    day block or light inside a night one, so the ink follows the surround rather than the
+    polarity.
+    """
+    ground = hex_to_rgb([page_bg])
+    return max(CHROME_INK.values(), key=lambda ink: float(wcag(hex_to_rgb([ink]), ground)[0]))
+
+
+def page_for(trial: dict) -> dict | None:
+    """The code page a trial is shown on, with its width and length preferences. None for
+    an arm that shows no code."""
+    if trial["mode"] == "discrimination":
+        return None
     return stimulus.snippet_for(
         trial["snippet"],
         trial.get("snippet_width"),
@@ -94,20 +113,26 @@ def _stage(n: int, trial: dict, page: dict) -> dict:
 
 def _chrome(trial: dict, polarity: str, position: int, run_length: int) -> dict:
     """The instrument's own furniture around the stimulus."""
-    is_duel = trial["mode"] == "duel"
+    page_bg = responses.surround_for(trial, polarity)
+    chip = (
+        f"colour · {trial['vision']['size_px']} px · {trial['vision']['ground']}"
+        if trial["mode"] == "discrimination"
+        else f"{ARM_LABEL[trial['mode']]} · {polarity} page"
+    )
+    keys = {"duel": "← →  or click", "discrimination": "1 2 3 4  or click"}.get(trial["mode"], "space pauses")
     return {
         "polarity": polarity,
-        "chip": f"{ARM_LABEL[trial['mode']]} · {polarity} page",
+        "chip": chip,
         # The same rule the recorded row uses, from the same place, so the row cannot
         # describe a surround other than the one painted.
-        "page_bg": responses.surround_for(trial, polarity),
+        "page_bg": page_bg,
         # The instrument's OWN chrome -- prompt, chip, progress, the gate -- has to contrast
-        # with whatever surround this trial paints, and the surround flips with polarity. A
-        # stylesheet cannot know that, so it is sent per trial. Getting it wrong is not
-        # cosmetic: a light chrome on a light day page is an invisible instruction and an
-        # invisible begin button.
-        "chrome_ink": CHROME_INK[polarity],
-        "keys": "← →  or click" if is_duel else "space pauses",
+        # with whatever surround this trial paints, and the surround flips with polarity and,
+        # on the colour arm, with the ground under test. A stylesheet cannot know that, so it
+        # is sent per trial. Getting it wrong is not cosmetic: a light chrome on a light day
+        # page is an invisible instruction and an invisible begin button.
+        "chrome_ink": chrome_ink_for(page_bg),
+        "keys": keys,
         "progress": f"{position + 1} of {run_length}",
         # A gate only at the START of a run: one instruction serves the whole run, and no
         # click is spent re-reading it mid-stride.
@@ -116,12 +141,12 @@ def _chrome(trial: dict, polarity: str, position: int, run_length: int) -> dict:
     }
 
 
-def payload(n: int, answered: list[dict]) -> dict:
+def payload(n: int, answered: list[dict], vision_answered: list[dict], posterior=None) -> dict:
     """Everything the page needs to show trial n, and nothing it does not.
 
     The keys here are a contract with static/app.js and are read nowhere else.
     """
-    trial = trial_for(n, answered)
+    trial = trial_for(n, answered, vision_answered, posterior)
     # The log BEFORE trial n, the same prefix trial_for reads, so the run gate and the
     # progress readout agree with the arm and the polarity the trial was actually built at.
     polarity, _arm, position, run_length = run_info(n, answered[:n])
@@ -143,14 +168,27 @@ def get_log() -> responses.ResponseLog:
     return responses.DEFAULT_LOG
 
 
+def get_vision_log() -> responses.ResponseLog:
+    """The colour-discrimination log the fourth arm appends to; the same seam as get_log."""
+    return DEFAULT_VISION_LOG
+
+
+def get_posterior() -> vision.Posterior:
+    """The observer posterior the fourth arm generates from. A test points it at a scratch
+    directory, so its sidecar never lands beside the real log."""
+    return DEFAULT_POSTERIOR
+
+
 #: Annotated rather than a `Depends()` default: a call in a default argument is evaluated
 #: once at import and is the usual source of surprising shared state.
 LogDep = Annotated[responses.ResponseLog, Depends(get_log)]
+VisionLogDep = Annotated[responses.ResponseLog, Depends(get_vision_log)]
+PosteriorDep = Annotated[vision.Posterior, Depends(get_posterior)]
 
 
 @app.get("/api/trial/{n}")
-def api_trial(n: int, log: LogDep) -> dict:
-    return payload(n, log.read())
+def api_trial(n: int, log: LogDep, vision_log: VisionLogDep, posterior: PosteriorDep) -> dict:
+    return payload(n, log.read(), vision_log.read(), posterior)
 
 
 class Answer(BaseModel):
@@ -163,7 +201,7 @@ class Answer(BaseModel):
 
 
 @app.post("/api/response")
-def api_response(a: Answer, log: LogDep) -> dict:
+def api_response(a: Answer, log: LogDep, vision_log: VisionLogDep, posterior: PosteriorDep) -> dict:
     """Append one answer, then hand back the next trial in the same round trip.
 
     The guard matters for the reason it always did: the trial is recomputed from the LOG at
@@ -177,13 +215,20 @@ def api_response(a: Answer, log: LogDep) -> dict:
     has restarted since the page loaded.
     """
     answered = log.read()
+    vision_answered = vision_log.read()
     if a.n != len(answered):
-        return {"ok": False, "reason": "stale", "next": payload(len(answered), answered)}
-    trial = trial_for(a.n, answered)
+        return {"ok": False, "reason": "stale", "next": payload(len(answered), answered, vision_answered, posterior)}
+    trial = trial_for(a.n, answered, vision_answered, posterior)
     entry = responses.build_entry(a.n, trial, page_for(trial), a.model_dump())
+    if trial["mode"] == "discrimination":
+        # The measurement goes to the vision log, which is the observer's one input; the
+        # app's own row is bookkeeping that keeps trial numbers dense and points at it.
+        vision_row = responses.vision_entry(trial, a.model_dump(), entry["ts"])
+        vision_log.append(vision_row)
+        vision_answered = [*vision_answered, vision_row]
     log.append(entry)
     answered = [*answered, entry]
-    return {"ok": True, "next": payload(len(answered), answered)}
+    return {"ok": True, "next": payload(len(answered), answered, vision_answered, posterior)}
 
 
 @app.get("/api/status")

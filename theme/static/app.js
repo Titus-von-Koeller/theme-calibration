@@ -216,6 +216,11 @@ el.cards.onclick = (ev) => {
   if (trial.is_duel) {
     const card = ev.target.closest(".card");
     if (card) answer(parseInt(card.dataset.i, 10));
+  } else if (trial.mode === "discrimination") {
+    // The colour arm: the four squares carry their slot. At glyph scale a square is a small
+    // target, so the keys below are the primary input and a click is the fallback.
+    const square = ev.target.closest("[data-slot]");
+    if (square) answer(parseInt(square.dataset.slot, 10));
   } else {
     const span = ev.target.closest("[data-tid]");
     if (span) answer(parseInt(span.dataset.tid, 10));
@@ -234,6 +239,13 @@ document.addEventListener("keydown", (ev) => {
     ev.preventDefault();
     inputMethod = "key";
     answer(k === "ArrowLeft" ? 0 : 1);
+  } else if (trial && trial.mode === "discrimination" && revealed && !paused && "1234".includes(k) && k !== "") {
+    // Four keys, one per slot, equidistant from the hand: at glyph scale the squares are
+    // near-unclickable targets, and a per-slot difference in motor cost is exactly what a
+    // guess drifts toward -- and a guess is what a threshold trial elicits.
+    ev.preventDefault();
+    inputMethod = "key";
+    answer(parseInt(k, 10) - 1);
   } else if (k === " " || k === "Spacebar") {
     ev.preventDefault();
     if (!revealed || paused) reveal();

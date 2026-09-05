@@ -13,6 +13,7 @@ import random
 
 import numpy as np
 
+from . import vision
 from .model import (
     GH_W,
     GH_X,
@@ -30,10 +31,17 @@ from .model import (
 from .space import POOL, conspicuous_enough, realize_many
 from .stimulus import DUEL_WIDTH, READING_PX, SURFACES
 
-#: Trials per polarity block, and how the block divides into runs of one kind.
-BLOCK = 24
+#: Trials per polarity block, and how the block divides into runs of one kind: sixteen
+#: duels, four comprehension probes, four find hunts, then eight colour-discrimination
+#: trials. The fourth arm joined on 2026-09-05, when Titus chose to move the vision trials
+#: into this app for its clock (queue item 6): a notebook cannot time an answer, and the
+#: small-field exponent those trials identify is the most valuable unmeasured number in the
+#: project. Rows before the change were built with a 24-trial block; their polarity and arm
+#: ride with them, so nothing re-derives them.
+BLOCK = 32
 DUELS_PER_BLOCK = 16
 PROBES_PER_BLOCK = 4
+DISCRIMINATION_PER_BLOCK = 8
 
 #: Duels needed before the model has enough to probe; until then every trial is a duel.
 BOOTSTRAP_DUELS = 6
@@ -106,7 +114,9 @@ def schedule_mode(n, history):
         return polarity, "duel"
     if slot < DUELS_PER_BLOCK + PROBES_PER_BLOCK:
         return polarity, "comprehension"
-    return polarity, "search"
+    if slot < DUELS_PER_BLOCK + 2 * PROBES_PER_BLOCK:
+        return polarity, "search"
+    return polarity, "discrimination"
 
 
 def duel_surface(n, n_duels):
@@ -143,7 +153,9 @@ def run_info(n, history):
         return polarity, arm, slot, DUELS_PER_BLOCK
     if slot < DUELS_PER_BLOCK + PROBES_PER_BLOCK:
         return polarity, arm, slot - DUELS_PER_BLOCK, PROBES_PER_BLOCK
-    return polarity, arm, slot - DUELS_PER_BLOCK - PROBES_PER_BLOCK, PROBES_PER_BLOCK
+    if slot < DUELS_PER_BLOCK + 2 * PROBES_PER_BLOCK:
+        return polarity, arm, slot - DUELS_PER_BLOCK - PROBES_PER_BLOCK, PROBES_PER_BLOCK
+    return polarity, arm, slot - DUELS_PER_BLOCK - 2 * PROBES_PER_BLOCK, DISCRIMINATION_PER_BLOCK
 
 
 def page_seed(n):
@@ -169,16 +181,17 @@ TRIAL_MEMO = {}
 TRIAL_MEMO_KEEP = 8
 
 
-def _history_key(n, history):
+def _history_key(n, history, vision_history=()):
     """Identify the history cheaply, without hashing every row.
 
     Length alone would collide between two different logs of the same length -- which is
     not hypothetical, since the suite drives the app with a scratch log while other tests
-    read the real one. The last row's timestamp separates them without a scan.
+    read the real one. The last row's timestamp separates them without a scan. The vision
+    log is part of the key because a discrimination trial is built from it.
     """
-    if not history:
-        return (n, 0, None)
-    return (n, len(history), history[-1].get("ts"))
+    last = history[-1].get("ts") if history else None
+    vision_last = vision_history[-1].get("ts") if vision_history else None
+    return (n, len(history), last, len(vision_history), vision_last)
 
 
 def _remember(key, trial):
@@ -489,22 +502,53 @@ def _search_dict(n, polarity, theta, theme):
     }
 
 
-def trial_for(n, responses):
+def _discrimination_trial(polarity, vision_history, posterior):
+    """A colour-discrimination trial from the vision generator, wrapped as an arm of this app.
+
+    The vision log has its own numbering: the next trial is its length, and the generator is
+    the app's (glyph sizes only). The polarity here is the block's, for the chrome; the
+    stimulus paints its own ground, which is the whole point of a ground family.
+    """
+    m = len(vision_history)
+    stimulus = vision.trial_for(
+        m, vision_history, sizes=vision.APP_SIZES, generator=vision.APP_GENERATOR, posterior=posterior
+    )
+    return {
+        "mode": "discrimination",
+        "kind": stimulus["kind"],
+        "polarity": polarity,
+        "surface": "editor",
+        "vision_n": m,
+        "vision": stimulus,
+        # The one theme-shaped field the page and the recorder read for every arm: the
+        # ground the stage is painted with.
+        "theme_a": {"ground": stimulus["ground_hex"]},
+        "theta_a": None,
+        "code_px": stimulus["size_px"],
+        "snippet": None,
+    }
+
+
+def trial_for(n, responses, vision_responses=(), posterior=None):
     """The nth trial, generated to maximize expected information about the utility.
 
     Duels compare a Thompson-sampled champion against the most informative challenger;
     comprehension probes ride the Thompson argmax; find hunts hold the champion's page and
-    sweep the find axes. Each arm is built by its own function below.
+    sweep the find axes; discrimination trials come from the vision generator. Each arm is
+    built by its own function below.
 
-    Depends only on `n` and the responses BEFORE trial n, so the recorder can rebuild it
-    from the log instead of trusting what the page sent back.
+    Depends only on `n`, the responses BEFORE trial n and the vision log as it stands, so
+    the recorder can rebuild it from the logs instead of trusting what the page sent back.
     """
     history = responses[:n]
-    key = _history_key(n, history)
+    vision_history = list(vision_responses)
+    key = _history_key(n, history, vision_history)
     if key in TRIAL_MEMO:
         return TRIAL_MEMO[key]
     n_duels = sum(duel_counts(history))
     polarity, arm = schedule_mode(n, history)
+    if arm == "discrimination":
+        return _remember(key, _discrimination_trial(polarity, vision_history, posterior))
     rng = random.Random(n * 2654435761 % (2**31))
     numpy_rng = np.random.default_rng(n * 7919 + 13)
     pool = POOL[polarity]

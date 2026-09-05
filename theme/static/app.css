@@ -63,3 +63,7 @@ body.duel #cards { gap: 0; align-items: stretch; height: 100%; }
    moves the text further off-axis. */
 .page { max-width: 640px; width: 100%; }
 body.duel .page { max-width: 640px; }
+
+/* The colour arm's squares: a fixed-pixel stimulus on the trial's own ground, so nothing
+   here sets a size or a colour -- the server inlines both. Only the hand's affordance. */
+.squares .square { cursor: pointer; }
