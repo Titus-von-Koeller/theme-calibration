@@ -104,6 +104,9 @@ File-disjoint branches produce no textual conflicts; what integration is actuall
 for is *semantic* conflict — a caller that moved, an assumption that no longer holds — and
 that only shows up when the whole suite runs against the combination.
 
-**Report learnings rather than writing them to shared notes.** Anything general enough to
-outlive this repo belongs in the operator's standing notes, and four agents editing those
-concurrently is the same race the worktrees exist to prevent. Report; one session deposits.
+**Report learnings rather than writing them to shared notes, and report them in git.**
+Anything general enough to outlive this repo belongs in the operator's standing notes, and four
+agents editing those concurrently is the same race the worktrees exist to prevent. Report; one
+session deposits. The report is your branch's last commit, `Report: <branch>`, with the
+learnings in the body -- a chat message reaches nobody once your window closes, a commit reaches
+the integrator through `git log` at merge time and stays greppable.
