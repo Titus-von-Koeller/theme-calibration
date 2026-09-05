@@ -56,9 +56,8 @@ Nine commits on branch `fourth-arm` (76ff74b..a01a7ea), integrated as 408abbb; b
 `pixi run check` and the whole of `pixi run test` are green on the merge, and the worktree
 and the branch are gone. Rows from the two surfaces are told apart by `surface` (`app` against absent) and
 `generator` (`v4` against `v3`), and only the app's carry `rt_ms`. What the clock adds to a
-threshold has not been read yet: that is the first thing to ask of the new rows. Still open
-from the same sitting: the patch engine reports the webview_quiet question-row anchor no
-longer matches on Claude Code 2.1.261.
+threshold has not been read yet: that is the first thing to ask of the new rows. The webview_quiet question-row anchor that stopped matching on Claude Code 2.1.261 was
+retargeted the same afternoon (dotfiles 08b3da6).
 
 Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 
@@ -131,8 +130,12 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
     summary line.
 
 **Widgets and graphs** (Titus's question, 2026-09-05; design in the method reef's "Widgets
-and graphs" section). 19. A surface contract table and appliers for `_viz.py` furniture and
-marimo's variables. 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
+and graphs" section). 19. **DONE 2026-09-05**, branch `surfaces` merged as 7ff074c, with dotfiles
+`patches/marimo_theme_vars.py` and loop-to-cluster's `_palette.py` region: `docs/surfaces.md`
+is the contract table, `theme/appliers/viz.py` writes the graph furniture, and
+`tests/test_appliers.py` checks both on every commit. It owes a pixel check of the marimo card
+and popover once a notebook webview reloads, a chart that reads `FURNITURE` for its axes
+(none does yet), and a writer for marimo's `--codehilite-*` code-block variables. 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
 (50, 12, 2 px) in the vision arm. 22. **Contrast beyond the code page** (Titus, 2026-09-05):
 body contrast is settled near 7.7:1 by day but only on code at 14 and 16 px; GUI text at
 11-13 px, icons, and the frame-against-page interaction are unmeasured. The exhibit page of
