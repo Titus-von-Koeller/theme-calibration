@@ -80,6 +80,11 @@ there is no reaction-time channel there at all.
       observer.py     the fitted observer behind the dE thresholds
       stimulus.py     a trial's page, and its HTML
       model.py        the preference GP and the reaction-time GP
+      verdict.py      what the log says the best theme is, per polarity, as one object
+      publish.py      the same as a command: print it, or write it for the applier
+      surfaces.py     the notebook page and card border an applied theme derives from
+                      its ground, so the elevation system survives a change of paper
+      lived.py        record which of the last two applied themes was better to live in
       schedule.py     which trial comes next
       trialspec.py    turning a trial into a prompt and cards
       responses.py    the append-only response log
@@ -88,13 +93,17 @@ there is no reaction-time channel there at all.
     data/           the measurements, and the published champion
                       aesthetics-responses.jsonl   duels, probes and hunts
                       calibration-responses.jsonl  the colour-discrimination trials
-                                                   these two are append-only text, one
+                      lived-responses.jsonl        duels decided by living in a theme
+                      applied-themes.jsonl         every palette applied to the editor,
+                                                   with the measurement it came from
+                                                   these four are append-only text, one
                                                    JSON object per line, and tracked,
                                                    because they are the record
                       observer-fit.json            the cached observer fit, keyed by
                                                    (model version, log length)
-                      measured-theme.json          the published champion, rewritten on
-                                                   every analysis pass
+                      measured-theme.json          the published champion, rewritten by
+                                                   `pixi run publish` and every analysis
+                                                   pass; derived, so not tracked
                       observer-logp-*.npy          a derived likelihood grid, regenerated
                                                    on demand and deliberately not tracked
                                                    (its small companion .json says which
@@ -102,8 +111,8 @@ there is no reaction-time channel there at all.
     notebooks/      the reading half: analysis, the vision calibration, the gallery
     tests/          recovery tests: plant a truth, check it comes back
 
-Everything under `data/` except the two response logs is derived. Regenerate it; never
-hand-edit it.
+Everything under `data/` except the four logs is derived. Regenerate it; never hand-edit
+it.
 
 ## Running it
 
@@ -111,8 +120,24 @@ hand-edit it.
     pixi run analyse    # the analysis notebook, at 127.0.0.1:2920
     pixi run vision     # a colour-discrimination sitting, at 127.0.0.1:2921
     pixi run gallery    # the palette gallery, at 127.0.0.1:2922
+    pixi run verdict    # print what the model believes, no browser
+    pixi run publish    # the same, and write data/measured-theme.json for the applier
+    pixi run lived -- current|previous   # which of the last two applied themes was better to live in
     pixi run test       # the recovery tests
     pixi run check      # ruff format --check and ruff check
+
+## From the log to the editor, and back
+
+`pixi run publish` writes the champion palettes; `apply-measured-theme --apply` (in
+dotfiles, on PATH) rewrites the marked regions of settings.jsonc from that file and appends
+what it applied, provenance included, to `data/applied-themes.jsonl`. VSCode picks the
+change up live. After living in a palette, `pixi run lived -- current` (or `previous`)
+records a duel between the two most recently applied palettes of that polarity: surface
+`vscode`, no clock. The fit reads those rows with the instrument's own, so the analysis's
+surface factor test is also the test of whether a four-second judgement in a browser and a
+day in the editor agree. They already disagree in one place worth knowing about: the day
+duels put the champion at the light wall of the theme space, while the paper chosen by
+living in it was walked down from near-white because it tires.
 
 Two of the three notebooks import `theme.space`, which realises its whole candidate pool
 at import time; expect the first cell to take a while.

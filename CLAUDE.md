@@ -14,7 +14,8 @@ engineering contract, including the procedure for several agents working at once
   care a change to the stimulus needs, how to substantiate a performance claim, and how to
   partition parallel work so it merges.
 - `theme/` — the instrument as an ordinary package. Each module's docstring says what it
-  owns and why it is separate.
+  owns and why it is separate. `theme/verdict.py` is where the answer is computed; the
+  notebook only words it, and `pixi run verdict` prints it without a browser.
 - `notebooks/` — analysis, the vision calibration, the gallery. A notebook's closing prose
   holds the findings of the instrument it belongs to: findings live WITH their instrument.
 - `data/` — the measurements. Append-only text, tracked. Derived caches are not.
@@ -25,7 +26,18 @@ engineering contract, including the procedure for several agents working at once
 ## Where the work stands
 
 The instrument is served at `127.0.0.1:2919` (`pixi run serve`) and answered daily. The
-analysis notebook reads the log and reports what the model believes.
+analysis notebook reads the log and reports what the model believes; `pixi run verdict`
+prints the same numbers.
+
+**The measured palettes are applied** (2026-09-05, from 320 responses and 215 duels): day a
+single leader at 52%, night a plateau of eight led at 16%. `apply-measured-theme --apply`
+wrote both into dotfiles settings.jsonc and recorded them in `data/applied-themes.jsonl`;
+every role was pixel-verified in the live editor over CDP. The loop back is `pixi run
+lived -- current|previous` after a second palette has been applied: it records a duel
+between the two most recently applied palettes with surface `vscode`, which the fit reads
+with everything else. The day champion sits at the light wall of the space (ground J' 95)
+against a standing paper walked down to L* 91.6 because near-white tires -- a four-second
+judgement against a day's; the lived duels are the instrument that decides it.
 
 Run every notebook through its task — `pixi run vision`, `pixi run analyse`, `pixi run
 gallery`. A task runs in the environment the lock file describes; an editor's kernel is
@@ -34,7 +46,7 @@ sibling project's environment, where `import theme` fails and marimo then report
 `NameError` on every cell downstream. `.vscode/settings.json` pins the interpreter for when
 this directory is the open folder.
 
-Open questions, most valuable first. Figures are from 192 responses, 127 duels.
+Open questions, most valuable first. Figures are from 320 responses, 215 duels.
 
 **Needs clicks, not code.** These are measurement limits; no engineering removes them.
 
@@ -46,11 +58,20 @@ Open questions, most valuable first. Figures are from 192 responses, 127 duels.
    cycles patch size and serves 16-px and 10-px trials from about trial 784, so this
    resolves by running `pixi run analyse`'s sibling notebook and answering. `separation_floor`
    switches regime on its own once it does.
-2. **Night is the thinner half.** Day sits at a leader of 40% with a credible set of 5;
-   night is 16% with a set of 14 over 64 duels. Night also carries the one live hint that a
-   single theme might be the wrong shape of answer (surface interaction, p = 0.09).
-3. **Day is close enough to choose by eye.** A five-theme plateau is the model saying it
-   cannot separate them, which is where a person's judgement is the better instrument.
+2. **Night is the thinner half, and its fit does not yet predict.** Day holds a single
+   leader at 52% (set of 1, flat over the last 25 duels) with held-out accuracy 67.6%.
+   Night is 16% with a set of 8 over 104 duels, held-out accuracy 62.5% but held-out
+   log-loss 0.81 -- worse than chance's 0.69, so the model is confidently wrong where it is
+   wrong -- and a fit on the first half of the night duels predicts the second half at
+   44.6%. Either night taste has drifted across sittings or the space is misspecified
+   for dark pages; the anchors agree (the champion beat the worst page 6 of 10 times at
+   night). More night duels first, and read the time-split again.
+3. **Snap judgement against sustained reading.** The day duels put the champion at the
+   light wall (ground lightness 1.0, warmth 0.98) and the P(best) mass at 0.90 on
+   lightness; the paper chosen by living in it was walked DOWN to L* 91.6 because
+   near-white tires. A brief high-contrast page looks crisper than it reads for eight
+   hours. The lived duels exist to measure this; until they do, the applied day paper is
+   a hypothesis, not a verdict.
 4. **The find-highlight axes.** Axis 8 ranks high for preference and the legibility surface
    could not resolve its effect on speed at 29 uniform hunts. Active hunting plus the
    conspicuity floor should fix it; re-read around 60 hunts.
@@ -68,14 +89,17 @@ Open questions, most valuable first. Figures are from 192 responses, 127 duels.
    collects it.
 7. **No observer-fit provenance on a response.** Tightening a threshold silently re-bases
    every past duel. Pixel size already has this discipline; the thresholds need the same
-   stamp.
+   stamp. The PUBLISHED and APPLIED palettes carry it now (fit fingerprint, observer model,
+   floor regime, commit); the per-response row still does not.
 8. **The memorisation-confounded rows are not excluded automatically.** 116 of 192 responses
    used one of four repeated pages. They are flagged and excludable, but nothing excludes
    them.
-9. **Regenerate `data/measured-theme.json`**, stale since the floors tightened (day
-   `p_best` moved from 0.1772 to 0.2021; the palette is byte-identical, so the winner did not move). And
-   decide whether it should be tracked at all: by this project's own rule it is derived
-   rather than measured, and reading the analysis rewrites it, so `git status` goes dirty.
+9. **The champion is the posterior-mean argmax; the card that leads is the P(best) group
+   leader.** They coincide by day and differ by night, where the mean-argmax page is not
+   the page most likely to be best. The published palette follows the mean (risk-neutral);
+   the shelf follows P(best). Say so in the readout when they differ, and decide which the
+   applier should get on a plateau. (`measured-theme.json` itself is resolved: derived, so
+   untracked, regenerated by `pixi run publish`.)
 10. **Smaller, measured, undone.** The permutation test is 60,000 solves of an 11x11 system
     inside two Python loops and folds into one batched operation. The suite has no
     parallelism. `theta_key` rounding costs ~18 ms of a warm trial. `REALIZE_CACHE` grows
@@ -85,7 +109,10 @@ Open questions, most valuable first. Figures are from 192 responses, 127 duels.
     contrast does not have, and finds the intended root only because every ground sits at an
     end of the range. It also cannot report failure, and the assembly step checks the
     absolute floors but not each row's own requested ratio.
-12. **Repo hygiene.** No CI, no pre-commit config, no LICENSE.
+12. **Repo hygiene.** No CI, no pre-commit config, no LICENSE. And `pixi run test` already
+    carries `-q` in pyproject's addopts, so `pytest -q` by hand is `-qq` and hides the
+    final count -- which is why two suite logs ended at the durations table with no
+    summary line.
 
 **External validity: measured but never checked against the thing being optimised.**
 These are not in any test and were not previously written down.
