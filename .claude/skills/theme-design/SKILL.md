@@ -24,11 +24,15 @@ interact, and choose the best combination — every step from measurement.
   ground lightness, small-field exponent), fit from the shared jsonl and cached beside it.
   Every instrument reads this fit — measurement sharpens preference constraints without a
   second copy anywhere. Change the model here, nowhere else.
-- `notebooks/vision.py` — the discrimination instrument on that
+- `theme/vision.py` + `notebooks/vision.py` — the discrimination instrument on that
   model: EIG-generated odd-one-out trials over seven grounds (Horizon, Selenized, Modus,
   GitHub dark) and three patch sizes (104/16/10 px — the glyph-scale stage and the
-  ground-threshold search run in the same loop). **Current findings and how to read them
-  are in its closing prose**, next to the live numbers; do not restate them elsewhere.
+  ground-threshold search run in the same loop). The generator is the module; the notebook
+  keeps a clockless loop and the reading half, and the web app serves the same trials as
+  its fourth arm (eight per 32-trial block, glyph sizes only, generator `v4`, surface
+  `app`) with the reaction-time clock, into the same log and numbering. **Current findings
+  and how to read them are in the notebook's closing prose**, next to the live numbers; do
+  not restate them elsewhere.
 - `~/dotfiles/home/editors/vscode/settings.jsonc` — the applied override layer; its block
   comments are the precedent for method and bar (workbench ~6:1 by day, AA by night).
 - `~/.claude/skills/titus-preferences/SKILL.md` — his standing functionality and aesthetics
@@ -383,9 +387,22 @@ interact, and choose the best combination — every step from measurement.
   1.5x against the ground and 1x against its siblings.
 - **The instrument's own chrome must never wear the theme under test.** The prompt, the
   chip, the progress and the gate are furniture; a theme being judged must not colour the
-  frame it is judged in. And the chrome's ink has to follow the surround, which flips with
-  polarity: a stylesheet that asserted one colour rendered the instruction and the begin
-  button at about 1.1:1 on light pages, which is an invisible instrument.
+  frame it is judged in. And the chrome's ink has to follow the SURROUND, not the polarity:
+  a stylesheet that asserted one colour rendered the instruction and the begin button at
+  about 1.1:1 on light pages, which is an invisible instrument; and a per-polarity ink fails
+  the moment an arm paints a ground of its own -- the colour arm shows the night ground
+  inside a day block, because adaptation to the ground under test is the measurement. The
+  ink is therefore chosen per trial by contrast against the painted surround, and every
+  ground the arm can paint is checked against both inks (`chrome_ink_for`; tests in
+  test_click_path).
+- **A trial pure in two logs needs a staleness check on both.** The colour arm rebuilds its
+  trial from the app log's prefix AND the whole vision log, and the vision log is shared
+  with the notebook sitting -- one series, one numbering, both surfaces appending. The
+  page echoes the vision numbering it was shown exactly as it echoes the trial number, and
+  the recorder compares both with the logs and refuses on either; it trusts neither. Rows
+  from the two surfaces are told apart by `surface` (`app` against absent) and `generator`
+  (`v4` against `v3`), and only the app's carry `rt_ms`; the first reading of what the clock
+  adds to a threshold is still to be written.
 - **The clock starts when the participant asks, never on render.** A page that reveals on
   load times however long it took to look at the screen, and a tab opened and left times an
   empty room. Gate the first trial of every sitting; inside a run, reveal at once, since
