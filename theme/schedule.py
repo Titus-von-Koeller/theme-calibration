@@ -28,7 +28,7 @@ from .model import (
     rt_at,
     rt_fit,
 )
-from .space import POOL, conspicuous_enough, realize_many
+from .space import FIND_HUE_AXIS, FIND_SALIENCE_AXIS, POOL, conspicuous_enough, realize_many
 from .stimulus import DUEL_WIDTH, READING_PX, SURFACES
 
 #: Trials per polarity block, and how the block divides into runs of one kind: sixteen
@@ -69,8 +69,6 @@ NIGHT_SHARE = 0.6
 PAGE_LINES = 28
 
 #: Theme-space axes the find hunts sweep: 7 is find hue, 8 is find salience.
-FIND_HUE_AXIS = 7
-FIND_SALIENCE_AXIS = 8
 
 #: Share of duels drawn as a uniform feasible pair instead of from the model, as insurance
 #: against model misspecification.

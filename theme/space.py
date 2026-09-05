@@ -62,6 +62,10 @@ AXES = [
     "find salience",
 ]
 
+#: The two axes that shape only the find highlight. They enter no palette-matching distance
+#: and are the axes a hunt sweeps; both callers read them from here.
+FIND_HUE_AXIS, FIND_SALIENCE_AXIS = AXES.index("find hue"), AXES.index("find salience")
+
 # Horizon's own token colors anchor the accent hues — evolve, don't repaint. Night
 # anchors carry alpha in the theme file and are composited onto their page before any
 # appearance math (the rule that caught the 30%-alpha comments). Literals are ONE
