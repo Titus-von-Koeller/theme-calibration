@@ -519,7 +519,10 @@ def _discrimination_trial(polarity, vision_history, posterior):
         "mode": "discrimination",
         "kind": stimulus["kind"],
         "polarity": polarity,
-        "surface": "editor",
+        # Not one of the theme surfaces: no theme is on screen. The vision row says the
+        # same, and the notebook's rows say nothing, which is how the two surfaces of the
+        # discrimination series stay separable.
+        "surface": "app",
         "vision_n": m,
         "vision": stimulus,
         # The one theme-shaped field the page and the recorder read for every arm: the
