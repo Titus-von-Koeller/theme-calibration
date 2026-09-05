@@ -544,6 +544,19 @@ Beauty votes through these; the instruments still veto, and Titus's eyes outrank
 - Results live with their instrument or in Titus's Notion (his hands only); CLAUDE.md carries
   rules, routing, and resume points.
 
+- **One control accent, and it is the function colour.** Buttons, badges, the focus ring,
+  the progress bar and the chat panel's Remote Control pill all take the palette's function
+  colour with the paper as text: the one cool, mid-lightness hue on both polarities, so a
+  control reads as a control and never as a keyword or a literal. The auto-mode warning
+  (the composer ring, the stop button) takes the literal colour -- warm, dark, "hot"
+  without being an error red -- and the stop button is drawn round: HAL's eye, Titus's
+  name and his creative freedom. Secondary text (descriptions, placeholders, footer icons)
+  is the comment colour, never VSCode's default grey. `charts.*` are the theme's declared
+  accent set for anything that draws data or status.
+- **A chart's canvas is furniture.** Vega-Lite paints white by default; on the cream paper
+  every tensor sat in a white frame. `background="transparent"` in `_viz.show()`; the
+  page's colour, never a literal.
+
 ## Widgets and graphs: aligning the other surfaces (design, 2026-09-05)
 
 Titus asked how widget and graph theming should join the optimisation. The frame that
