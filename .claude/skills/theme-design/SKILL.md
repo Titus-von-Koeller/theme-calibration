@@ -397,6 +397,18 @@ interact, and choose the best combination — every step from measurement.
   measurement is stated where the measurement is taken even when the space guarantees it.
   Filtering the candidate grid BEFORE the acquisition, rather than rejecting after, keeps
   the chosen trial the best available one rather than the first acceptable one.
+- **A census answers "is this screen coherent", not "is this surface themed".** It
+  classifies the pixels a screenshot HOLDS, so a colour that only appears in a transient
+  state -- a banner, a warning card, a primary button, an error -- is invisible to it however
+  loud it is. The Claude Code panel returned zero foreign colours on a real window while
+  eight of its `--app-*` variables still resolved to Claude's brand palette, and Titus found
+  one of them himself when a usage banner appeared ("this is still salmon, no?"). For a
+  surface that declares its colours as custom properties, enumerate the TABLE with
+  `getComputedStyle` and ask which entries fail to resolve to a palette colour; the census
+  then confirms what is on screen rather than being asked to find what is not. Where no
+  such table exists, grep the stylesheet for hex literals and read each one's rule -- the
+  census stays the check on the result, never the search for the work.
+
 - **State a colour floor in the observer's own steps, not in raw dE.** CAM16-UCS is near
   uniform for the average eye; the fitted observer is not average. His confusion-axis
   ellipse (phi 0.9 deg, w1 0.31, w2 0.81) makes a red-green step cost 1.6x the dE of a
