@@ -182,8 +182,10 @@ is the contract table, `theme/appliers/viz.py` writes the graph furniture, and
 `tests/test_appliers.py` checks both on every commit. The marimo check closed on 2026-09-06
 when the 02-tensors webview reloaded the renderer: `--card` and `--popover` compute to the page
 (#efe2d3) and `--muted-foreground` to the comment step (#56524f), read over CDP. Still owed: a
-chart that reads `FURNITURE` for its axes (none does yet), and a writer for marimo's
-`--codehilite-*` code-block variables. 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
+chart that reads `FURNITURE` for its axes (none does yet), a writer for marimo's
+`--codehilite-*` code-block variables, and the notebook card elevation, a literal rgba of
+Horizon's page hue in dotfiles' cell-chrome.css and webview-layout.py because no theme key
+carries a shadow (the contract's "not covered yet" list has all three). 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
 (50, 12, 2 px) in the vision arm. 22. **Contrast beyond the code page** (Titus, 2026-09-05):
 body contrast is settled near 7.7:1 by day but only on code at 14 and 16 px; GUI text at
 11-13 px, icons, and the frame-against-page interaction are unmeasured. The exhibit page of
