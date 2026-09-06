@@ -147,6 +147,13 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
    input method on every row; the notebook keeps the clockless loop, which scores accuracy
    only, and the reading half. The number is kept so nothing pointing at it breaks. What
    the clock buys a threshold is unread, and that reading is what this item now owes.
+   **Still owed, and blocked on clicks rather than code** (checked 2026-09-06): the vision
+   log holds 748 rows and **none of them carry `surface: app`**, so the fourth arm has not
+   been answered once and there is nothing yet to read the clock from. All 748 sit at 104 px
+   (498) or at no recorded size (250), so the size exponent still has zero glyph-scale rows
+   and item 1 is unmoved. The generator serves 16-px and 10-px trials from about trial 784,
+   which is 36 trials away. One sitting through the app's colour arm produces both readings
+   at once.
 7. **Observer-fit provenance on a response** -- DONE 2026-09-06. Tightening a threshold
    silently re-bases every past duel: the pool is carved by the separation floor, and that
    floor moves whenever the observer is refit on a longer vision log. Every new row now
@@ -243,10 +250,20 @@ is the contract table, `theme/appliers/viz.py` writes the graph furniture, and
 `tests/test_appliers.py` checks both on every commit. The marimo check closed on 2026-09-06
 when the 02-tensors webview reloaded the renderer: `--card` and `--popover` compute to the page
 (#efe2d3) and `--muted-foreground` to the comment step (#56524f), read over CDP. Still owed: a
-chart that reads `FURNITURE` for its axes (none does yet), a writer for marimo's
-`--codehilite-*` code-block variables, and the notebook card elevation, a literal rgba of
+chart that reads `FURNITURE` for its axes (none does yet -- loop-to-cluster's partition,
+not this repo's), a writer for marimo's `--codehilite-*` code-block variables, and the
+notebook card elevation, a literal rgba of
 Horizon's page hue in dotfiles' cell-chrome.css and webview-layout.py because no theme key
-carries a shadow (the contract's "not covered yet" list has all three). 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
+carries a shadow (the contract's "not covered yet" list has all three).
+**Why the codehilite writer stays open** (read 2026-09-06): it is NOT one more declaration
+in dotfiles' `marimo_theme_vars.py`, which is what would have made it this thread's to do.
+The bundle names 59 Pygments variables (`--codehilite-k`, `-na`, `-s2`, ...), and VSCode
+exposes only its workbench COLOUR IDS as `--vscode-*` -- textMate token colours are not
+colour ids and have no CSS variable -- so `--codehilite-k:var(--vscode-...)` cannot be
+written at all. It needs literal hexes from the published palette, which means a generated
+region with the supersede-on-every-write discipline every generated region needs: a new
+writer in the "one artefact, many writers" pattern, sized like `appliers/viz.py`, not a
+patch line. 20. An exhibit-page stimulus kind and a timed chart arm. 21. Mark sizes
 (50, 12, 2 px) in the vision arm. 22. **Contrast beyond the code page** (Titus, 2026-09-05):
 body contrast is settled near 7.7:1 by day but only on code at 14 and 16 px; GUI text at
 11-13 px, icons, and the frame-against-page interaction are unmeasured. The exhibit page of
