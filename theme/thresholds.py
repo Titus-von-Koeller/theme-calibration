@@ -120,3 +120,15 @@ def separation_floor(polarity, size_px=14.0):
         f"to {size_px:.0f} px; the {FIXED_SCALE_FACTOR:g}x constant is retired because it "
         f"stood in for exactly this."
     )
+
+
+def floor_regime(fit=None):
+    """Which rule `separation_floor` is currently applying: "constant" or "fitted".
+
+    The same predicate `separation_floor` branches on, named once, because the prose it
+    returns is a paragraph and a stamp on a response row needs a word. Every row recorded
+    under "constant" was chosen against a floor standing in for an unmeasured exponent;
+    the day the exponent identifies, every row after it says "fitted", and the two are not
+    the same measurement. That is the whole point of stamping it.
+    """
+    return "fitted" if size_is_identified(fit) else "constant"

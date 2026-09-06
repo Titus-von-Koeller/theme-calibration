@@ -147,10 +147,22 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
    input method on every row; the notebook keeps the clockless loop, which scores accuracy
    only, and the reading half. The number is kept so nothing pointing at it breaks. What
    the clock buys a threshold is unread, and that reading is what this item now owes.
-7. **No observer-fit provenance on a response.** Tightening a threshold silently re-bases
-   every past duel. Pixel size already has this discipline; the thresholds need the same
-   stamp. The PUBLISHED and APPLIED palettes carry it now (fit fingerprint, observer model,
-   floor regime, commit); the per-response row still does not.
+7. **Observer-fit provenance on a response** -- DONE 2026-09-06. Tightening a threshold
+   silently re-bases every past duel: the pool is carved by the separation floor, and that
+   floor moves whenever the observer is refit on a longer vision log. Every new row now
+   carries `provenance`: the preference fit that chose the trial, the observer model with
+   its trial count and `de_min`, and the separation floor with its regime word
+   (`constant` or `fitted`, from `thresholds.floor_regime`). Old rows are NOT rewritten --
+   what they were taken under is genuinely unknown and inventing it is worse than the gap,
+   so a row without the key is a pre-2026-09-06 row and reads as one. The stamp is written
+   by `schedule.trial_for`, which is the only place holding the fit that actually chose the
+   stimulus, and the recorder rebuilds the trial from the same history prefix, so the row
+   names the selecting fit rather than whatever is loaded when the click lands.
+   Found on the way and fixed first: `preference.log_fingerprint` used the builtin `hash()`,
+   which salts strings per process, so the fit id in every PUBLISHED palette's provenance
+   was a number that changed on every run. It is a blake2b digest now, pinned by a golden
+   test (a self-comparison inside one process passes with the salted hash too).
+   Tests: `test_click_path` for the row and for all four arms, both mutation-checked.
 8. **The memorisation-confounded rows are not excluded automatically.** 116 of 192 responses
    used one of four repeated pages. They are flagged and excludable, but nothing excludes
    them.

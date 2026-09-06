@@ -41,6 +41,7 @@ from .thresholds import (  # noqa: F401
     VISION_FIT,
     VISION_LOG,
     VISION_N,
+    floor_regime,
     separation_floor,
 )
 
