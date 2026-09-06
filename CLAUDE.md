@@ -114,8 +114,13 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
    Shipped instead: the pool is defined by survivors, "draw 512-blocks until 400 survive per
    polarity" (d4a03f7; the old pool is a prefix of the new one, import 0.9 s), and every
    candidate carries its stratum -- pool, fresh immigrant, or bred -- so the verdict, the CLI
-   and the notebook say where the leader and the shelf came from; a shelf that is all bred
-   is the one symptom that would justify widening. Titus's question of 2026-09-06, whether
+   and the notebook say where the leader and the shelf came from (all bred is the designed
+   steady state), and print how far the grid's nearest neighbours sit apart in the model's own
+   correlation lengths (`Verdict.grid`: 0.95 by day, 1.01 by night at 336 responses -- at the
+   one-length edge). Measured in that metric the grid is borderline, and widening is NOT the
+   lever: in nine dimensions doubling a uniform pool tightens neighbours by 2^(1/9), about
+   9% (400 -> 3200 uniform points moved the median from 1.03 to 0.77), so fine structure
+   near the optimum rests on the bred children, which is what they are for. Titus's question of 2026-09-06, whether
    a fixed pool can trap the search or old trials poison it: no -- the GP is defined over the
    whole continuous cube, 64 fresh Sobol points join every trial, children and crossovers
    explore around the elites, Thompson sampling revisits uncertain regions, and the pool is
