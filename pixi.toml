@@ -70,5 +70,6 @@ verdict = { cmd = "python -m theme.publish", description = "Print what the model
 publish = { cmd = "python -m theme.publish --write", description = "Publish the champion palettes for the applier" }
 lived = { cmd = "python -m theme.lived", description = "Record which of the last two applied themes was better to live in" }
 census = { cmd = "python -m theme.census", description = "Classify a screenshot's colours against the published palette; the foreign ones are the work list" }
+apply-viz = { cmd = "python -m theme.appliers.viz", description = "Write the graph furniture into loop-to-cluster's palette module from the published palette (dry run; pass --apply)" }
 test = { cmd = "pytest -q", description = "Run the recovery tests" }
 check = { cmd = "ruff format --check . && ruff check .", description = "Lint and format check" }

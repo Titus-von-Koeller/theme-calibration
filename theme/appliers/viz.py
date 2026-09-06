@@ -1,7 +1,7 @@
 """Write the graph FURNITURE into loop-to-cluster's palette module from the published palette.
 
-    pixi run python -m theme.appliers.viz            # show what would change, touch nothing
-    pixi run python -m theme.appliers.viz --apply    # write it
+    pixi run apply-viz             # show what would change, touch nothing
+    pixi run apply-viz -- --apply  # write it
 
 A chart has two kinds of colour. Its furniture -- the canvas, the axis ink, tick labels,
 gridlines, axis lines -- carries no data and is THEME colour: it derives from the one
