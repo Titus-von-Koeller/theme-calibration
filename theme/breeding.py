@@ -79,14 +79,20 @@ class _CandidateSet:
     the standing stratum ends is what the explore/exploit split is declared against.
     """
 
+    #: The three places a candidate can come from, in the order they are offered.
+    STRATA = ("pool", "fresh", "bred")
+
     def __init__(self, polarity):
         self.polarity = polarity
         self.entries = []
         self._seen = set()
+        self.strata = []
 
-    def offer(self, thetas, themes=None):
+    def offer(self, thetas, themes=None, stratum="bred"):
         """Add each theta that is new and legible. `themes` skips realization for the pool,
-        whose members are realized once at startup and never change."""
+        whose members are realized once at startup and never change. `stratum` names where
+        the batch came from, so a verdict can say whether its leader is a standing grid
+        point, a fresh immigrant, or a bred child."""
         thetas = [np.clip(np.asarray(t, dtype=float), 0.0, 1.0) for t in thetas]
         fresh = [t for t in thetas if tuple(np.round(t, 4)) not in self._seen]
         if themes is None:
@@ -101,6 +107,7 @@ class _CandidateSet:
                 continue
             self._seen.add(key)
             self.entries.append((theta, theme))
+            self.strata.append(stratum)
 
     @property
     def thetas(self):
@@ -149,17 +156,33 @@ def _breed(elites, rng, n_mutants, n_crossovers, length_scales):
 
 def candidates(fit, polarity, rng, n_trial=0, n_elite=10, n_mutants=20, n_crossovers=48, immigrants_log2=6):
     """(candidates, index where the standing global stratum ends) for this trial."""
+    entries, n_standing, _strata = candidates_with_strata(
+        fit, polarity, rng, n_trial, n_elite, n_mutants, n_crossovers, immigrants_log2
+    )
+    return entries, n_standing
+
+
+def candidates_with_strata(
+    fit, polarity, rng, n_trial=0, n_elite=10, n_mutants=20, n_crossovers=48, immigrants_log2=6
+):
+    """`candidates`, plus one stratum name per candidate: "pool" for the standing grid,
+    "fresh" for this trial's Sobol immigrants, "bred" for children of the elites.
+
+    The verdict reads the strata to say where its leader and shelf came from. A shelf that
+    is all one lineage of bred children is the sign the standing grid has stopped reaching
+    the model; that used to be a hunch, and this makes it a count.
+    """
     pool = _CandidateSet(polarity)
     standing = realized_space().POOL[polarity]
-    pool.offer([theta for theta, _theme in standing], [theme for _theta, theme in standing])
-    pool.offer(list(sobol_block(immigrants_log2, n_trial)))
+    pool.offer([theta for theta, _theme in standing], [theme for _theta, theme in standing], stratum="pool")
+    pool.offer(list(sobol_block(immigrants_log2, n_trial)), stratum="fresh")
     n_standing = len(pool.entries)
     if fit is None:
-        return pool.entries, n_standing
+        return pool.entries, n_standing, pool.strata
 
     this_polarity = 1.0 if polarity == "night" else 0.0
     archive = [x[:N_AXES] for x in fit["X"] if abs(x[POLARITY_AXIS] - this_polarity) < 0.5]
     length_scales = fit.get("ls")
     elites = _elites(fit, polarity, archive + pool.thetas, n_elite, length_scales)
-    pool.offer(_breed(elites, rng, n_mutants, n_crossovers, length_scales))
-    return pool.entries, n_standing
+    pool.offer(_breed(elites, rng, n_mutants, n_crossovers, length_scales), stratum="bred")
+    return pool.entries, n_standing, pool.strata

@@ -55,6 +55,11 @@ def describe(verdict):
         + " | open: "
         + (", ".join(AXES[a] for a, _r, _m in open_axes) or "nothing")
     )
+    origins = verdict.shelf_strata
+    lines.append(
+        f"  origin: leader is {verdict.champion_stratum}; shelf shown from pool {origins['pool']}, "
+        f"fresh {origins['fresh']}, bred {origins['bred']}"
+    )
     theme = verdict.champion_theme
     lines.append(
         "  champion: ground {ground} keyword {keyword} function {function} string {string} ink {ink} "

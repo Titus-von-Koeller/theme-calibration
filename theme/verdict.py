@@ -29,7 +29,7 @@ from . import paths
 from .diagnostics import axis_consensus, best_set, factor_effect, progress_report, spread_out
 from .kernel import N_AXES
 from .legibility import rt_at, rt_fit, rt_penalty
-from .model import candidates
+from .model import candidates_with_strata
 from .observer import MODEL_VERSION as OBSERVER_MODEL
 from .preference import duel_rows, fitted, mean_utility_at
 from .signals import signals_for
@@ -100,6 +100,9 @@ class Verdict:
     progress: dict | None
     factors: dict
     consensus: list
+    #: Where each candidate came from: "pool" (the standing grid), "fresh" (this reading's
+    #: Sobol immigrants) or "bred" (a child of the elites). One per entry of `thetas`.
+    strata: list = field(repr=False)
     #: The fit the verdict was read from, kept so the sweep and the provenance can reach it.
     fit: dict = field(repr=False)
 
@@ -122,6 +125,23 @@ class Verdict:
     @property
     def champion_theme(self) -> dict:
         return self.themes[self.champion]
+
+    @property
+    def champion_stratum(self) -> str:
+        return self.strata[self.champion]
+
+    @property
+    def shelf_strata(self) -> dict:
+        """How many of the shown shelf members came from each stratum, leader included.
+
+        All from one stratum -- and in practice that means all bred -- is the sign the
+        standing grid has stopped reaching the model, which is the one symptom that would
+        justify widening it (method reef: judge the pool against the length scales).
+        """
+        counts = dict.fromkeys(("pool", "fresh", "bred"), 0)
+        for i in self.shown:
+            counts[self.strata[i]] += 1
+        return counts
 
     @property
     def beats_random(self) -> float:
@@ -150,24 +170,25 @@ class Verdict:
 
 
 def _bred_candidates(fit, polarity):
-    bred = candidates(fit, polarity, np.random.default_rng(CANDIDATE_SEED), n_trial=0)[0]
-    return [theta for theta, _theme in bred], [theme for _theta, theme in bred]
+    bred, _n_standing, strata = candidates_with_strata(fit, polarity, np.random.default_rng(CANDIDATE_SEED), n_trial=0)
+    return [theta for theta, _theme in bred], [theme for _theta, theme in bred], strata
 
 
-def _apply_legibility(responses, polarity, fit, thetas, themes):
-    """(kept thetas, kept themes, the exclusion mask, the surface) after the timed arms bind.
+def _apply_legibility(responses, polarity, fit, thetas, themes, strata):
+    """(kept thetas, kept themes, kept strata, the exclusion mask, the surface) after the
+    timed arms bind.
 
     A thin or noisy reaction-time log excludes nothing, by construction of rt_penalty; and a
     log that would exclude nearly everything is not trusted to choose either.
     """
     surface = rt_fit(responses, polarity, fit.get("ls"))
     if surface is None:
-        return thetas, themes, None, None
+        return thetas, themes, strata, None, None
     excluded, _seconds = rt_penalty(surface, thetas, polarity)
     kept = [i for i in range(len(thetas)) if not excluded[i]]
     if len(kept) < MIN_SURVIVORS:
-        return thetas, themes, None, surface
-    return [thetas[i] for i in kept], [themes[i] for i in kept], excluded, surface
+        return thetas, themes, strata, None, surface
+    return [thetas[i] for i in kept], [themes[i] for i in kept], [strata[i] for i in kept], excluded, surface
 
 
 def _legibility_note(surface, excluded, thetas, polarity, champion):
@@ -200,8 +221,8 @@ def verdict_for(responses, polarity, fit=None):
     fit = fit or fitted(responses)
     if fit is None:
         return None
-    thetas, themes = _bred_candidates(fit, polarity)
-    thetas, themes, excluded, surface = _apply_legibility(responses, polarity, fit, thetas, themes)
+    thetas, themes, strata = _bred_candidates(fit, polarity)
+    thetas, themes, strata, excluded, surface = _apply_legibility(responses, polarity, fit, thetas, themes, strata)
     mean_utility = mean_utility_at(fit, thetas, polarity)
     champion = int(np.argmax(mean_utility))
     best = best_set(fit, polarity, thetas, seed=17)
@@ -222,6 +243,7 @@ def verdict_for(responses, polarity, fit=None):
         progress=progress_report(responses, polarity, thetas),
         factors={key: factor_effect(responses, polarity, key) for key in FACTORS},
         consensus=axis_consensus(best, thetas),
+        strata=strata,
         fit=fit,
     )
 

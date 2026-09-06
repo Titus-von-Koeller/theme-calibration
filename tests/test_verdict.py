@@ -15,6 +15,7 @@ import pytest
 from test_preference_model import duel_log
 
 from theme import verdict as verdict_module
+from theme.publish import describe
 from theme.verdict import Legibility, palette_of, publish, verdict_for
 
 
@@ -41,6 +42,24 @@ def test_the_leader_is_shown_first_with_its_group_probability(day_verdict):
     probabilities = [day_verdict.shown_probability[i] for i in shown]
     assert probabilities == sorted(probabilities, reverse=True)
     assert probabilities[0] == pytest.approx(day_verdict.lead)
+
+
+def test_every_candidate_names_the_stratum_it_came_from(day_verdict, search_model):
+    """Where the leader and the shelf come from is a count, not a hunch: a shelf that is all
+    bred children is the one symptom that would justify widening the standing grid."""
+    assert len(day_verdict.strata) == len(day_verdict.thetas)
+    assert set(day_verdict.strata) <= {"pool", "fresh", "bred"}
+    pool_keys = {tuple(np.round(theta, 4)) for theta, _theme in search_model.POOL["day"]}
+    for theta, stratum in zip(day_verdict.thetas, day_verdict.strata, strict=True):
+        if tuple(np.round(theta, 4)) in pool_keys:
+            assert stratum == "pool", "a standing grid point must be labelled as one"
+    assert day_verdict.champion_stratum == day_verdict.strata[day_verdict.champion]
+    origins = day_verdict.shelf_strata
+    assert sum(origins.values()) == len(day_verdict.shown)
+    # The fixture's stub themes carry no roles, so the printer is exercised on a copy that does.
+    roles = ("ground", "keyword", "function", "string", "ink", "comment", "punct", "find_fill")
+    printable = dataclasses.replace(day_verdict, themes=[dict.fromkeys(roles, "#000000")] * len(day_verdict.themes))
+    assert any(" origin: leader is " in line for line in describe(printable))
 
 
 def test_the_verdict_counts_only_its_own_polarity(search_model):
