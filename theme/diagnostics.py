@@ -392,18 +392,78 @@ def _factor_verdict(key, p_value):
     return f"no {key} effect this data can see"
 
 
+def _batched_tilt_features(axis_differences, levels, n_levels, n_tilt_axes):
+    """(P, n, k) design matrices for P label assignments over the SAME duels.
+
+    The permutations differ only in the tilt columns -- the shared-utility block is the
+    same axis differences every time -- so it is broadcast rather than copied P times.
+    """
+    n_perm = levels.shape[0]
+    shared = np.broadcast_to(axis_differences, (n_perm, *axis_differences.shape))
+    columns = [shared]
+    for axis in range(n_tilt_axes):
+        values = axis_differences[:, axis]
+        for level in range(n_levels - 1):
+            column = np.where(levels == level, values, np.where(levels == n_levels - 1, -values, 0.0))
+            columns.append(column[:, :, None])
+    return np.concatenate(columns, axis=2)
+
+
+def _batched_held_out_loglik(axis_differences, levels, n_levels, n_tilt_axes, seed):
+    """`_held_out_loglik` for P label assignments at once, as (P,).
+
+    Every permutation solves the same SHAPE of problem over the same duels and the same
+    folds -- only the labels move -- so the Newton iteration runs on stacked arrays and
+    the 11x11 solves become one batched LAPACK call per step instead of P of them.
+
+    The fold split is drawn from `seed` alone, exactly as the unbatched version draws it,
+    so the permutations share it and the two implementations see identical folds.
+    """
+    order = np.random.default_rng(seed).permutation(len(axis_differences))
+    n_perm = levels.shape[0]
+    total, n_scored = np.zeros(n_perm), 0
+    for fold in range(5):
+        held_out = order[fold::5]
+        train = np.setdiff1d(order, held_out)
+        if len(train) < 10:
+            continue
+        features = _batched_tilt_features(axis_differences[train], levels[:, train], n_levels, n_tilt_axes)
+        coefficients = np.zeros((n_perm, features.shape[2]))
+        identity = np.eye(features.shape[2])
+        for _ in range(60):
+            p_first_wins = 1.0 / (1.0 + np.exp(-(features @ coefficients[:, :, None])[:, :, 0]))
+            gradient = (features.transpose(0, 2, 1) @ (1.0 - p_first_wins)[:, :, None])[:, :, 0] - coefficients
+            weights = p_first_wins * (1 - p_first_wins)
+            # (F * w)^T F per permutation, as one batched product. Written as a
+            # three-operand einsum this leaves BLAS entirely and runs numpy's own
+            # single-threaded loop -- the shape of slowdown that reads as clever.
+            hessian = (features * weights[:, :, None]).transpose(0, 2, 1) @ features + identity
+            coefficients = coefficients + np.linalg.solve(hessian, gradient[:, :, None])[:, :, 0]
+        features = _batched_tilt_features(axis_differences[held_out], levels[:, held_out], n_levels, n_tilt_axes)
+        log_odds = (features @ coefficients[:, :, None])[:, :, 0]
+        total += -np.logaddexp(0.0, -log_odds).sum(axis=1)
+        n_scored += len(held_out)
+    return total / max(n_scored, 1)
+
+
 def _permutation_null(axis_differences, levels_of_row, n_levels, nperm, seed):
     """The gain statistic under `nperm` shuffles of the level labels.
 
     The tilt-free half of the gain is the same number for every permutation -- with no
     tilt the design matrix never sees the labels -- so it is computed once. Half the
     permutation test was recomputing it.
+
+    The permutations are drawn from `seed` in the same order as before and then solved as
+    one batch, which is where the 120,000 tiny solves went. Characterized against the
+    unbatched implementation: identical p-values on every factor and polarity.
     """
     tilt_free = _tilt_free_loglik(axis_differences, 2)
     rng = np.random.default_rng(seed)
-    return np.array(
-        [_tilt_gain(axis_differences, rng.permutation(levels_of_row), n_levels, 2, tilt_free) for _ in range(nperm)]
+    permuted = np.array([rng.permutation(levels_of_row) for _ in range(nperm)])
+    with_tilt = np.mean(
+        [_batched_held_out_loglik(axis_differences, permuted, n_levels, 1, s) for s in range(2)], axis=0
     )
+    return with_tilt - tilt_free
 
 
 def factor_effect(responses, polarity, key, nperm=200, seed=7, min_n=24):
