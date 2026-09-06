@@ -63,7 +63,7 @@ def test_every_candidate_names_the_stratum_it_came_from(day_verdict, search_mode
     # The fixture's stub themes carry no roles; the printer runs on a copy that does.
     roles = ("ground", "keyword", "function", "string", "ink", "comment", "punct", "find_fill")
     printable = dataclasses.replace(day_verdict, themes=[dict.fromkeys(roles, "#000000")] * len(day_verdict.themes))
-    assert any(" origin: leader is " in line for line in describe(printable))
+    assert any(" origin: champion is " in line for line in describe(printable))
 
 
 def test_the_verdict_counts_only_its_own_polarity(search_model):
@@ -153,3 +153,38 @@ def test_publish_writes_both_polarities_from_one_fit(search_model, tmp_path, mon
     assert set(published) == {"day", "night"}
     assert published["day"]["n_duels"] == 60 and published["night"]["n_duels"] == 0
     assert json.loads(path.read_text()) == published
+
+
+def test_the_readout_says_when_the_champion_is_not_the_leader(day_verdict):
+    """Queue item 9: two readings of one posterior, and on a plateau they name two pages.
+
+    The published palette follows the posterior MEAN (risk-neutral); the shelf leads with
+    the P(best) group leader. The method reef's rule is that a readout must never put the
+    leader's probability under the champion's card -- so when they part, the leader's own
+    card is printed and labelled, and when they coincide nothing extra is said.
+    """
+    roles = ("ground", "keyword", "function", "string", "ink", "comment", "punct", "find_fill")
+    printable = dataclasses.replace(day_verdict, themes=[dict.fromkeys(roles, "#000000")] * len(day_verdict.themes))
+
+    apart = dataclasses.replace(
+        printable, champion=next(i for i in range(len(printable.thetas)) if i != printable.leader)
+    )
+    assert not apart.champion_is_leader
+    text = "\n".join(describe(apart))
+    assert "NOT the champion" in text, "a parted champion and leader must be named as two pages"
+    assert "the leader is not the champion" in text, "the headline percentage must say whose it is"
+
+    together = dataclasses.replace(printable, champion=printable.leader)
+    assert together.champion_is_leader
+    quiet = "\n".join(describe(together))
+    assert "NOT the champion" not in quiet, "saying it when they coincide trains the eye to skip it"
+
+
+def test_the_origin_line_names_the_champions_stratum_as_the_champions(day_verdict):
+    """It used to read "leader is <champion's stratum>", which is the same conflation item
+    9 is about, one line further down."""
+    roles = ("ground", "keyword", "function", "string", "ink", "comment", "punct", "find_fill")
+    printable = dataclasses.replace(day_verdict, themes=[dict.fromkeys(roles, "#000000")] * len(day_verdict.themes))
+    line = next(line for line in describe(printable) if line.strip().startswith("origin:"))
+    assert f"champion is {printable.champion_stratum}" in line
+    assert f"shelf leader is {printable.leader_stratum}" in line

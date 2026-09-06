@@ -188,8 +188,9 @@ def _(AXES, mo):
         low, high = note.gap_interval
         head = (
             f" {note.n_excluded} of {note.n_candidates} candidates were dropped first as credibly "
-            f"slower to read than the fastest ({note.n_timed} timed trials). The leader reads in "
-            f"about {note.champion_seconds / 1000:.1f} s"
+            f"slower to read than the fastest ({note.n_timed} timed trials"
+            + (f", {note.n_memorised} more dropped as pages he had already learned" if note.n_memorised else "")
+            + f"). The champion reads in about {note.champion_seconds / 1000:.1f} s"
         )
         if note.champion_credibly_slower:
             return head + (
@@ -322,7 +323,7 @@ def _(AXES, mo):
         shelf = ", ".join(f"{count} from {named[stratum]}" for stratum, count in origins.items() if count)
         grid = verdict.grid
         return (
-            f" The leader came from {named[verdict.champion_stratum]}; the shelf shown holds {shelf}. "
+            f" The champion came from {named[verdict.champion_stratum]}; the shelf shown holds {shelf}. "
             f"The standing grid's nearest neighbours sit {grid['neighbour_lengths']:.2f} of the model's own "
             f"correlation lengths apart, "
             + (
@@ -336,11 +337,29 @@ def _(AXES, mo):
             )
         )
 
+    def champion_versus_leader_sentence(verdict):
+        # Two readings of the same posterior, and on a plateau they name different pages.
+        # The mean is risk-neutral -- best in expectation -- and P(best) is most-likely-best;
+        # the applier receives the mean, deliberately, and the shelf leads with the other.
+        # Said out loud only when they part, because saying it always would train the eye
+        # to skip it.
+        if verdict.champion_is_leader:
+            return ""
+        return (
+            " Worth knowing before you pick: the **champion** applied from this reading is the"
+            " posterior-MEAN argmax, and the **first card on the shelf** is the P(best) group"
+            " leader -- two different pages here. The mean is the risk-neutral choice (best on"
+            " average over everything still uncertain); P(best) is the page most likely to be"
+            " the single best one. On a plateau these part, and neither is wrong: the applier"
+            " keeps receiving the mean, and the percentage above belongs to the leader's card,"
+            " not to the champion's."
+        )
+
     def verdict_prose(verdict):
         return mo.md(
             f"### The {verdict.polarity} verdict\n\n{headline(verdict)}.{legibility_sentence(verdict)}"
             f"{progress_sentence(verdict)}{factor_sentence(verdict)}{consensus_sentence(verdict)}"
-            f"{origin_sentence(verdict)}"
+            f"{origin_sentence(verdict)}{champion_versus_leader_sentence(verdict)}"
             " Shown below: the leader, then the most *different* members of the set holding half "
             "the probability mass -- near-identical themes are grouped first, so what you see are "
             "choices rather than variations of one."
