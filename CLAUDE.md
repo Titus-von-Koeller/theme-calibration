@@ -170,10 +170,16 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
     contrast does not have, and finds the intended root only because every ground sits at an
     end of the range. It also cannot report failure, and the assembly step checks the
     absolute floors but not each row's own requested ratio.
-12. **Repo hygiene.** No CI, no pre-commit config, no LICENSE. And `pixi run test` already
-    carries `-q` in pyproject's addopts, so `pytest -q` by hand is `-qq` and hides the
-    final count -- which is why two suite logs ended at the durations table with no
-    summary line.
+12. **Repo hygiene.** The suite counts again (DONE 2026-09-06): pyproject's addopts carried
+    `-q` and the `test` TASK carried a second one, so `pixi run test` was `-qq` -- the
+    task, not the hand-typed form, is what hid the count, and a green run ended at the
+    warnings block reading like a killed run. The task is now bare `pytest` and the suite
+    reports `201 passed in 72.13s`. Still open, by decision rather than by oversight: no
+    CI this round (the gates are `pixi run check` and `pixi run test`, both run before
+    every commit, and a runner buys little while one machine does all the work); no
+    pre-commit config for the same reason; **no LICENSE until Titus names one** -- the
+    repo is public, so the choice is his and an unlicensed public repo is the status quo
+    until he makes it.
 
 **Widgets and graphs** (Titus's question, 2026-09-05; design in the method reef's "Widgets
 and graphs" section). 19. **DONE 2026-09-05**, branch `surfaces` merged as 7ff074c, with dotfiles
