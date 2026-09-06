@@ -45,8 +45,9 @@ def test_the_leader_is_shown_first_with_its_group_probability(day_verdict):
 
 
 def test_every_candidate_names_the_stratum_it_came_from(day_verdict, search_model):
-    """Where the leader and the shelf come from is a count, not a hunch: a shelf that is all
-    bred children is the one symptom that would justify widening the standing grid."""
+    """Where the leader and the shelf come from is a count, not a hunch; and whether the
+    standing grid wants widening is read from its spacing against the finest length scale,
+    never from the shelf being all bred, which is the designed steady state."""
     assert len(day_verdict.strata) == len(day_verdict.thetas)
     assert set(day_verdict.strata) <= {"pool", "fresh", "bred"}
     pool_keys = {tuple(np.round(theta, 4)) for theta, _theme in search_model.POOL["day"]}
@@ -56,7 +57,10 @@ def test_every_candidate_names_the_stratum_it_came_from(day_verdict, search_mode
     assert day_verdict.champion_stratum == day_verdict.strata[day_verdict.champion]
     origins = day_verdict.shelf_strata
     assert sum(origins.values()) == len(day_verdict.shown)
-    # The fixture's stub themes carry no roles, so the printer is exercised on a copy that does.
+    grid = day_verdict.grid
+    assert 0.0 < grid["neighbour_lengths"] < 10.0
+    assert grid["resolves"] == (grid["neighbour_lengths"] <= verdict_module.GRID_RESOLVES_WITHIN)
+    # The fixture's stub themes carry no roles; the printer runs on a copy that does.
     roles = ("ground", "keyword", "function", "string", "ink", "comment", "punct", "find_fill")
     printable = dataclasses.replace(day_verdict, themes=[dict.fromkeys(roles, "#000000")] * len(day_verdict.themes))
     assert any(" origin: leader is " in line for line in describe(printable))

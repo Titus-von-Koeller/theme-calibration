@@ -27,11 +27,11 @@ import numpy as np
 
 from . import paths
 from .diagnostics import axis_consensus, best_set, factor_effect, progress_report, spread_out
-from .kernel import N_AXES
+from .kernel import N_AXES, scale_thetas
 from .legibility import rt_at, rt_fit, rt_penalty
 from .model import candidates_with_strata
 from .observer import MODEL_VERSION as OBSERVER_MODEL
-from .preference import duel_rows, fitted, mean_utility_at
+from .preference import duel_rows, fitted, mean_utility_at, realized_space
 from .signals import signals_for
 from .space import DE_MIN, READING_SIZE_PX, VISION_N, separation_floor
 from .surfaces import derived_surfaces
@@ -103,6 +103,11 @@ class Verdict:
     #: Where each candidate came from: "pool" (the standing grid), "fresh" (this reading's
     #: Sobol immigrants) or "bred" (a child of the elites). One per entry of `thetas`.
     strata: list = field(repr=False)
+    #: How far apart the standing grid's nearest neighbours sit in the model's own metric,
+    #: in correlation lengths -- the one comparison that decides whether the grid wants
+    #: widening (method reef: judge a pool's density against the length scales, not against
+    #: how many a floor removed). `resolves` is a median neighbour within one length.
+    grid: dict
     #: The fit the verdict was read from, kept so the sweep and the provenance can reach it.
     fit: dict = field(repr=False)
 
@@ -134,9 +139,9 @@ class Verdict:
     def shelf_strata(self) -> dict:
         """How many of the shown shelf members came from each stratum, leader included.
 
-        All from one stratum -- and in practice that means all bred -- is the sign the
-        standing grid has stopped reaching the model, which is the one symptom that would
-        justify widening it (method reef: judge the pool against the length scales).
+        All bred is the designed steady state (children refine the elites); a leader from
+        the pool or the immigrants says the model's refinements are not yet beating uniform
+        coverage. Whether the grid is wide enough is not read here but from `grid`.
         """
         counts = dict.fromkeys(("pool", "fresh", "bred"), 0)
         for i in self.shown:
@@ -167,6 +172,38 @@ class Verdict:
                 }
             )
         return rows
+
+
+#: A standing grid point whose nearest neighbour sits within this many correlation lengths
+#: has the surface between them interpolated rather than guessed: at one length the Matern
+#: 5/2 kernel still correlates the two at about 0.5. Past it the model sees structure finer
+#: than a uniform grid of any affordable size carries -- in nine dimensions doubling the
+#: pool tightens neighbours by only 2^(1/9), 8 to 9% measured -- so the answer is never "widen"; it
+#: is that refinement rests on the bred children, which is what they are for.
+GRID_RESOLVES_WITHIN = 1.0
+
+
+def grid_resolution(fit, polarity):
+    """{neighbour_lengths, resolves}: does the standing grid still resolve the surface the
+    model can see?
+
+    The median distance from each pool theta to its nearest pool neighbour, measured in the
+    kernel's own coordinates (each axis divided by its fitted ARD length scale), so one
+    unit is one correlation length whatever the axes' scales. A per-axis gap against the
+    finest length scale was the first attempt and it misjudged: the pool's 0.16 per axis
+    against 0.30 read as too coarse while the same points sit at 0.95 (day) and 1.01 (night)
+    correlation lengths once every axis is scaled by its own length -- at the edge, which
+    is where a uniform grid in nine dimensions lives whatever its size (see
+    GRID_RESOLVES_WITHIN).
+    """
+    thetas = [theta for theta, _theme in realized_space().POOL[polarity]]
+    if len(thetas) < 2:
+        return {"neighbour_lengths": float("nan"), "resolves": False}
+    scaled = scale_thetas(thetas, fit.get("ls"))
+    gaps = np.linalg.norm(scaled[:, None, :] - scaled[None, :, :], axis=-1)
+    np.fill_diagonal(gaps, np.inf)
+    neighbour = float(np.median(gaps.min(axis=1)))
+    return {"neighbour_lengths": neighbour, "resolves": bool(neighbour <= GRID_RESOLVES_WITHIN)}
 
 
 def _bred_candidates(fit, polarity):
@@ -244,6 +281,7 @@ def verdict_for(responses, polarity, fit=None):
         factors={key: factor_effect(responses, polarity, key) for key in FACTORS},
         consensus=axis_consensus(best, thetas),
         strata=strata,
+        grid=grid_resolution(fit, polarity),
         fit=fit,
     )
 

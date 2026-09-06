@@ -56,9 +56,16 @@ def describe(verdict):
         + (", ".join(AXES[a] for a, _r, _m in open_axes) or "nothing")
     )
     origins = verdict.shelf_strata
+    grid = verdict.grid
     lines.append(
         f"  origin: leader is {verdict.champion_stratum}; shelf shown from pool {origins['pool']}, "
-        f"fresh {origins['fresh']}, bred {origins['bred']}"
+        f"fresh {origins['fresh']}, bred {origins['bred']}; grid neighbours {grid['neighbour_lengths']:.2f} "
+        f"correlation lengths apart"
+        + (
+            " -- interpolates"
+            if grid["resolves"]
+            else " -- finer structure than a uniform grid carries; rests on breeding"
+        )
     )
     theme = verdict.champion_theme
     lines.append(
