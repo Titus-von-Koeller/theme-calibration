@@ -23,7 +23,7 @@ and weights. They are spelled that way because `theme.schedule` imports them and
 public interface is frozen; renaming them is a separate, serialized commit.
 """
 
-from .breeding import candidates, sobol_block
+from .breeding import candidates, candidates_with_strata, sobol_block
 from .diagnostics import (
     BEST_MEMO,
     SURF_MEMO,
@@ -86,6 +86,7 @@ __all__ = [
     "best_set",
     "bilinear_against",
     "candidates",
+    "candidates_with_strata",
     "coords",
     "cv_logloss",
     "duel_rows",
