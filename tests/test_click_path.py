@@ -18,6 +18,7 @@ from conftest import correct_choice, report
 
 from theme import schedule, vision
 from theme.color import hex_to_rgb, wcag
+from theme.preference import duel_rows, fitted
 from theme.server import CHROME_INK, app, get_log, get_posterior, get_vision_log
 
 #: The first colour trial of the first block, and the trial after the colour run: a run that
@@ -386,6 +387,52 @@ def test_the_recorded_row_describes_the_stimulus_that_was_shown(client, scratch_
         assert field in row, f"a response without {field!r} is not re-analysable"
     assert row["rt_ms"] == pytest.approx(1500.0)
     assert row["paused"] is False
+
+
+def test_a_row_names_the_fit_and_the_floors_it_was_taken_under(client, scratch_log):
+    """Queue item 7: the thresholds that decide which themes EXIST need pixel size's stamp.
+
+    The candidate pool is carved by the separation floor, and that floor moves whenever the
+    observer is refit on a longer vision log. Without this block, a row taken under a 6.46
+    dE floor and a row taken after it moves are indistinguishable in the log, and the
+    re-analysis that has already happened three times has nothing to condition on.
+    """
+    client.post("/api/response", json=report(0, correct_choice(0, [])))
+    stamp = scratch_log.read()[0]["provenance"]
+
+    assert stamp["observer"]["model"], "a row must name the observer model it was chosen under"
+    assert stamp["observer"]["n_trials"] >= 0
+    assert stamp["observer"]["de_min"] > 0, "the discrimination threshold is what the floor is built from"
+    assert stamp["floor"]["separation"] > 0
+    assert stamp["floor"]["regime"] in ("constant", "fitted")
+    # Trial 0 precedes every duel, so no preference fit chose it. Null is the honest answer
+    # and the key is present anyway -- an absent key would be indistinguishable from a
+    # writer that forgot.
+    assert "fit" in stamp and stamp["fit"] is None
+
+
+def test_every_arm_stamps_its_provenance_and_the_duels_name_a_real_fit(client, scratch_log):
+    """All four arms, and the fit fingerprint is the one the fit itself reports.
+
+    A stamp only some rows carry is worse than none: the missing ones look like rows from
+    before the stamp existed. The colour arm legitimately names no preference fit -- the
+    observer posterior chose it -- so it is checked for null rather than skipped, and the
+    duels once a fit exists are checked against `fitted` directly, so a stamp that names
+    some OTHER fit cannot pass.
+    """
+    for n in range(21):
+        client.post("/api/response", json=report(n, correct_choice(n, scratch_log.read())))
+    rows = scratch_log.read()
+
+    assert all("provenance" in row for row in rows), "every row carries its conditions or none of them do"
+    assert {row["mode"] for row in rows} >= {"duel", "comprehension", "search"}, "arms not covered"
+
+    duels = [row for row in rows if row["mode"] == "duel"]
+    later = duels[-1]
+    history = rows[: later["n"]]
+    assert later["provenance"]["fit"] == fitted(duel_rows(history))["fingerprint"][2], (
+        "the stamp must name the fit that actually chose the trial, not whatever is loaded now"
+    )
 
 
 def test_a_paused_trial_is_flagged_so_its_clock_is_not_believed(client, scratch_log):

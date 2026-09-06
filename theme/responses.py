@@ -24,6 +24,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from . import paths, vision
+from .observer import MODEL_VERSION as OBSERVER_MODEL
+from .space import DE_MIN, READING_SIZE_PX, VISION_N, floor_regime, separation_floor
 from .trialspec import rng_for
 
 # The neutral surround a duel is judged against, per polarity. A duel keeps this rather
@@ -87,6 +89,7 @@ def _stimulus_fields(trial: dict, page: dict | None, reported: dict) -> dict:
         **_page_fields(page),
         "surface": trial.get("surface", "editor"),
         "code_px": trial["code_px"],
+        **_provenance_fields(trial),
         "theta_a": trial["theta_a"],
         "theme_a": trial["theme_a"],
         "page_bg": surround_for(trial, trial["polarity"]),
@@ -98,6 +101,43 @@ def _stimulus_fields(trial: dict, page: dict | None, reported: dict) -> dict:
         "t_render": round(reported["t_render"], 1),
         "t_click": round(reported["t_click"], 1),
         "paused": reported.get("pauses", 0) > 0,
+    }
+
+
+def _provenance_fields(trial: dict) -> dict:
+    """Which fit chose this stimulus, and which floors it had to clear to exist.
+
+    Tightening a threshold silently re-bases every past duel: the candidate pool is carved
+    by the separation floor, and that floor moves whenever the observer is refit on a
+    longer vision log. A row recorded under a 6.46 dE floor and one recorded after the
+    floor moves are answers to different questions, and nothing in the log said so -- pixel
+    size has ridden along since the beginning for exactly this reason, and the thresholds
+    that decide which themes EXIST had no such stamp.
+
+    Written per row rather than reconstructed later, because the fit and the floors are
+    recoverable from the code and the logs only for as long as neither has moved, which is
+    precisely the case where the stamp is not needed. Old rows are not rewritten: what they
+    were taken under is genuinely unknown, and inventing it is worse than the gap.
+
+    `fit_fingerprint` is required, never defaulted. A reader's default once repaired a
+    missing key in a writer for a whole corpus, and a provenance field that guesses is the
+    worst place for that to happen.
+    """
+    polarity = trial["polarity"]
+    floor, _how = separation_floor(polarity, READING_SIZE_PX)
+    return {
+        "provenance": {
+            "fit": trial["fit_fingerprint"],
+            "observer": {
+                "model": OBSERVER_MODEL,
+                "n_trials": VISION_N,
+                "de_min": round(float(DE_MIN[polarity]), 3),
+            },
+            # The floor as it stood for THIS row, in the units the space is carved in, plus
+            # the word for which rule produced it. The prose `separation_floor` returns is a
+            # paragraph; a row wants the word.
+            "floor": {"separation": round(float(floor), 3), "regime": floor_regime()},
+        }
     }
 
 
