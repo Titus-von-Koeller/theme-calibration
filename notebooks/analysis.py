@@ -313,10 +313,24 @@ def _(AXES, mo):
             )
         return ""
 
+    def origin_sentence(verdict):
+        # Where the winners come from is the one number that decides whether the standing
+        # grid needs widening: leaders are bred by design, and a shelf that is ALL bred from
+        # one lineage would mean the grid has stopped reaching the model.
+        origins = verdict.shelf_strata
+        named = {"pool": "the standing grid", "fresh": "this reading's fresh immigrants", "bred": "breeding"}
+        shelf = ", ".join(f"{count} from {named[stratum]}" for stratum, count in origins.items() if count)
+        return f" The leader came from {named[verdict.champion_stratum]}; the shelf shown holds {shelf}." + (
+            " Every member is bred: check the grid still reaches the model before trusting the plateau."
+            if origins["pool"] == 0 and origins["fresh"] == 0 and len(verdict.shown) > 2
+            else ""
+        )
+
     def verdict_prose(verdict):
         return mo.md(
             f"### The {verdict.polarity} verdict\n\n{headline(verdict)}.{legibility_sentence(verdict)}"
             f"{progress_sentence(verdict)}{factor_sentence(verdict)}{consensus_sentence(verdict)}"
+            f"{origin_sentence(verdict)}"
             " Shown below: the leader, then the most *different* members of the set holding half "
             "the probability mass -- near-identical themes are grouped first, so what you see are "
             "choices rather than variations of one."
