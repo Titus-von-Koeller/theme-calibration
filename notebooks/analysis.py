@@ -314,16 +314,26 @@ def _(AXES, mo):
         return ""
 
     def origin_sentence(verdict):
-        # Where the winners come from is the one number that decides whether the standing
-        # grid needs widening: leaders are bred by design, and a shelf that is ALL bred from
-        # one lineage would mean the grid has stopped reaching the model.
+        # Leaders are bred by design (children refine the elites), so an all-bred shelf is
+        # the steady state, not a warning. Whether the standing grid wants widening is the
+        # grid's spacing against the model's finest length scale, and nothing else.
         origins = verdict.shelf_strata
         named = {"pool": "the standing grid", "fresh": "this reading's fresh immigrants", "bred": "breeding"}
         shelf = ", ".join(f"{count} from {named[stratum]}" for stratum, count in origins.items() if count)
-        return f" The leader came from {named[verdict.champion_stratum]}; the shelf shown holds {shelf}." + (
-            " Every member is bred: check the grid still reaches the model before trusting the plateau."
-            if origins["pool"] == 0 and origins["fresh"] == 0 and len(verdict.shown) > 2
-            else ""
+        grid = verdict.grid
+        return (
+            f" The leader came from {named[verdict.champion_stratum]}; the shelf shown holds {shelf}. "
+            f"The standing grid's nearest neighbours sit {grid['neighbour_lengths']:.2f} of the model's own "
+            f"correlation lengths apart, "
+            + (
+                "so the surface between them is interpolated, not guessed."
+                if grid["resolves"]
+                else (
+                    "more than a correlation length: the model now sees structure finer than a uniform grid "
+                    "carries (doubling the pool would tighten this by about 8% in nine dimensions), so "
+                    "refinement rests on the bred children."
+                )
+            )
         )
 
     def verdict_prose(verdict):

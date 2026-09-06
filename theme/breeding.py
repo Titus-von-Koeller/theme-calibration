@@ -168,9 +168,11 @@ def candidates_with_strata(
     """`candidates`, plus one stratum name per candidate: "pool" for the standing grid,
     "fresh" for this trial's Sobol immigrants, "bred" for children of the elites.
 
-    The verdict reads the strata to say where its leader and shelf came from. A shelf that
-    is all one lineage of bred children is the sign the standing grid has stopped reaching
-    the model; that used to be a hunch, and this makes it a count.
+    The verdict reads the strata to say where its leader and shelf came from. Once the model
+    has learned anything the leader and the whole shelf are bred -- children refine the
+    elites, so they outrank the uniform grid at the top by construction -- and a leader
+    from the pool or the immigrants means the refinements are not yet beating coverage.
+    That used to be a hunch, and this makes it a count.
     """
     pool = _CandidateSet(polarity)
     standing = realized_space().POOL[polarity]
