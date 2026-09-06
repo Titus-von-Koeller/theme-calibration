@@ -109,4 +109,8 @@ Anything general enough to outlive this repo belongs in the operator's standing 
 agents editing those concurrently is the same race the worktrees exist to prevent. Report; one
 session deposits. The report is your branch's last commit, `Report: <branch>`, with the
 learnings in the body -- a chat message reaches nobody once your window closes, a commit reaches
-the integrator through `git log` at merge time and stays greppable.
+the integrator through `git log` at merge time and stays greppable. `colony report --file <body>`
+writes it (`--template` prints the six sections), and `colony park` refuses a work branch whose
+last commit is not one. Your brief, if the work was handed out with `colony brief`, is the
+branch's first commit: read it with `git log main..HEAD` and run `colony brief --check` before
+acting on it.
