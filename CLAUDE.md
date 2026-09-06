@@ -106,8 +106,14 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
    buying find time -- 3.4 steps by day and 7.4 by night on 29 and 24 hunts, explaining 16%
    and 27% of variance, not identified -- so the 4-step constant stands and is to be
    promoted when the knee identifies (re-read around 60 hunts, together with axis 8's
-   effect on the legibility surface); (ii) whether the thinner pool wants a wider draw
-   (`POOL_THETA` is 512), its own commit; (iii) later and separately, reparametrize axis 8
+   effect on the legibility surface); (ii) READ 2026-09-06, no widening: the carve removed a
+   region and did not thin the pool -- median nearest-neighbour gap 0.491 to 0.494 by day,
+   0.494 to 0.503 by night, prior standardisation moved under 0.01 -- and the pool's per-axis
+   spacing (about 0.165) is already finer than the fitted ARD length scales (0.30 on the
+   finest axes, 0.44 to 0.79 elsewhere), so more points add coverage the model cannot use;
+   what it still owes is the small commit that defines the pool as "draw until N survive"
+   (N 400) so a floor change cannot silently shrink it, plus one readout line saying whether
+   winners come from the pool or from breeding; (iii) later and separately, reparametrize axis 8
    so theta 8 = 0 IS the baseline (today theta 8 maps to chroma 8 + 26 s and a lightness
    step 4 + 14 s, so its delivered steps depend on hue and page), which needs the logged
    rows' theta 8 re-derived from their hexes first (inverse.py is the tool) or the model
