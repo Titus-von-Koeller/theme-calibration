@@ -192,6 +192,13 @@ These are not in any test and were not previously written down.
     commit's tree. Removing it means a history rewrite and a force push to a public repo.
 14. **Screen calibration.** No ICC profile, which bounds absolute colour claims but not the
     relative structure the instrument learns.
+23. **The ink on a data fill is now the paper** (surfaces branch, 2026-09-05): `INK_LIGHT` and
+    `INK_DARK` in loop-to-cluster's `_palette.py` are the day and night papers instead of
+    white and near-black, so a census reads them as in-system. Measured cost: contrast at
+    the cividis ramp's ink crossover falls from 4.2:1 to 3.6:1, a band no near-neutral pair
+    but pure black clears; the crossover positions themselves barely move (0.500 to 0.495).
+    Coherence bought at the ramp's midpoint's expense: reverse it if legibility there
+    matters more to you than the census's one-system rule.
 15. **The role plan is calibrated for 14-line pages** while every caller asks for 28, so its
     tolerance is never met and is enforced nowhere. Per-role counts stay tight, so nothing is
     invalidated, but changing the plan changes the stimulus.
