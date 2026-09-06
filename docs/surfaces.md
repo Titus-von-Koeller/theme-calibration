@@ -42,6 +42,3 @@ agree, and a key that appears here must have a role there.
 - **The notebook card elevation** has no theme key on either surface, so it stays a literal
   derived from Horizon's page hue (row 3). The census does not see it as a flat colour, so it
   hides; it would show as a temperature clash on a very different paper.
-- **Pixel verification of the marimo widget variables** requires a notebook webview that has
-  loaded the patched renderer, which happens when a notebook webview next opens: the patch
-  writes a file on disk, and a running webview keeps the stylesheet it parsed.
