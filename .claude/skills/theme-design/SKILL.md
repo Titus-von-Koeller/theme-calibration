@@ -135,7 +135,14 @@ interact, and choose the best combination — every step from measurement.
   so the pool already resolves the surface at the resolution the model can distinguish;
   leaders come from the bred children by design, and the pool is insurance against
   forgetting a corner. What a floor change does warrant is a pool defined by survivors
-  ("draw until N survive") rather than by draws, so the question never returns.
+  ("draw until N survive") rather than by draws, so the question never returns -- done
+  2026-09-06 (400 per polarity). **Measured in the kernel's own metric the grid is at the
+  edge, and widening cannot move it**: nearest neighbours sit 0.95 (day) and 1.01 (night)
+  correlation lengths apart once each axis is scaled by its fitted length, and in nine
+  dimensions doubling a uniform pool tightens that by only 2^(1/9), 8 to 9% measured (400 to
+  3200 points: 1.03 to 0.77). So a uniform
+  grid never resolves the optimum; it finds the basin, and the bred children resolve it.
+  `Verdict.grid` prints the number so the claim stays checked.
 - **Randomize position AND fit its effect.** He picks the right-hand card 61% of the time
   (z = -1.91 over 79 duels). Randomization alone leaves that on the estimate as noise; a
   fitted side-advantage term subtracts it, and it is reconstructible from a logged swap flag
