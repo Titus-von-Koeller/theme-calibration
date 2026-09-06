@@ -178,8 +178,8 @@ class Verdict:
 #: has the surface between them interpolated rather than guessed: at one length the Matern
 #: 5/2 kernel still correlates the two at about 0.5. Past it the model sees structure finer
 #: than a uniform grid of any affordable size carries -- in nine dimensions doubling the
-#: pool tightens neighbours by only 2^(1/9), 8 to 9% measured -- so the answer is never "widen"; it
-#: is that refinement rests on the bred children, which is what they are for.
+#: pool tightens neighbours by only 2^(1/9), 8 to 9% measured -- so the answer is never
+#: "widen"; it is that refinement rests on the bred children, which is what they are for.
 GRID_RESOLVES_WITHIN = 1.0
 
 
