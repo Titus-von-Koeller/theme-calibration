@@ -87,6 +87,9 @@ def test_the_legibility_gap_is_the_champions_not_the_first_candidates():
         "n": 9,
         "sf2": 0.1,
         "noise": 0.1,
+        # Nothing was dropped from this hand-built surface. Required rather than defaulted:
+        # a note that guesses how much was filtered out is a note that cannot be trusted.
+        "n_memorised_excluded": 0,
     }
     thetas = [np.full(9, 0.2), np.full(9, 0.8)]
     excluded = np.array([False, False])

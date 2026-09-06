@@ -34,7 +34,9 @@ def describe(verdict):
         note = verdict.legibility
         low, high = note.gap_interval
         lines.append(
-            f"  legibility: {note.n_timed} timed trials dropped {note.n_excluded} of {note.n_candidates} "
+            f"  legibility: {note.n_timed} timed trials"
+            + (f" ({note.n_memorised} dropped as already-seen pages)" if note.n_memorised else "")
+            + f" dropped {note.n_excluded} of {note.n_candidates} "
             f"candidates; champion reads in {note.champion_seconds / 1000:.1f} s, "
             f"{note.gap_log_time:+.2f} [{low:+.2f}, {high:+.2f}] log-time against the fastest"
             + (" -- CREDIBLY SLOWER" if note.champion_credibly_slower else "")

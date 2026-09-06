@@ -19,6 +19,7 @@ readable in fact.
 """
 
 import math
+from typing import NamedTuple
 
 import numpy as np
 
@@ -42,9 +43,41 @@ DEFAULT_CODE_PX = 15.0
 TIMED_MODES = ("comprehension", "search")
 
 
-def _timed_trials(responses, polarity):
-    """(GP inputs, log times, is-a-hunt flags, type sizes) from the usable timed trials."""
+class TimedTrials(NamedTuple):
+    """The usable timed rows, and how many were dropped for having been seen before."""
+
+    inputs: np.ndarray
+    log_times: np.ndarray
+    is_hunt: np.ndarray
+    pixel_sizes: np.ndarray
+    memorised_excluded: int
+
+
+def _is_first_showing(row):
+    """Was this page new to him when it was shown?
+
+    Only an explicit True counts. A row from before the flag existed says nothing about
+    its page, and the measured answer is that those rows ARE the confounded ones: all 37
+    flagless timed rows in the log use one of the four memorised pages -- tensor-ops 17,
+    tint 8, train-loop 7, build-model 5, and nothing else. Defaulting a missing flag to
+    True would therefore admit exactly the corpus this exclusion exists to remove.
+
+    Written as "require the good case" for the same reason every floor here is: a row that
+    does not say it was fresh is not fresh, and the absent case fails closed.
+    """
+    return row.get("snippet_fresh") is True
+
+
+def _timed_trials(responses, polarity, include_memorised=False):
+    """The usable timed trials, and the count excluded as memorised.
+
+    A stimulus shown twice measures memory: four snippets over 116 trials turned
+    time-to-find into a practice curve (RT against trial index, r = -0.47). Reaction time
+    on a page he has already learned is not a reading time for that theme, so those rows
+    are out of the surface by default -- while staying in the log, which is the record.
+    """
     gp_inputs, log_times, is_hunt, pixel_sizes = [], [], [], []
+    memorised_excluded = 0
     for row in responses:
         if row.get("mode") not in TIMED_MODES:
             continue
@@ -53,11 +86,21 @@ def _timed_trials(responses, polarity):
         rt = float(row.get("rt_ms") or 0.0)
         if rt < MIN_RT_MS or rt > MAX_RT_MS:
             continue
+        if not _is_first_showing(row):
+            memorised_excluded += 1
+            if not include_memorised:
+                continue
         gp_inputs.append(coords(row["theta_a"], polarity))
         log_times.append(np.log(rt))
         is_hunt.append(1.0 if row["mode"] == "search" else 0.0)
         pixel_sizes.append(float(row.get("code_px") or DEFAULT_CODE_PX))
-    return np.array(gp_inputs), np.array(log_times), np.array(is_hunt), np.asarray(pixel_sizes)
+    return TimedTrials(
+        np.array(gp_inputs),
+        np.array(log_times),
+        np.array(is_hunt),
+        np.asarray(pixel_sizes),
+        memorised_excluded,
+    )
 
 
 def _nuisance_baselines(log_times, is_hunt, pixel_sizes):
@@ -96,9 +139,16 @@ def _nuisance_baselines(log_times, is_hunt, pixel_sizes):
     return baseline, prediction_baseline, probe_mean, hunt_mean
 
 
-def rt_fit(responses, polarity, length_scales=None, noise_share=0.45):
-    """The reading-time surface over theme space, or None if the log is too thin."""
-    gp_inputs, log_times, is_hunt, pixel_sizes = _timed_trials(responses, polarity)
+def rt_fit(responses, polarity, length_scales=None, noise_share=0.45, include_memorised=False):
+    """The reading-time surface over theme space, or None if the log is too thin.
+
+    `include_memorised` puts the pages he has already learned back in, for asking what
+    they do to the surface. It is not the default because their reaction times measure
+    practice; the count that was dropped rides along on the fit so a readout can say so.
+    """
+    gp_inputs, log_times, is_hunt, pixel_sizes, memorised_excluded = _timed_trials(
+        responses, polarity, include_memorised
+    )
     if len(gp_inputs) < MIN_TIMED_TRIALS:
         return None
     baseline, prediction_baseline, probe_mean, hunt_mean = _nuisance_baselines(log_times, is_hunt, pixel_sizes)
@@ -136,6 +186,9 @@ def rt_fit(responses, polarity, length_scales=None, noise_share=0.45):
         "n": len(gp_inputs),
         "sf2": signal_variance,
         "noise": noise_variance,
+        # Reported rather than silently applied: an exclusion nobody can see is a filter
+        # that quietly changes what the instrument answers.
+        "n_memorised_excluded": memorised_excluded,
     }
 
 

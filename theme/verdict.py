@@ -62,6 +62,11 @@ class Legibility:
     n_timed: int
     n_candidates: int
     n_excluded: int
+    #: Timed rows dropped because the page had been shown before. Distinct from
+    #: `n_excluded`, which counts candidate THEMES the surface ruled out: this counts
+    #: MEASUREMENTS the surface refused to read, and a reader who cannot see it cannot
+    #: tell a thin log from a heavily filtered one.
+    n_memorised: int
     champion_seconds: float
     #: Champion minus fastest, in log time, with its standard deviation. A DIFFERENCE with
     #: an interval, never two point estimates side by side: the posterior sd on either
@@ -240,6 +245,7 @@ def _legibility_note(surface, excluded, thetas, polarity, champion):
         n_timed=int(surface["n"]),
         n_candidates=len(excluded),
         n_excluded=int(excluded.sum()),
+        n_memorised=int(surface["n_memorised_excluded"]),
         champion_seconds=float(np.exp(mean_log_time[champion])),
         gap_log_time=gap,
         gap_sd=float(np.sqrt(variance[champion] + variance[fastest])),

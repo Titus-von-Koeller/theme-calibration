@@ -163,9 +163,21 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
    was a number that changed on every run. It is a blake2b digest now, pinned by a golden
    test (a self-comparison inside one process passes with the salted hash too).
    Tests: `test_click_path` for the row and for all four arms, both mutation-checked.
-8. **The memorisation-confounded rows are not excluded automatically.** 116 of 192 responses
-   used one of four repeated pages. They are flagged and excludable, but nothing excludes
-   them.
+8. **The memorisation-confounded rows are excluded automatically** -- DONE 2026-09-06.
+   `legibility.rt_fit` drops them by default; `include_memorised=True` puts them back for
+   asking what they do, and the count rides along on the fit so `pixi run verdict` prints
+   it (day "33 timed trials (21 dropped as already-seen pages)", night 30 and 17). The rows
+   stay in the log: the log is the record, the fit is the measurement.
+   A row counts as a first showing only if it SAYS so (`snippet_fresh is True`). Measured
+   before choosing that: all 37 flagless timed rows use one of the four memorised pages --
+   tensor-ops 17, tint 8, train-loop 7, build-model 5, and nothing else -- so defaulting a
+   missing flag to fresh would have admitted exactly the corpus the exclusion exists to
+   remove. The one explicitly repeated row is a generated page shown twice.
+   It matters: the day surface's ranking of candidates correlates only 0.523 with the
+   surface fitted including them (night 0.807), so those rows were not a rounding matter.
+   The cost is a thinner surface -- day 54 -> 33 usable timed rows, night 47 -> 30, both
+   still over the 8 the fit needs -- and a lower spread of predictions by day (sd 0.096 ->
+   0.071), which is the honest amount of confidence 33 first-showings buy.
 9. **The champion is the posterior-mean argmax; the card that leads is the P(best) group
    leader.** They coincide by day and differ by night, where the mean-argmax page is not
    the page most likely to be best. The published palette follows the mean (risk-neutral);

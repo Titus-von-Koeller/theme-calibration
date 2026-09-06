@@ -47,6 +47,9 @@ def synth_timed(n, active=(2, 5), offset=0.0, noise=0.25, seed=3, hunt_share=0.4
                 "theta_a": list(map(float, th)),
                 "correct": True,
                 "paused": False,
+                # Synthetic pages are first showings by construction; the surface excludes
+                # rows that do not say so, which is what the real log needs.
+                "snippet_fresh": True,
                 "rt_ms": float(np.exp(y) * 1000.0),
             }
         )
@@ -70,6 +73,9 @@ def sized_rows(n=48, size_step=0.0, seed=3):
                 "theta_a": list(map(float, th)),
                 "correct": True,
                 "paused": False,
+                # Synthetic pages are first showings by construction; the surface excludes
+                # rows that do not say so, which is what the real log needs.
+                "snippet_fresh": True,
                 "code_px": px,
                 "rt_ms": float(np.exp(base + r.normal(0, 0.18)) * 1000),
             }
@@ -122,6 +128,9 @@ def hunt_run(model, strategy, n=40, seed=1, noise=0.22):
                 "theta_a": list(map(float, th)),
                 "correct": True,
                 "paused": False,
+                # Synthetic pages are first showings by construction; the surface excludes
+                # rows that do not say so, which is what the real log needs.
+                "snippet_fresh": True,
                 "rt_ms": float(np.exp(truth(th) + r.normal(0, noise)) * 1000),
             }
         )
@@ -245,3 +254,39 @@ def test_the_predicted_times_come_back_in_the_unit_they_were_fitted_in(search_mo
         f"predicted times span {np.min(predicted):.0f}..{np.max(predicted):.0f}, "
         "which is not the millisecond window rt_fit reads"
     )
+
+
+def test_a_page_he_has_already_learned_is_out_of_the_surface(search_model):
+    """Queue item 8: a stimulus shown twice measures memory, not the theme.
+
+    Four snippets over 116 trials turned time-to-find into a practice curve (r = -0.47
+    against trial index). Those rows stay in the log -- it is the record -- and stay out of
+    the fit, which is the measurement.
+    """
+    fresh, _truth = synth_timed(40, seed=11)
+    memorised = [{**row, "snippet_fresh": False} for row in synth_timed(20, seed=12)[0]]
+
+    default = search_model.rt_fit(fresh + memorised, "day", None)
+    assert default["n"] == 40, "the memorised rows are in the surface by default"
+    assert default["n_memorised_excluded"] == 20, "an exclusion nobody can count is a silent filter"
+
+    included = search_model.rt_fit(fresh + memorised, "day", None, include_memorised=True)
+    assert included["n"] == 60, "the flag must be able to put them back for asking what they do"
+    assert included["n_memorised_excluded"] == 20, "the count reports what the flag overrode"
+
+
+def test_a_row_that_does_not_say_it_was_fresh_is_not_treated_as_fresh(search_model):
+    """The missing key is the case that matters, and it is not the safe one.
+
+    Every one of the 37 flagless timed rows in the real log uses one of the four memorised
+    pages -- tensor-ops, tint, train-loop, build-model -- so a reader defaulting a missing
+    flag to True would admit precisely the corpus this exclusion exists to remove. That is
+    the optimistic-default trap that once logged every fallback page as a first showing,
+    and a provenance flag is the worst place for it.
+    """
+    fresh, _truth = synth_timed(40, seed=11)
+    flagless = [{k: v for k, v in row.items() if k != "snippet_fresh"} for row in synth_timed(20, seed=12)[0]]
+
+    fit = search_model.rt_fit(fresh + flagless, "day", None)
+    assert fit["n"] == 40, "a row with no freshness flag was counted as a first showing"
+    assert fit["n_memorised_excluded"] == 20
