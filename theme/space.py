@@ -504,37 +504,70 @@ def raw_prior(theta, polarity, theme):
     return harmony + complexity + warmth
 
 
-def _build_pool(pool_thetas):
-    """The feasible pool per polarity, and the prior's location and scale over it.
+#: Feasible standing candidates per polarity. The pool is defined by what SURVIVES the
+#: floors, not by how many thetas were drawn: it used to be "512 draws, keep the survivors",
+#: so every floor change shrank it by an unknown amount and raised the question of whether
+#: it was still wide enough (the highlight baseline of 2026-09-05 took day from 420 to 284).
+#: 400 is what the model can use: its finest fitted length-scales are ~0.30 of an axis, and
+#: 400 uniform points in nine dimensions sit ~0.17 apart per axis, already finer than the
+#: surface the GP can resolve; leaders come from the bred children in any case (of the top
+#: 20 by posterior mean, none was a standing point at 336 responses).
+POOL_SIZE = 400
+
+#: Thetas drawn per block while filling the pool -- one batched realize_many each, ~0.1 s.
+POOL_DRAW_BLOCK = 512
+
+#: Blocks after which filling gives up: the floors have left almost nothing feasible, and
+#: that is a broken space to report, not a small pool to serve.
+POOL_MAX_BLOCKS = 16
+
+
+def _build_pool(size=POOL_SIZE, seed=0xA55):
+    """The feasible pool per polarity, the prior's location and scale over it, and every
+    theta drawn on the way.
 
     A fixed, deterministic candidate pool: the acquisition shops here (plus per-trial
     local refinements around the champion), the prior is standardized here, and
-    infeasible corners are carved away by the floors rather than penalized.
+    infeasible corners are carved away by the floors rather than penalized. Blocks are
+    drawn from one generator until each polarity holds `size` survivors, so the pool's
+    size is a promise and a tighter floor moves only how many blocks it takes. The first
+    block is the pool the instrument ran on until 2026-09-06, and its survivors come first
+    in the same order -- the old pool is a prefix of the new one -- because the ORDER is
+    load-bearing twice over: the index where the standing stratum ends is declared against
+    it, and PRIOR_STATS is computed over the same survivors in the same sequence.
 
-    ONE realize_many per polarity, not 512 realize() calls. This runs at import, and
-    colour-science costs the same for sixty-four colours as for one, so realizing the pool
-    a theme at a time paid the library's per-call argument validation 1024 times: importing
-    theme.space took 29 s, which is 29 s of a freshly started server accepting no
-    connections. Batched it is 1.9 s. realize_many populates REALIZE_CACHE on the way
-    through, so the per-theta realize() the analysis and prior_mean still use hit it warm
-    -- checked, not assumed: all 512 pool thetas are in the cache after import.
-
-    The ORDER of the surviving pool is load-bearing twice over, so it is preserved exactly:
-    the index where the standing stratum ends is declared against it, and PRIOR_STATS is
-    computed over the same survivors in the same sequence.
+    ONE realize_many per block and polarity, not a realize() per theta. This runs at import,
+    and colour-science costs the same for sixty-four colours as for one, so realizing the
+    pool a theme at a time paid the library's per-call argument validation 1024 times:
+    importing theme.space took 29 s, which is 29 s of a freshly started server accepting no
+    connections. Batched it is under 2 s. realize_many populates REALIZE_CACHE on the way
+    through, so the per-theta realize() the analysis and prior_mean still use hit it warm.
     """
-    pool, stats = {}, {}
-    for polarity in ("day", "night"):
-        themes = realize_many(pool_thetas, polarity)
-        feasible = [(theta, theme) for theta, theme in zip(pool_thetas, themes, strict=True) if theme is not None]
-        priors = np.array([raw_prior(theta, polarity, theme) for theta, theme in feasible])
+    rng = np.random.default_rng(seed)
+    pool = {"day": [], "night": []}
+    drawn = []
+    while any(len(members) < size for members in pool.values()):
+        if len(drawn) == POOL_MAX_BLOCKS:
+            raise RuntimeError(
+                f"the floors leave too few feasible themes: {POOL_MAX_BLOCKS * POOL_DRAW_BLOCK} draws filled "
+                + ", ".join(f"{polarity} to {len(members)}/{size}" for polarity, members in pool.items())
+            )
+        block = rng.random((POOL_DRAW_BLOCK, 9))
+        drawn.append(block)
+        for polarity, members in pool.items():
+            if len(members) >= size:
+                continue
+            themes = realize_many(block, polarity)
+            members.extend((theta, theme) for theta, theme in zip(block, themes, strict=True) if theme is not None)
+            del members[size:]
+    stats = {}
+    for polarity, members in pool.items():
+        priors = np.array([raw_prior(theta, polarity, theme) for theta, theme in members])
         stats[polarity] = (float(priors.mean()), float(priors.std() + 1e-9))
-        pool[polarity] = feasible
-    return pool, stats
+    return pool, stats, np.vstack(drawn)
 
 
-POOL_THETA = np.random.default_rng(0xA55).random((512, 9))
-POOL, PRIOR_STATS = _build_pool(POOL_THETA)
+POOL, PRIOR_STATS, POOL_THETA = _build_pool()
 
 
 def prior_mean(theta, polarity, theme=None):
