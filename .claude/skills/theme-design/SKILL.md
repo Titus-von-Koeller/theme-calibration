@@ -678,7 +678,7 @@ Implementation, in order:
 
 1. **One artefact, many writers** -- done 2026-09-05, except the readers. `measured-theme.json`
    is the source; settings.jsonc has its regions (the dotfiles applier, which now reads the
-   theming map `~/dotfiles/home/theme/vscode-map.toml`, ADR 012); loop-to-cluster's
+   theming map `~/dotfiles/home/theme/vscode-map.toml`, ADR 013); loop-to-cluster's
    `_palette.py` has `FURNITURE` and the ink pair, written by `theme/appliers/viz.py`; and
    marimo's `--card`, `--popover` and `--muted-foreground` follow the keys through dotfiles
    `patches/marimo_theme_vars.py`, the rest of its variables having read `--vscode-*` all
