@@ -106,14 +106,23 @@ Open questions, most valuable first. Figures are from 320 responses, 215 duels.
    buying find time -- 3.4 steps by day and 7.4 by night on 29 and 24 hunts, explaining 16%
    and 27% of variance, not identified -- so the 4-step constant stands and is to be
    promoted when the knee identifies (re-read around 60 hunts, together with axis 8's
-   effect on the legibility surface); (ii) READ 2026-09-06, no widening: the carve removed a
+   effect on the legibility surface); (ii) DONE 2026-09-06, no widening: the carve removed a
    region and did not thin the pool -- median nearest-neighbour gap 0.491 to 0.494 by day,
    0.494 to 0.503 by night, prior standardisation moved under 0.01 -- and the pool's per-axis
    spacing (about 0.165) is already finer than the fitted ARD length scales (0.30 on the
-   finest axes, 0.44 to 0.79 elsewhere), so more points add coverage the model cannot use;
-   what it still owes is the small commit that defines the pool as "draw until N survive"
-   (N 400) so a floor change cannot silently shrink it, plus one readout line saying whether
-   winners come from the pool or from breeding; (iii) later and separately, reparametrize axis 8
+   finest axes, 0.44 to 0.79 elsewhere), so more points add coverage the model cannot use.
+   Shipped instead: the pool is defined by survivors, "draw 512-blocks until 400 survive per
+   polarity" (d4a03f7; the old pool is a prefix of the new one, import 0.9 s), and every
+   candidate carries its stratum -- pool, fresh immigrant, or bred -- so the verdict, the CLI
+   and the notebook say where the leader and the shelf came from; a shelf that is all bred
+   is the one symptom that would justify widening. Titus's question of 2026-09-06, whether
+   a fixed pool can trap the search or old trials poison it: no -- the GP is defined over the
+   whole continuous cube, 64 fresh Sobol points join every trial, children and crossovers
+   explore around the elites, Thompson sampling revisits uncertain regions, and the pool is
+   seeded and never edited by data; the model resolves ~0.3 of an axis where a hex step is
+   ~0.05, so the search optimises the continuous colour behind the quantization. What CAN
+   lose valid themes is the box walls of the nine axes (item 3's light wall), not the pool.
+   (iii) later and separately, reparametrize axis 8
    so theta 8 = 0 IS the baseline (today theta 8 maps to chroma 8 + 26 s and a lightness
    step 4 + 14 s, so its delivered steps depend on hue and page), which needs the logged
    rows' theta 8 re-derived from their hexes first (inverse.py is the tool) or the model
