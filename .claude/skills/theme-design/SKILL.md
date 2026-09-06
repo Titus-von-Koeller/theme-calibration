@@ -127,6 +127,15 @@ interact, and choose the best combination — every step from measurement.
   ~0 on such a landscape. What buys convergence is reducing effective dimension (ARD) and an
   informative prior, not a cleverer search. ARD length-scales must be shrunk toward isotropy
   while relevance is unidentifiable (weight n/160): at 60 duels the raw estimate is noise.
+- **Judge a pool's density against the fitted length scales, not against how many a floor
+  removed.** The conspicuity baseline dropped a third of the standing pool and the reflex
+  was to widen the draw. Measured: the carve removed a REGION, the survivors' median
+  nearest-neighbour gap was unchanged (0.491 to 0.494 day, 0.494 to 0.503 night), and the
+  spacing of about 0.165 per unit axis sits well inside the finest ARD length scale (0.30),
+  so the pool already resolves the surface at the resolution the model can distinguish;
+  leaders come from the bred children by design, and the pool is insurance against
+  forgetting a corner. What a floor change does warrant is a pool defined by survivors
+  ("draw until N survive") rather than by draws, so the question never returns.
 - **Randomize position AND fit its effect.** He picks the right-hand card 61% of the time
   (z = -1.91 over 79 duels). Randomization alone leaves that on the estimate as noise; a
   fitted side-advantage term subtracts it, and it is reconstructible from a logged swap flag
