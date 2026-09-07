@@ -41,12 +41,13 @@ The model (v2, replacing a v1 LMS-opponent Weibull):
   the axis is added here when its data exists.
 - Inference: exact posterior over a dense parameter grid (QUEST+ style, no sampler
   to tune), chunked so peak memory stays modest, cached to ``observer-fit.json``
-  beside the log and keyed by (model version, log length) — instruments load the
+  beside the log and keyed by model version and log content — instruments load the
   cache in milliseconds and only the first session after new data pays the refit.
 
 Fit artifacts are derived data: regenerate, never hand-edit.
 """
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -230,7 +231,11 @@ def fit(log_path, cache=True, force=False):
     log_path = Path(log_path)
     records = [json.loads(line) for line in log_path.read_text().splitlines() if line.strip()]
     cache_path = log_path.parent / "observer-fit.json"
-    key = {"model": MODEL_VERSION, "n": len(records)}
+    # A restored log or another log beside the same cache can have the same length
+    # and different answers. Hash the records actually fitted, including earlier rows;
+    # canonical JSON ignores whitespace and key order without ignoring measurements.
+    digest = hashlib.sha256(json.dumps(records, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    key = {"model": MODEL_VERSION, "n": len(records), "log_sha256": digest}
     if cache and not force and cache_path.exists():
         stored = json.loads(cache_path.read_text())
         if {k: stored.get(k) for k in key} == key:
@@ -242,8 +247,7 @@ def fit(log_path, cache=True, force=False):
 
     phi_vals, phi_m = marginal(post, "phi")
     payload = {
-        "model": MODEL_VERSION,
-        "n": len(records),
+        **key,
         "phi_deg_mean": float((phi_m * phi_vals).sum()),
         "phi_deg_sd": float(np.sqrt((phi_m * phi_vals**2).sum() - ((phi_m * phi_vals).sum()) ** 2)),
         "w1_mean": posterior_mean(post, "w1", log_space=True),

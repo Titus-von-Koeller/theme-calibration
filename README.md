@@ -125,7 +125,7 @@ numbering; the app's rows carry `rt_ms` and are told apart by `surface` and `gen
                                                    JSON object per line, and tracked,
                                                    because they are the record
                       observer-fit.json            the cached observer fit, keyed by
-                                                   (model version, log length)
+                                                   (model version, log content SHA-256)
                       measured-theme.json          the published champion, rewritten by
                                                    `pixi run publish` and every analysis
                                                    pass; derived, so not tracked
