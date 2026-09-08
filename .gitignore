@@ -34,3 +34,4 @@ data/observer-logp-*
 # `git status` dirty on every reading. What IS tracked is the event of applying one --
 # data/applied-themes.jsonl carries each applied palette with its provenance.
 data/measured-theme.json
+data/observer-fit.json
