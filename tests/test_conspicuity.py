@@ -6,10 +6,12 @@ page raises the step. The baseline has to fail closed. The knee fit has to recov
 that was planted -- the recovery-test shape the rest of the suite uses.
 """
 
+import inspect
+
 import numpy as np
 import pytest
 
-from theme import conspicuity
+from theme import conspicuity, thresholds
 from theme.conspicuity import (
     CURRENT_BASELINE_JND,
     ISOTROPIC,
@@ -32,17 +34,54 @@ def test_one_lightness_step_at_the_reference_page_is_exactly_the_threshold(polar
 
 @pytest.mark.parametrize("polarity", polarities)
 def test_a_chromatic_step_counts_for_fewer_jnd_where_the_ellipse_is_weak(polarity):
-    """The fitted ellipse has w1 and w2 below 1 (or equal to it in the isotropic fallback),
-    so the same dE along a' or b' is never seen as MORE than along lightness."""
+    """A chromatic step costs what the FITTED ellipse says it costs, derived here from
+    phi/w1/w2 rather than asserted as an inequality.
+
+    This used to assert `chromatic <= lightness` from a docstring premise that both weights
+    sit below 1. That is a property of one fit, not of the metric: the 2026-09-06 sitting
+    refit w2 to 1.0350, so a b' step legitimately became marginally MORE costly than a
+    lightness step and the assertion failed at 1e-9 (see five-failures-reproduction.md).
+    The closed form below cannot go red when a sitting moves the fit, and it is a stronger
+    check than the inequality was -- it pins the rotation into the confusion axis AND both
+    weightings, where `<=` only pinned their sign relative to 1.
+
+    The weak-axis claim in the name survives as the ordering assertion: wherever the two
+    weights differ, the axis with the smaller weight is the cheaper one. The `<= 1` regime
+    itself is still pinned, deterministically and fit-independently, by
+    `test_a_weak_ellipse_makes_every_chromatic_step_cheaper`.
+    """
     reference = conspicuity.REFERENCE_J[polarity]
+    ellipse = conspicuity.ELLIPSE
     lightness = observer_jnd(np.array([5.0, 0.0, 0.0]), reference, polarity)
     red_green = observer_jnd(np.array([0.0, 5.0, 0.0]), reference, polarity)
     blue_yellow = observer_jnd(np.array([0.0, 0.0, 5.0]), reference, polarity)
-    assert red_green <= lightness + 1e-9
-    assert blue_yellow <= lightness + 1e-9
-    weak, strong = sorted([conspicuity.ELLIPSE.w1, conspicuity.ELLIPSE.w2])
+
+    # A pure a' step lands cos(phi) along the confusion axis and -sin(phi) across it, so
+    # its weighted length is sqrt(w1 cos^2 + w2 sin^2); a pure b' step swaps the two.
+    cos2 = np.cos(ellipse.phi) ** 2
+    sin2 = np.sin(ellipse.phi) ** 2
+    assert red_green == pytest.approx(lightness * np.sqrt(ellipse.w1 * cos2 + ellipse.w2 * sin2))
+    assert blue_yellow == pytest.approx(lightness * np.sqrt(ellipse.w1 * sin2 + ellipse.w2 * cos2))
+
+    weak, strong = sorted([ellipse.w1, ellipse.w2])
     if strong > weak:
         assert min(red_green, blue_yellow) < max(red_green, blue_yellow)
+
+
+@pytest.mark.parametrize("polarity", polarities)
+def test_a_weak_ellipse_makes_every_chromatic_step_cheaper(polarity):
+    """The claim the test above used to make, kept but pinned to a FROZEN ellipse.
+
+    Worth keeping fit-independently: "both weights below 1 means no chromatic step is
+    dearer than a lightness step" is a real property of the metric, and it is exactly the
+    kind of statement that must not be read off live data, because then a sitting decides
+    whether the suite is green.
+    """
+    weak = Ellipse(phi=0.3, w1=0.4, w2=0.9, lightness_gain=0.0)
+    reference = conspicuity.REFERENCE_J[polarity]
+    lightness = observer_jnd(np.array([5.0, 0.0, 0.0]), reference, polarity, ellipse=weak)
+    for chromatic in (np.array([0.0, 5.0, 0.0]), np.array([0.0, 0.0, 5.0])):
+        assert observer_jnd(chromatic, reference, polarity, ellipse=weak) <= lightness + 1e-9
 
 
 def test_the_isotropic_ellipse_is_plain_de_over_the_threshold():
@@ -70,9 +109,34 @@ def test_observer_jnd_is_batched_over_rows_and_grounds():
 
 @pytest.mark.parametrize("polarity", polarities)
 def test_the_other_matches_owe_the_meaning_roles_multiple(polarity):
-    """Until the size exponent is identified that multiple is the 2x constant; the point of
-    routing it through separation_floor is that both switch regime together."""
-    assert other_baseline_jnd(polarity) == pytest.approx(2.0)
+    """Whatever regime `separation_floor` is in, this is its multiple -- that IS the point
+    of routing it through there, so both switch together.
+
+    This used to assert the 2x constant outright. The constant was only ever the
+    unidentified regime's value, so when the 2026-09-06 sitting identified the size
+    exponent the assertion failed while the code was doing exactly what it promised. The
+    test now asserts the routing plus whichever regime is in force, so it holds on both
+    sides of the switch. The two branches are not symmetric in what they prove: the
+    constant branch pins a number, the fitted branch pins the closed form the exponent
+    implies -- which is the only one of the two a refit can move.
+    """
+    multiple = other_baseline_jnd(polarity)
+    floor, why = thresholds.separation_floor(polarity)
+
+    # The routing claim: this reads separation_floor rather than keeping its own constant.
+    assert multiple == pytest.approx(floor / DE_MIN[polarity])
+
+    # Take the read size from the signature so this cannot drift from the function's own
+    # default the way a second literal 14.0 would.
+    read_size_px = inspect.signature(thresholds.separation_floor).parameters["size_px"].default
+
+    if thresholds.size_is_identified():
+        exponent = thresholds.VISION_FIT.gamma_mean
+        assert multiple == pytest.approx((thresholds.REFERENCE_SIZE_PX / read_size_px) ** exponent)
+        assert "retired" in why, "the fitted regime must say the constant is no longer applied"
+    else:
+        assert multiple == pytest.approx(thresholds.FIXED_SCALE_FACTOR)
+        assert "constant" in why, "the constant regime must say out loud that it is not measured"
 
 
 @pytest.mark.parametrize("polarity", polarities)
