@@ -18,6 +18,7 @@ flat or planted spread, and the assertion is which regime results.
 
 import pytest
 
+from theme import thresholds
 from theme.observer import ObserverFit
 from theme.thresholds import size_is_identified
 
@@ -98,10 +99,18 @@ def test_the_private_payload_is_never_consulted():
         size_is_identified(private)
 
 
-def test_no_vision_data_at_all_is_not_identified_rather_than_an_error():
+def test_no_vision_data_at_all_is_not_identified_rather_than_an_error(monkeypatch):
     """Distinct from an unreachable posterior: a machine with no vision log is the
-    documented VISION_N == 0 case, and "not identified" is the true answer there."""
-    assert size_is_identified(None) is False
+    documented VISION_N == 0 case, and "not identified" is the true answer there.
+
+    VISION_FIT is patched rather than passing None, because `fit or VISION_FIT` means a
+    None argument selects the LIVE fit rather than simulating its absence. Asserting on
+    that is the coupling queue item 25 is about: this test passed on the committed rows
+    and failed on the sitting's, where the live fit is genuinely identified — caught only
+    because the brief demands both data states.
+    """
+    monkeypatch.setattr(thresholds, "VISION_FIT", None)
+    assert thresholds.size_is_identified() is False
 
 
 # -- the words -------------------------------------------------------------------------
