@@ -81,22 +81,33 @@ FIXED_SCALE_FACTOR = 2.0
 IMPLIED_EXPONENT = 0.35
 
 
-def size_is_identified(fit=None):
-    """Has any vision trial been shown at a size other than the reference?
+#: How far gamma's posterior must depart from flat before the size exponent counts as
+#: measured. Five grid values start at 0.2 each; this is a spread, not a threshold on any
+#: single mass, so it does not care which way the data leaned.
+IDENTIFIED_SPREAD = 0.03
 
-    Read off gamma's own posterior rather than off the log, so the answer tracks the model
-    that would actually be used. A flat marginal means the data has said nothing, whatever
-    the log happens to contain.
+
+def size_is_identified(fit=None):
+    """Is the size exponent IDENTIFIED — has gamma's posterior moved off its prior?
+
+    Not "was a trial shown at another size": that is the cause, this is the thing the
+    caller needs. `separation_floor` switches between a fitted exponent and a stand-in
+    constant on this answer, so it reads the posterior that would actually be used rather
+    than the log that produced it.
+
+    False means the data has said nothing — a flat marginal, whatever the log contains.
+    It does NOT mean the posterior could not be found: an unreachable posterior raises,
+    because returning False there would swap a measured regime for a constant with nothing
+    to show for it. That was the previous behaviour, via `or fit._p["marginals"]`, and a
+    rename of that private attribute was all it would have taken.
     """
     fit = fit or VISION_FIT
     if fit is None:
+        # No vision log on this machine at all — the documented VISION_N == 0 case above.
+        # "Not identified" is the true answer here, not a missing contract.
         return False
-    marginal = fit.summary().get("marginals", {}).get("gamma") if callable(fit.summary) else None
-    marginal = marginal or getattr(fit, "_p", {}).get("marginals", {}).get("gamma")
-    if not marginal:
-        return False
-    masses = list(marginal["p"] if isinstance(marginal, dict) else marginal)
-    return (max(masses) - min(masses)) > 0.03
+    masses = fit.marginals["gamma"]["p"]
+    return (max(masses) - min(masses)) > IDENTIFIED_SPREAD
 
 
 def separation_floor(polarity, size_px=14.0):

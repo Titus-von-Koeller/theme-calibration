@@ -195,6 +195,20 @@ class ObserverFit:
         self._p = payload
 
     def __getattr__(self, k):
+        """Payload values as attributes — for names the class does not already define.
+
+        The guard is load-bearing. Python consults __getattr__ whenever normal lookup
+        raises AttributeError, and that INCLUDES an AttributeError raised inside a
+        property getter, so without it the bare `AttributeError(k)` below replaces the
+        message of every property on this class. Measured: a property raising
+        AttributeError("CONTRACT: no marginals in this payload") surfaced as plain
+        "AttributeError: marginals", which is exactly the diagnosis `marginals` exists to
+        give. Re-invoking the descriptor is what lets its own error through — the original
+        exception is already gone here (sys.exc_info() is None by the time we are called).
+        """
+        descriptor = getattr(type(self), k, None)
+        if descriptor is not None:
+            return descriptor.__get__(self, type(self))
         try:
             return self._p[k]
         except KeyError as e:
@@ -222,7 +236,43 @@ class ObserverFit:
             return min(base.values()) * scale
         return base[direction] * scale
 
+    @property
+    def marginals(self):
+        """Per-axis posterior marginals: ``{axis: {"values": [...], "p": [...]}}``.
+
+        The module docstring promises ``marginals["gamma"]`` to consumers "precisely so a
+        consumer can check this rather than take the mean on trust", and this is that
+        promise as code. It resolved through ``__getattr__`` before, which meant it
+        happened to work and was not a contract — and the one consumer that reads it
+        (``notebooks/vision.py``) was relying on an accident.
+
+        Explicit rather than a method, so attribute access is unchanged and that consumer
+        keeps working; a method would shadow the ``__getattr__`` path and break it.
+
+        Raises AttributeError NAMING THE CONTRACT when a payload has no marginals, rather
+        than returning something falsy: the alternative is what this replaced —
+        ``thresholds.size_is_identified`` reading an unreachable posterior as a measured
+        "not identified" and silently swapping a fitted regime for a constant. Still an
+        AttributeError, so ``getattr(fit, "marginals", default)`` keeps Python's own
+        meaning for a caller that genuinely has a default.
+        """
+        try:
+            return self._p["marginals"]
+        except KeyError:
+            raise AttributeError(
+                "this fit carries no marginals — the payload predates them or was built "
+                'by hand. marginals["gamma"] is the documented contract (see the module '
+                "docstring); thresholds.size_is_identified refuses rather than guess."
+            ) from None
+
     def summary(self):
+        """The payload's SCALAR values only.
+
+        Deliberately flat: it is a readout, not the payload. Vectors and mappings — the
+        marginals above among them — are reached through their own accessors, so a caller
+        that wants a distribution has to ask for one by name rather than receive it by
+        accident.
+        """
         return {k: v for k, v in self._p.items() if not isinstance(v, (list, dict))}
 
 
