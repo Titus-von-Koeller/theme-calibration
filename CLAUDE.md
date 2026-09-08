@@ -223,6 +223,20 @@ These are not in any test and were not previously written down.
     but pure black clears; the crossover positions themselves barely move (0.500 to 0.495).
     Coherence bought at the ramp's midpoint's expense: reverse it if legibility there
     matters more to you than the census's one-system rule.
+24. **Signals share one lightness, and the day accents fall under the floor on the page**
+    (src-f4's review of the measured palette, 2026-09-08). `theme/signals.py` walks every
+    conventional hue to the same body-text floor on the ground, so red and green land at a
+    contrast ratio of 1.01 against EACH OTHER: a state encoded as red-versus-green alone is
+    carried by hue only. Nothing shipped does that yet; the rule to keep is that a signal
+    pair never differs by hue alone (add a lightness or shape step). The review framed this
+    as Titus's red-green deficiency; the standing verdict of 2026-09-03 found no deficiency
+    signal (red-green threshold 1.5x blue-yellow, where anomalous trichromacy shows
+    several-fold), so the design rule stands on convention, not on his eyes. Second fact:
+    on the day PAGE (#efe1d2) the chromatic accents measure 4.21 to 4.25, under the 4.5:1
+    floor that titus-preferences sets for the deepest surface they appear on -- the floors
+    are checked against the ground only. Owed: the floor check takes the page as a second
+    surface for every role that can appear on it (links, inline code, prose accents), or
+    the contract table says which roles never do.
 15. **The role plan is calibrated for 14-line pages** while every caller asks for 28, so its
     tolerance is never met and is enforced nowhere. Per-role counts stay tight, so nothing is
     invalidated, but changing the plan changes the stimulus.
