@@ -48,6 +48,7 @@ class PrivateOnlyFit:
 
 # -- the documented accessor -----------------------------------------------------------
 
+
 def test_marginals_is_an_explicit_property_not_an_attribute_accident():
     """`fit.marginals` resolved through __getattr__ before this, which means it worked and
     was not a contract; notebooks/vision.py already depended on it. Making it explicit is
@@ -63,10 +64,11 @@ def test_marginals_carries_gamma():
 
 def test_a_payload_without_marginals_raises_naming_the_contract():
     with pytest.raises(AttributeError, match="marginals"):
-        ObserverFit({"gamma_mean": 0.7}).marginals
+        _ = ObserverFit({"gamma_mean": 0.7}).marginals
 
 
 # -- the regime switch -----------------------------------------------------------------
+
 
 def test_a_flat_posterior_is_not_identified():
     """The real negative: five equal masses is the prior, untouched by data."""
@@ -85,8 +87,9 @@ def test_a_barely_moved_posterior_is_still_not_identified():
 
 # -- the lie this branch exists to remove ----------------------------------------------
 
+
 def test_an_unreachable_posterior_raises_instead_of_returning_a_plausible_false():
-    with pytest.raises(Exception) as raised:
+    with pytest.raises(AttributeError) as raised:
         size_is_identified(ObserverFit({"gamma_mean": 0.7}))
     assert "marginals" in str(raised.value)
 
@@ -95,7 +98,9 @@ def test_the_private_payload_is_never_consulted():
     """The regression guard. A rename of `_p` used to turn a measured regime into the
     constant one silently; reaching into `_p` here would make that possible again."""
     private = PrivateOnlyFit({"marginals": {"gamma": marginal(0.6, 0.2, 0.1, 0.05, 0.05)}})
-    with pytest.raises(Exception):
+    # AttributeError specifically: the documented accessor is simply not there on this
+    # shape, which is what a rename produces.
+    with pytest.raises(AttributeError):
         size_is_identified(private)
 
 
@@ -114,6 +119,7 @@ def test_no_vision_data_at_all_is_not_identified_rather_than_an_error(monkeypatc
 
 
 # -- the words -------------------------------------------------------------------------
+
 
 def test_the_docstring_describes_identification_not_presence():
     """The body tests whether gamma's posterior moved; the first line used to ask whether
