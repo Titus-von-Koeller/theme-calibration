@@ -250,15 +250,21 @@ These are not in any test and were not previously written down.
     claim is really about the metric, freeze the inputs rather than borrow the instrument's.
     Two owner items for `theme/`, reported rather than changed because that directory was
     outside the branch's partition:
-    - `thresholds.size_is_identified()` reaches gamma's posterior only through the private
-      `fit._p`; its documented path `fit.summary()["marginals"]` is an empty dict. It fails
-      SILENTLY to False, which reverts the instrument to the constant regime with no error
-      — a regime change by accident. Either populate `summary()["marginals"]` or make the
-      missing-marginal case raise; "require the good case", as the guards elsewhere do.
-    - Its name and first docstring line still ask "has any vision trial been shown at a size
-      other than the reference?" (presence), while the body tests whether gamma's marginal
-      is non-flat by more than 0.03 (identification). The body is on the right side of that
-      distinction and the wording is stale. Latent, not biting: 0.03 is a bar on probability
+    - DONE (branch `identification-path`). `thresholds.size_is_identified()` reached
+      gamma's posterior only through the private `fit._p`; its documented path
+      `fit.summary()["marginals"]` is an empty dict. It failed SILENTLY to False, which
+      reverts the instrument to the constant regime with no error — a regime change by
+      accident. Closed by the second option, raising: `ObserverFit.marginals` is an
+      explicit property, `size_is_identified` reads it with no fallback, and an
+      unreachable posterior raises instead of returning a plausible False. `summary()`
+      stays flat. A property and not a method because `notebooks/vision.py` already reads
+      `fit.marginals` as an attribute, and a method would shadow it.
+    - DONE (branch `identification-path`). Its first docstring line asked "has any vision
+      trial been shown at a size other than the reference?" (presence), while the body
+      tests whether gamma's marginal is non-flat by more than 0.03 (identification). The
+      body was on the right side of that distinction and the wording was stale; the
+      docstring now states identification and says why the two differ. The criterion
+      itself is unchanged and now named `IDENTIFIED_SPREAD`. Latent, not biting: 0.03 is a bar on probability
       MASSES, so it moves with grid resolution — today's spread is 0.978 on a five-point
       grid, nowhere near the boundary, but a finer grid shrinks every mass mechanically.
     **Item 1's premise has changed and its owner should decide whether to mark it DONE.**
