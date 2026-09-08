@@ -240,3 +240,33 @@ These are not in any test and were not previously written down.
 15. **The role plan is calibrated for 14-line pages** while every caller asks for 28, so its
     tolerance is never met and is enforced nowhere. Per-role counts stay tight, so nothing is
     invalidated, but changing the plan changes the stimulus.
+25. **The suite was coupled to the live fit, so a sitting could turn main red** (branch
+    `five-failures`, 2026-09-08). Three tests asserted properties of one particular observer
+    fit — that both ellipse weights sit below 1, and that the separation multiple is the 2x
+    constant — so the 2026-09-06 sitting made five of them fail by doing its job. They now
+    read the fit, or a frozen ellipse where the claim is about the metric rather than about
+    his eyes, and pass in both data states. The rule earned: a test may assert the SHAPE of
+    a relationship the fit implies, never a number the fit is allowed to move; where the
+    claim is really about the metric, freeze the inputs rather than borrow the instrument's.
+    Two owner items for `theme/`, reported rather than changed because that directory was
+    outside the branch's partition:
+    - `thresholds.size_is_identified()` reaches gamma's posterior only through the private
+      `fit._p`; its documented path `fit.summary()["marginals"]` is an empty dict. It fails
+      SILENTLY to False, which reverts the instrument to the constant regime with no error
+      — a regime change by accident. Either populate `summary()["marginals"]` or make the
+      missing-marginal case raise; "require the good case", as the guards elsewhere do.
+    - Its name and first docstring line still ask "has any vision trial been shown at a size
+      other than the reference?" (presence), while the body tests whether gamma's marginal
+      is non-flat by more than 0.03 (identification). The body is on the right side of that
+      distinction and the wording is stale. Latent, not biting: 0.03 is a bar on probability
+      MASSES, so it moves with grid resolution — today's spread is 0.978 on a five-point
+      grid, nowhere near the boundary, but a finer grid shrinks every mass mechanically.
+    **Item 1's premise has changed and its owner should decide whether to mark it DONE.**
+    Measured on the sitting's 828 vision rows: `size_is_identified()` is now True, 97.8% of
+    gamma's posterior mass sits on the grid point 0.35, and the fitted floor is 1.9893x
+    DE_MIN against the retired 2.0x constant — the constant was standing in for 0.35, so the
+    transition was continuous rather than a cliff, exactly as item 1 predicted it would be.
+    The honest limit is resolution, not direction: the grid is five points spaced 0.35 apart
+    and 0.35 is itself a grid point, so this excludes 0.7 and above without identifying a
+    third digit. Whether that is enough to retire a judged constant is the question item 1's
+    notebook was always meant to answer.

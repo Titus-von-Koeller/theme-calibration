@@ -255,14 +255,32 @@ class TestSeparationFloorRegime:
     axis is unmeasured, the fitted exponent once it is not, and never both.
     """
 
-    def test_the_constant_is_in_force_while_no_trial_varied_size(self):
-        assert not thresholds.size_is_identified(), (
-            "a trial at a second patch size has been logged, so this suite's premise has "
-            "changed and the floor should now be fitted rather than constant"
-        )
+    def test_the_regime_in_force_is_the_one_identification_calls_for(self):
+        """Whichever regime the fit puts us in, the floor and its stated reason agree with it.
+
+        This began as `test_the_constant_is_in_force_while_no_trial_varied_size`, asserting
+        `not size_is_identified()` -- a tripwire whose failure message said the premise had
+        changed. On 2026-09-06 it fired, correctly: 56 trials at 16 and 10 px identified the
+        size exponent. A tripwire that has fired has done its job and should not be re-armed
+        by pinning the other regime instead, so what is asserted now is the RELATIONSHIP,
+        which is true on both sides of the switch and cannot be turned red by a sitting.
+
+        The switch is `size_is_identified()`, which reads gamma's posterior rather than the
+        log -- identification, not the presence of a glyph-size trial. Two notes on that
+        function are owner items for `theme/` and are recorded in this branch's Report
+        rather than changed here: its name and first docstring line still say presence, and
+        it reaches the posterior only through a private attribute.
+        """
+        identified = thresholds.size_is_identified()
         floor, why = thresholds.separation_floor("day", 14.0)
-        assert floor == pytest.approx(2.0 * thresholds.DE_MIN["day"])
-        assert "constant" in why, "the regime must say out loud that it is not measured"
+
+        if identified:
+            expected = thresholds.DE_MIN["day"] * (104.0 / 14.0) ** thresholds.VISION_FIT.gamma_mean
+            assert floor == pytest.approx(expected, rel=1e-9)
+            assert "retired" in why, "the switch must say the constant is no longer applied"
+        else:
+            assert floor == pytest.approx(2.0 * thresholds.DE_MIN["day"])
+            assert "constant" in why, "the regime must say out loud that it is not measured"
 
     def test_the_floor_switches_to_the_fitted_exponent_once_size_is_measured(self, monkeypatch):
         """And the constant is dropped, not multiplied by it."""
