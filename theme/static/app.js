@@ -9,7 +9,7 @@ const $ = (id) => document.getElementById(id);
 const el = {
   body: document.body, page: $("page"), chip: $("chip"), keys: $("keys"),
   progress: $("progress"), pause: $("pause"), prompt: $("prompt"), cards: $("cards"),
-  cover: $("cover"), coverText: $("cover-text"), go: $("go"),
+  cover: $("cover"), coverText: $("cover-text"), stopping: $("stopping"), go: $("go"),
 };
 
 let trial = null;        // the trial on screen
@@ -20,6 +20,8 @@ let pauses = 0;
 let inputMethod = "mouse";
 let idleTimer = null;
 let busy = false;        // one answer in flight at a time
+let stoppingRequest = null;
+let stoppingGeneration = 0;
 let started = false;     // has begin been pressed at all since this page loaded?
 
 // How long a revealed trial waits for an answer before hiding itself.
@@ -107,6 +109,7 @@ function show(t) {
   // click is spent re-reading an instruction that has not changed.
   if (t.gate || !started) {
     cover(t.gate_text, "begin");
+    if (t.block_complete) showStopping();
   } else {
     reveal();
   }
@@ -115,6 +118,7 @@ function show(t) {
 // ---- the clock and the cover -----------------------------------------------------------
 
 function cover(text, label) {
+  clearStopping();
   el.coverText.textContent = text;
   el.go.textContent = label;
   el.cover.hidden = false;
@@ -124,6 +128,7 @@ function cover(text, label) {
 }
 
 function reveal() {
+  clearStopping();
   started = true;
   el.cover.hidden = true;
   el.cards.dataset.hidden = "0";
@@ -146,6 +151,7 @@ function doPause(why) {
   paused = true;
   pauses += 1;
   cover(`${why} — the stimulus is hidden; the clock re-baselines when you resume`, "resume");
+  showStopping();
 }
 
 // The stimulus went away and will come back, so this trial's clock is no longer a clean
@@ -156,6 +162,51 @@ function interrupt(text, label) {
   revealed = false;
   pauses += 1;
   cover(text, label);
+}
+
+// Cached evidence is requested only while covered. Resume never waits for it,
+// and a late reply cannot appear across a timed stimulus or a different pause.
+function clearStopping() {
+  stoppingGeneration += 1;
+  stoppingRequest?.abort();
+  stoppingRequest = null;
+  el.stopping.hidden = true;
+  el.stopping.textContent = "";
+}
+
+async function showStopping() {
+  const generation = stoppingGeneration;
+  const controller = new AbortController();
+  stoppingRequest = controller;
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  el.stopping.hidden = false;
+  el.stopping.textContent = "Checking the saved analysis. You can resume whenever you choose.";
+  try {
+    const response = await fetch(`/api/stopping/${trial.polarity}`, {signal: controller.signal});
+    if (!response.ok) throw new Error("summary unavailable");
+    const summary = await response.json();
+    if (generation !== stoppingGeneration || el.cover.hidden) return;
+    const lines = [summary.recommendation, summary.reason];
+    if (summary.created) lines.push(`${summary.polarity} · analysis saved ${summary.created} · ${Math.floor(summary.age_seconds / 60)} minutes ago`);
+    const item = summary.observation;
+    if (item) {
+      lines.push(`${item.duels} ${summary.polarity} duels; leading group ${Math.round(item.leading_group_mass * 100)}% probability of best. ${item.alternatives} alternatives in the set targeting 50% mass — not a completion percentage.`);
+      const p = item.progress;
+      if (p) lines.push(`Compared ${p.duels - p.back} → ${p.duels} duels in the combined log on the same candidate set: leader ${Math.round(p.lead_then * 100)}% → ${Math.round(p.lead_now * 100)}%; alternatives ${p.set_then} → ${p.set_now}. This is not a comparison with the previous block.`);
+      else lines.push("Not enough history for a same-candidate progress comparison.");
+    }
+    el.stopping.replaceChildren(...lines.map(text => {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = text;
+      return paragraph;
+    }));
+  } catch (_error) {
+    if (generation === stoppingGeneration && !el.cover.hidden) {
+      el.stopping.textContent = "Whether more trials help is unknown: the saved analysis is unavailable. Pause and review it before choosing another block.";
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // ---- answering -------------------------------------------------------------------------

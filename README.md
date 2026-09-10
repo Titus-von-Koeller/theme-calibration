@@ -239,3 +239,30 @@ mistake, and the only defence is writing down what did not work.
 
 `CONTRIBUTING.md` has the invariants every commit has to hold, and the rules for working
 on this repo in parallel.
+
+### Pausing and deciding whether to continue
+
+The pause cover and block boundary show a cached analysis recommendation. Resume
+never waits for it; it disappears before the trial clock starts. The first version
+reports **unknown** or **review**, with a reading-speed warning only when the existing
+verdict establishes that tradeoff. It does not decide that a concentrated posterior
+means more trials are useful, or that short trials establish sustained comfort.
+
+Between sittings, prepare the cache explicitly from the current logs:
+
+```sh
+pixi run python -m theme.stopping --refresh
+```
+
+This fits the existing analysis and writes only its derived stopping summary (plus
+the existing model's derived caches); it does not apply a palette or append human
+responses. Do not run it during a sitting. Missing, changed-data, changed-model and
+changed-candidate-recipe summaries are shown as unknown. Age and day/night are
+explicit. A valid snapshot still lacks predictive validation and lived-comfort
+acceptance; its default credible set targets 50% probability mass, not completion.
+The progress comparison uses the last 25 duels across the combined log on one
+candidate set, not a per-polarity or previous-block comparison.
+
+The isolated browser fixture exercises the real page without writing measurements:
+`pixi run python tests/browser_stopping.py /tmp/stopping-browser-check`.
+It creates only its own headless Chrome profile and ephemeral loopback server.

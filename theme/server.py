@@ -29,9 +29,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import paths, responses, stimulus, trialspec, vision
+from . import paths, responses, stimulus, stopping, trialspec, vision
 from .color import hex_to_rgb, wcag
-from .schedule import run_info, trial_for
+from .schedule import BLOCK, run_info, trial_for
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -165,6 +165,7 @@ def payload(n: int, answered: list[dict], vision_answered: list[dict], posterior
     page = page_for(trial)
     return {
         "n": n,
+        "block_complete": n > 0 and n % BLOCK == 0,
         # The colour arm is numbered by the vision log. The page echoes this back with its
         # answer, as it echoes n, so the recorder can refuse an answer whose vision log has
         # moved on -- a notebook sitting appends to the same log.
@@ -261,6 +262,16 @@ def api_status(log: LogDep) -> dict:
     rows = log.read()
     duels = sum(1 for row in rows if row.get("mode") == "duel")
     return {"responses": len(rows), "duels": duels}
+
+
+@app.get("/api/stopping/{polarity}")
+def api_stopping(polarity: str, log: LogDep, vision_log: VisionLogDep) -> dict:
+    # Separate pause-only request: response/trial handlers never read or fit this.
+    try:
+        current = stopping.identity((log.path, vision_log.path, paths.LIVED_LOG))
+        return stopping.read_summary(polarity, current)
+    except OSError:
+        return stopping.unknown("Analysis inputs are unavailable; pause and review them before more trials.")
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

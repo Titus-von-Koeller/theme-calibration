@@ -35,3 +35,7 @@ data/observer-logp-*
 # data/applied-themes.jsonl carries each applied palette with its provenance.
 data/measured-theme.json
 data/observer-fit.json
+
+data/stopping-summary.json
+data/stopping-*.tmp
+data/stopping-summary.lock

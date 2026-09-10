@@ -67,3 +67,9 @@ body.duel .page { max-width: 640px; }
 /* The colour arm's squares: a fixed-pixel stimulus on the trial's own ground, so nothing
    here sets a size or a colour -- the server inlines both. Only the hand's affordance. */
 .squares .square { cursor: pointer; }
+
+/* Evidence belongs to the covered pause, never the measured stimulus. */
+#stopping { max-width: min(42rem, 90vw); max-height: 40vh; overflow-y: auto; padding: 0 1rem; line-height: 1.5; }
+#stopping[hidden] { display: none; }
+#stopping p { margin: .5rem 0; }
+#stopping p:first-child { font-weight: bold; }
