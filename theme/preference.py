@@ -11,6 +11,8 @@ weight a duel, and the two information-theoretic helpers the trial chooser acqui
 against.
 """
 
+import hashlib
+
 import numpy as np
 
 from .kernel import N_AXES, POLARITY_AXIS, SIGNAL_VARIANCE, ard_scales, coords, kmat, quadratic_form
@@ -57,9 +59,16 @@ def log_fingerprint(rows):
 
     These are exactly the fields `duels_from` reads, so the fingerprint is complete for
     everything downstream of it.
+
+    Digested rather than hashed with the builtin, because this value does not stay inside
+    the process: it names the fit in a published palette's provenance and on every
+    response row, and `hash()` salts strings per process, so the same log fingerprinted
+    differently on every run. A number that changes when nothing changed is worse than no
+    identifier at all -- it looks like one, and nothing can be compared against it. blake2b
+    over the same fields costs microseconds against a cubic fit.
     """
-    return hash(
-        tuple(
+    material = repr(
+        [
             (
                 row["choice"],
                 row["polarity"],
@@ -70,8 +79,9 @@ def log_fingerprint(rows):
                 bool(row.get("swap")),
             )
             for row in rows
-        )
+        ]
     )
+    return hashlib.blake2b(material.encode(), digest_size=8).hexdigest()
 
 
 def duels_from(responses, rt_p=0.5):

@@ -32,6 +32,10 @@ import pytest
 from conftest import POOL_THETA
 from scipy.stats import qmc
 
+# Imported directly rather than through the `search_model` fixture: the fingerprint is a
+# pure function of rows and touches none of the colour layer that fixture stubs out.
+from theme.preference import log_fingerprint
+
 
 def synth_duels(model, n, active=(0, 3, 6), delta=0.0, seed=1):
     """Duels from a linear observer, with an optional left-card advantage."""
@@ -333,3 +337,53 @@ def test_the_fit_memo_names_the_log_it_cached(search_model):
     first = search_model.fitted(duel_log(search_model, 60, active=(0, 3, 6), seed=1))
     second = search_model.fitted(duel_log(search_model, 60, active=(2, 5, 8), seed=2))
     assert not np.array_equal(first["f"], second["f"]), "two different 60-duel logs were served one fit"
+
+
+def test_the_fit_fingerprint_is_the_same_in_every_process():
+    """A fingerprint that is written down must not be salted per process.
+
+    This value does not stay inside the process: `verdict.provenance` puts it in every
+    published palette and every response row carries it, so re-reading a year of
+    measurements means asking which fit a row was taken under. The builtin `hash()` salts
+    strings per run, so the same log fingerprinted differently every time -- an identifier
+    that changes when nothing changed, which is worse than none, because it looks like one.
+
+    Pinned as a literal rather than compared against itself: a self-comparison inside one
+    process passes with the salted hash too, which is exactly the bug that would be missed.
+    """
+    rows = [
+        {
+            "choice": 0,
+            "polarity": "day",
+            "theta_a": [0.1, 0.2],
+            "theta_b": [0.3, 0.4],
+            "rt_ms": 1234.5,
+            "paused": False,
+            "swap": True,
+        }
+    ]
+    assert log_fingerprint(rows) == "83fcd5ee5829a592"
+
+
+def test_the_fingerprint_moves_when_any_field_it_names_moves():
+    """Complete, not merely stable: a key must name every input that changes the answer."""
+    base = {
+        "choice": 0,
+        "polarity": "day",
+        "theta_a": [0.1, 0.2],
+        "theta_b": [0.3, 0.4],
+        "rt_ms": 1234.5,
+        "paused": False,
+        "swap": True,
+    }
+    reference = log_fingerprint([base])
+    for field, value in [
+        ("choice", 1),
+        ("polarity", "night"),
+        ("theta_a", [0.9, 0.2]),
+        ("theta_b", [0.3, 0.9]),
+        ("rt_ms", 1234.6),
+        ("paused", True),
+        ("swap", False),
+    ]:
+        assert log_fingerprint([{**base, field: value}]) != reference, f"changing {field} left the fingerprint unmoved"

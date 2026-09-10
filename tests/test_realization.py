@@ -302,3 +302,57 @@ class TestSeparationFloorRegime:
             f"{doubled_and_scaled:.1f} dE between every accent pair is not a floor, it is a "
             "refusal to build any theme at all"
         )
+
+
+def test_the_realization_cache_forgets_its_coldest_entry_rather_than_growing_forever(monkeypatch):
+    """Queue item 10: the instrument is a server that stays up for days.
+
+    Measured before bounding it: the standing pool realizes 2048 entries at import and each
+    trial adds about 305 more, so a 500-trial sitting grew the cache by roughly 210 MB.
+    """
+    cache = space._LruCache(max_entries=4)
+    for i in range(4):
+        cache[i] = f"theme-{i}"
+    assert len(cache) == 4
+
+    # Read the oldest, so it is no longer the coldest. This is the property FIFO does not
+    # have, and the standing pool -- realized once at import, re-read every trial -- is
+    # exactly the entry a FIFO bound would throw away.
+    assert cache[0] == "theme-0"
+    cache[4] = "theme-4"
+
+    assert len(cache) == 4, "the bound must hold"
+    assert 0 in cache, "the entry that was just read must survive"
+    assert 1 not in cache, "the coldest entry is the one that goes"
+
+
+def test_the_pool_is_never_re_realized_when_the_cache_fills(monkeypatch):
+    """The bound must not evict what every trial re-reads.
+
+    Checked by COUNTING realizations, not by looking at the cache afterwards: an evicted
+    entry is simply recomputed and re-inserted, so the end state looks identical either
+    way and an end-state assertion passes under a FIFO bound too. The cost of the wrong
+    policy is the recomputation, so the recomputation is what the test has to see.
+
+    Evicting the standing pool hands back the behaviour already measured as three times
+    slower: recomputing a batch is slower than not computing at all.
+    """
+    monkeypatch.setattr(space.REALIZE_CACHE, "max_entries", 64)
+    pool_thetas = [theta for theta, _theme in space.POOL["day"][:8]]
+    space.realize_many(pool_thetas, "day")  # warm
+
+    realized = []
+    inner = space._realize_batch
+    monkeypatch.setattr(
+        space, "_realize_batch", lambda table, polarity: realized.append(len(table)) or inner(table, polarity)
+    )
+
+    rng = np.random.default_rng(0)
+    for _ in range(20):
+        space.realize_many(pool_thetas, "day")  # the pool, re-read as a trial would
+        space.realize_many(rng.random((8, 9)), "day")  # one-off candidates, new every round
+
+    assert sum(realized) == 160, (
+        f"the pool was re-realized: {sum(realized)} themes built where only the 160 one-offs should be"
+    )
+    assert len(space.REALIZE_CACHE) <= 64, "the bound must hold"

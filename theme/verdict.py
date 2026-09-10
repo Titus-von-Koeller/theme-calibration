@@ -62,6 +62,11 @@ class Legibility:
     n_timed: int
     n_candidates: int
     n_excluded: int
+    #: Timed rows dropped because the page had been shown before. Distinct from
+    #: `n_excluded`, which counts candidate THEMES the surface ruled out: this counts
+    #: MEASUREMENTS the surface refused to read, and a reader who cannot see it cannot
+    #: tell a thin log from a heavily filtered one.
+    n_memorised: int
     champion_seconds: float
     #: Champion minus fastest, in log time, with its standard deviation. A DIFFERENCE with
     #: an interval, never two point estimates side by side: the posterior sd on either
@@ -134,6 +139,32 @@ class Verdict:
     @property
     def champion_stratum(self) -> str:
         return self.strata[self.champion]
+
+    @property
+    def leader(self) -> int:
+        """The P(best) group leader: the representative of the group holding the most
+        argmax mass, and the card the shelf shows first.
+
+        A DIFFERENT page from `champion`, which is the posterior-MEAN argmax. The mean
+        answers "which page does the model expect to be best"; P(best) answers "which page
+        is most likely to be the best one". They coincide when a single winner dominates
+        and part on a plateau, where the mean can sit on a page that is good in expectation
+        without being the most probable argmax anywhere.
+        """
+        return int(self.credible[0])
+
+    @property
+    def champion_is_leader(self) -> bool:
+        """Do the two readings name the same page? When they do not, the readout says so."""
+        return self.champion == self.leader
+
+    @property
+    def leader_theme(self) -> dict:
+        return self.themes[self.leader]
+
+    @property
+    def leader_stratum(self) -> str:
+        return self.strata[self.leader]
 
     @property
     def shelf_strata(self) -> dict:
@@ -240,6 +271,7 @@ def _legibility_note(surface, excluded, thetas, polarity, champion):
         n_timed=int(surface["n"]),
         n_candidates=len(excluded),
         n_excluded=int(excluded.sum()),
+        n_memorised=int(surface["n_memorised_excluded"]),
         champion_seconds=float(np.exp(mean_log_time[champion])),
         gap_log_time=gap,
         gap_sd=float(np.sqrt(variance[champion] + variance[fastest])),

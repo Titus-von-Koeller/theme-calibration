@@ -17,6 +17,7 @@ with it, which is why the harmony model moved and the prior did not.
 """
 
 import math
+from collections import OrderedDict
 from itertools import combinations
 from typing import NamedTuple
 
@@ -41,6 +42,7 @@ from .thresholds import (  # noqa: F401
     VISION_FIT,
     VISION_LOG,
     VISION_N,
+    floor_regime,
     separation_floor,
 )
 
@@ -101,11 +103,47 @@ def anchor_polar(polarity):
 
 ANCHOR_HM = {p: anchor_polar(p) for p in ("day", "night")}
 
+#: How many realized themes to keep. Measured 2026-09-06 on the running instrument: the
+#: standing pool realizes 2048 entries at import and each trial adds about 305 more (the
+#: bred children and the Sobol immigrants), at roughly 1.4 kB an entry -- so an unbounded
+#: cache grew by about 210 MB over a 500-trial sitting, in a server that stays up for days.
+#: 32768 holds the standing pool plus about a hundred trials of candidates, some 45 MB.
+CACHE_ENTRIES = 32768
+
+
+class _LruCache(OrderedDict):
+    """A dict that forgets its least recently READ entry once it is full.
+
+    Least-recently-used rather than the insert-order eviction the other memos here use,
+    and the difference is load-bearing: the standing pool is realized once at import and
+    then re-read on every single trial, so a FIFO bound would evict exactly the entries
+    the search depends on and hand back the three-times-slower behaviour that batching
+    without a cache already measured. Reading marks an entry fresh, so the pool survives
+    for as long as it is used and a one-off candidate does not.
+    """
+
+    def __init__(self, max_entries=CACHE_ENTRIES):
+        super().__init__()
+        self.max_entries = max_entries
+
+    def __getitem__(self, key):
+        value = super().__getitem__(key)
+        self.move_to_end(key)
+        return value
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self.move_to_end(key)
+        while len(self) > self.max_entries:
+            self.popitem(last=False)
+
+
 # Realization and prior are pure functions of (theta, polarity); the caches make the
 # per-trial local-refinement candidates (and every posterior call over the pool) pay
-# for their appearance math exactly once per kernel.
-REALIZE_CACHE = {}
-PRIOR_CACHE = {}
+# for their appearance math exactly once per kernel. Bounded because the instrument is a
+# long-lived server: both grew without limit, at about 305 and 289 entries a trial.
+REALIZE_CACHE = _LruCache()
+PRIOR_CACHE = _LruCache()
 
 
 def theta_key(theta, polarity):

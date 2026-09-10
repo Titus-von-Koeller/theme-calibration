@@ -28,13 +28,16 @@ def describe(verdict):
     """One polarity's verdict as lines of text."""
     lines = [
         f"{verdict.polarity}: {verdict.n_duels} duels, verdict {verdict.verdict}, leader holds "
-        f"{100 * verdict.lead:.0f}% of the probability of being best, credible set of {len(verdict.credible)}",
+        f"{100 * verdict.lead:.0f}% of the probability of being best, credible set of {len(verdict.credible)}"
+        + ("" if verdict.champion_is_leader else " (the leader is not the champion -- see below)"),
     ]
     if verdict.legibility:
         note = verdict.legibility
         low, high = note.gap_interval
         lines.append(
-            f"  legibility: {note.n_timed} timed trials dropped {note.n_excluded} of {note.n_candidates} "
+            f"  legibility: {note.n_timed} timed trials"
+            + (f" ({note.n_memorised} dropped as already-seen pages)" if note.n_memorised else "")
+            + f" dropped {note.n_excluded} of {note.n_candidates} "
             f"candidates; champion reads in {note.champion_seconds / 1000:.1f} s, "
             f"{note.gap_log_time:+.2f} [{low:+.2f}, {high:+.2f}] log-time against the fastest"
             + (" -- CREDIBLY SLOWER" if note.champion_credibly_slower else "")
@@ -58,7 +61,8 @@ def describe(verdict):
     origins = verdict.shelf_strata
     grid = verdict.grid
     lines.append(
-        f"  origin: leader is {verdict.champion_stratum}; shelf shown from pool {origins['pool']}, "
+        f"  origin: champion is {verdict.champion_stratum}, shelf leader is {verdict.leader_stratum}; "
+        f"shelf shown from pool {origins['pool']}, "
         f"fresh {origins['fresh']}, bred {origins['bred']}; grid neighbours {grid['neighbour_lengths']:.2f} "
         f"correlation lengths apart"
         + (
@@ -67,11 +71,23 @@ def describe(verdict):
             else " -- finer structure than a uniform grid carries; rests on breeding"
         )
     )
-    theme = verdict.champion_theme
-    lines.append(
-        "  champion: ground {ground} keyword {keyword} function {function} string {string} ink {ink} "
-        "comment {comment} punct {punct} find {find_fill}".format(**theme)
+    roles = (
+        "ground {ground} keyword {keyword} function {function} string {string} "
+        "ink {ink} comment {comment} punct {punct} find {find_fill}"
     )
+    lines.append(
+        "  champion (posterior mean -- this is what the applier receives): " + roles.format(**verdict.champion_theme)
+    )
+    if not verdict.champion_is_leader:
+        # The method reef's rule: never let a readout put the leader's probability under
+        # the champion's card. They are two different pages and two different questions --
+        # the mean is risk-neutral, P(best) is most-likely-best -- and on a plateau they
+        # part. Printing the leader's own card is what stops the headline percentage from
+        # being read as the champion's.
+        lines.append(
+            f"  leader (P(best) group, {100 * verdict.lead:.0f}% -- the shelf's first card, NOT the champion): "
+            + roles.format(**verdict.leader_theme)
+        )
     for i in verdict.shown[1:]:
         member = verdict.themes[i]
         lines.append(

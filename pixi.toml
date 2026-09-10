@@ -71,5 +71,9 @@ publish = { cmd = "python -m theme.publish --write", description = "Publish the 
 lived = { cmd = "python -m theme.lived", description = "Record which of the last two applied themes was better to live in" }
 census = { cmd = "python -m theme.census", description = "Classify a screenshot's colours against the published palette; the foreign ones are the work list" }
 apply-viz = { cmd = "python -m theme.appliers.viz", description = "Write the graph furniture into loop-to-cluster's palette module from the published palette (dry run; pass --apply)" }
-test = { cmd = "pytest -q", description = "Run the recovery tests" }
+# Bare `pytest`, not `pytest -q`: pyproject's addopts already carries one `-q`, and two of
+# them suppress the summary line, so a green run ends at the warnings block and reads as a
+# killed run. One `-q` hides the per-test dots; the second hides the count that proves the
+# suite ran at all.
+test = { cmd = "pytest", description = "Run the recovery tests" }
 check = { cmd = "ruff format --check . && ruff check .", description = "Lint and format check" }

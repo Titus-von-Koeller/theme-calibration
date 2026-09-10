@@ -201,6 +201,20 @@ def _remember(key, trial):
     return trial
 
 
+def _stamped(trial, fit):
+    """Name the preference fit that chose this trial, on the trial itself.
+
+    Only this function has the fit in hand, and the recorder rebuilds the trial from the
+    same history prefix, so the stamp it writes is the fit that actually selected the
+    stimulus rather than whatever is loaded when the click arrives. `None` is a real
+    answer -- a discrimination trial is chosen by the observer posterior and no preference
+    fit, and the first four duels precede any fit at all -- so it is written as null rather
+    than left out, and `responses` requires the key.
+    """
+    trial["fit_fingerprint"] = fit["fingerprint"][2] if fit else None
+    return trial
+
+
 def _uniform_pair(pool, rng):
     """Two distinct feasible themes drawn uniformly -- the model's control condition."""
     return [pool[i] for i in rng.sample(range(len(pool)), 2)]
@@ -551,7 +565,7 @@ def trial_for(n, responses, vision_responses=(), posterior=None):
     n_duels = sum(duel_counts(history))
     polarity, arm = schedule_mode(n, history)
     if arm == "discrimination":
-        return _remember(key, _discrimination_trial(polarity, vision_history, posterior))
+        return _remember(key, _stamped(_discrimination_trial(polarity, vision_history, posterior), None))
     rng = random.Random(n * 2654435761 % (2**31))
     numpy_rng = np.random.default_rng(n * 7919 + 13)
     pool = POOL[polarity]
@@ -563,4 +577,4 @@ def trial_for(n, responses, vision_responses=(), posterior=None):
         trial = _comprehension_trial(n, history, polarity, fit, pool, rng, numpy_rng)
     else:
         trial = _search_trial(n, history, polarity, fit, pool, rng, numpy_rng)
-    return _remember(key, trial)
+    return _remember(key, _stamped(trial, fit))
